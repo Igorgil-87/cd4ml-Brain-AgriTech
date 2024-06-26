@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% set title = 'Welcome to the CD4ML Scenario Picker' %}
+    {% include "partials/_head.html" %}
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <style>
+        body {
+            background-image: url('/static/A_background_image_representing_the_automotive_mar.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+            padding-top: 70px; /* Space for fixed navbar */
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+        }
+        h2 {
+            margin-top: 20px;
+            color: #fff;
+        }
+        p {
+            color: #ccc;
+        }
+        .btn-primary {
+            background-color: #e60000;
+            border-color: #e60000;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #b30000;
+            transform: scale(1.05);
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #565e64;
+            transform: scale(1.05);
+        }
+        .card {
+            margin-bottom: 30px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: none;
+            transition: transform 0.3s;
+            color: #000;
+        }
+        .card:hover {
+            transform: scale(1.05);
+        }
+        .card img {
+            max-width: 100%;
+            height: auto;
+            border-bottom: 2px solid #e60000;
+        }
+        .card-title {
+            color: #000;
+            font-size: 1.5rem;
+            margin-top: 15px;
+        }
+        .card-text {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="/">
+            <img src="/static/santander.gif" width="30" height="30" class="d-inline-block align-top" alt="" loading="lazy">
+            CD4ML
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Previsão de Vendas
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" href="/groceries/models">Todos os Modelos</a>
+                        <a class="dropdown-item" href="/groceries/latest">Modelo Mais Recente</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Previsão de Preços
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" href="/houses/models">Todos os Modelos</a>
+                        <a class="dropdown-item" href="/houses/latest">Modelo Mais Recente</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container text-center">
+        <h2>Bem-vindo! Selecione o cenário que você deseja experimentar!</h2>
+        <div class="row justify-content-center">
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img class="card-img-top" src="/static/mercado.jpg" alt="Car Sales Icon">
+                    <div class="card-body">
+                        <h2 class="card-title">Cenário de previsão de vendas</h2>
+                        <p class="card-text">Preveja a quantidade de venda de veículos em uma data específica</p>
+                        <a class="btn btn-primary" href="/groceries/latest" role="button">Use o modelo válido mais recente »</a>
+                        <a class="btn btn-secondary" href="/groceries/models" role="button">Ver todos os modelos »</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img class="card-img-top" src="/static/carro.jpg" alt="Car Model Image">
+                    <div class="card-body">
+                        <h2 class="card-title">Previsão de preços de carros</h2>
+                        <p class="card-text">Preveja a diferença entre o preço real de um carro e o preço sugerido</p>
+                        <a class="btn btn-primary" href="/houses/latest" role="button">Use o modelo válido mais recente »</a>
+                        <a class="btn btn-secondary" href="/houses/models" role="button">Ver todos os modelos »</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS e dependências -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://stackpath.amazonaws.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+</body>
+</html>
