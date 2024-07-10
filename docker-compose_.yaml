@@ -23,7 +23,6 @@ services:
       TENANT: "jenkins"
       ACCESS_KEY: ${ACCESS_KEY}
       SECRET_KEY: ${SECRET_KEY}
-      ADMIN_USERNAME: "admin"  # Adicionando usuário admin
     volumes:
       - jenkins_home:/var/jenkins_home
     secrets:
@@ -112,8 +111,7 @@ services:
     environment:
       MINIO_ACCESS_KEY: ${ACCESS_KEY}
       MINIO_SECRET_KEY: ${SECRET_KEY}
-    entrypoint: sh
-    command: -c 'mkdir -p /data/cd4ml-ml-flow-bucket && /usr/bin/minio server /data'
+    command: server /data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -141,7 +139,7 @@ services:
       - mlflow-storage:/mnt/mlflow
     depends_on:
       - minio
-  
+
   dev:
     container_name: dev
     image: jupyter/minimal-notebook:54462805efcb

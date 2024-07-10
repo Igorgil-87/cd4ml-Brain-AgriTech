@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.8"
 services:
   welcome:
     container_name: welcome_server
@@ -21,8 +21,8 @@ services:
       FLUENTD_HOST: fluentd
       FLUENTD_PORT: 24224
       TENANT: "jenkins"
-      ACCESS_KEY: ${ACCESS_KEY}
-      SECRET_KEY: ${SECRET_KEY}
+      ACCESS_KEY: admin
+      SECRET_KEY: adminadmin
     volumes:
       - jenkins_home:/var/jenkins_home
     secrets:
@@ -95,8 +95,8 @@ services:
       FLUENTD_HOST: fluentd
       FLUENTD_PORT: 24224
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      ACCESS_KEY: ${ACCESS_KEY}
-      SECRET_KEY: ${SECRET_KEY}
+      ACCESS_KEY: admin
+      SECRET_KEY: adminadmin
     networks:
       - jenkins_nw
     depends_on: 
@@ -109,9 +109,10 @@ services:
     ports:
       - "9000:9000"
     environment:
-      MINIO_ACCESS_KEY: ${ACCESS_KEY}
-      MINIO_SECRET_KEY: ${SECRET_KEY}
-    command: server /data
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: adminadmin
+    entrypoint: sh
+    command: -c 'mkdir -p /data/cd4ml-ml-flow-bucket && /usr/bin/minio server /data'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -129,8 +130,8 @@ services:
       dockerfile: Dockerfile-mlflow
     environment:
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: ${ACCESS_KEY}
-      AWS_SECRET_ACCESS_KEY: ${SECRET_KEY}
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: adminadmin
     ports:
       - "12000:5000"
     networks:
@@ -139,7 +140,7 @@ services:
       - mlflow-storage:/mnt/mlflow
     depends_on:
       - minio
-
+  
   dev:
     container_name: dev
     image: jupyter/minimal-notebook:54462805efcb
