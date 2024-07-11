@@ -79,7 +79,28 @@ def call_model_for_scenario_and_identifier(scenario_name, identifier=None):
     return prediction if prediction is not None else {
         "error": "No Model Available To Use"
     }
+             #comissao/latest
+@app.route('/comissao/latest', methods=['get', 'post'])
+def comissao():
+    scenario_name = "comissao"
+    printable_scenario_name = "Previsão de Comissões"
+    return render_template("comissao.html", scenario_name=scenario_name, printable_scenario_name=printable_scenario_name)
 
+@app.route('/api/comissao/predict', methods=['post'])
+def predict_comissao():
+    data = request.form
+    # Aqui você processa os dados e faz a previsão usando seu modelo
+    # Substitua o exemplo abaixo pela lógica do seu modelo preditivo
+    prediction = {
+        "numContracts": data.get('numContracts'),
+        "totalValue": data.get('totalValue'),
+        "defaultValue": data.get('defaultValue'),
+        "numSoldInsurances": data.get('numSoldInsurances'),
+        "totalInsuranceValue": data.get('totalInsuranceValue'),
+        "fraudValue": data.get('fraudValue'),
+        "predictedCommission": 12345.67  # Substitua pelo valor predito pelo seu modelo
+    }
+    return render_template("prediction_result.html", prediction=prediction)
 
 @app.route('/<scenario_name>/<identifier>', methods=['get', 'post'])
 def return_webpage_for_scenario_and_identifier(scenario_name, identifier):

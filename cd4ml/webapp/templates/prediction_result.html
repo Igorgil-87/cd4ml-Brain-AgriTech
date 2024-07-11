@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% set title = 'Resultado da Previsão' %}
+    {% include "partials/_head.html" %}
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">   
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            padding-top: 70px; /* Space for fixed navbar */
+        }
+        .container {
+            padding: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #e60000;
+            color: #fff;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .card-body {
+            background-color: #fff;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .result-value {
+            font-size: 2rem;
+            color: #e60000;
+        }
+    </style>
+</head>
+<body>
+    {% include "partials/_navbar.html" %}
+    <div class="container">
+        <h2 class="mb-4">Resultado da Previsão</h2>
+        <div class="card">
+            <div class="card-header">
+                Previsão de Comissão
+            </div>
+            <div class="card-body">
+                <p class="result-title">Número de Contratos:</p>
+                <p class="result-value">{{ prediction.numContracts }}</p>
+                
+                <p class="result-title">Valor Total dos Contratos:</p>
+                <p class="result-value">R$ {{ prediction.totalValue }}</p>
+                
+                <p class="result-title">Valor Inadimplente:</p>
+                <p class="result-value">R$ {{ prediction.defaultValue }}</p>
+                
+                <p class="result-title">Número de Seguros Vendidos:</p>
+                <p class="result-value">{{ prediction.numSoldInsurances }}</p>
+                
+                <p class="result-title">Valor Total dos Seguros Vendidos:</p>
+                <p class="result-value">R$ {{ prediction.totalInsuranceValue }}</p>
+                
+                <p class="result-title">Valor de Fraudes:</p>
+                <p class="result-value">R$ {{ prediction.fraudValue }}</p>
+                
+                <p class="result-title">Comissão Predita:</p>
+                <p class="result-value">R$ {{ prediction.predictedCommission }}</p>
+            </div>
+        </div>
+    </div>
+    <!-- Bootstrap JS e dependências -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://stackpath.amazonaws.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+</body>
+</html>
