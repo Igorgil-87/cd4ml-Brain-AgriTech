@@ -1,70 +1,101 @@
-# Continuous Intelligence and CD4ML Workshop
+# CD4ML Brain AgriTech
 
-This workshop contains the sample application and machine learning code used for the Continuous Delivery for Machine Learning (CD4ML) and Continuous Intelligence workshop. 
+Repositório para o projeto **CD4ML (Continuous Delivery for Machine Learning)** para a Brain AgriTech. Este ambiente Docker configura uma série de serviços e ferramentas de CI/CD para facilitar o desenvolvimento, monitoramento e implantação de modelos de machine learning. Ele integra Jenkins, Elasticsearch, Kibana, Minio, Mlflow, e Jupyter, além de scripts e dependências para suportar pipelines de machine learning e automação de testes.
 
-This workshop is based on an existing [CD4ML Workshop](https://github.com/ThoughtWorksInc/cd4ml-workshop).
+## Índice
 
-This material has been developed and is continuously evolved by [ThoughtWorks](https://www.thoughtworks.com/open-source) and has been presented in conferences such as: ODSC Boston 2020, ODSC Europe 2020.
+- [Visão Geral do Projeto](#visão-geral-do-projeto)
+- [Serviços Configurados](#serviços-configurados)
+- [Pré-requisitos](#pré-requisitos)
+- [Configuração e Instalação](#configuração-e-instalação)
+- [Estrutura de Contêineres e Scripts](#estrutura-de-contêineres-e-scripts)
+- [Scripts de Testes e Hooks](#scripts-de-testes-e-hooks)
+- [Dependências](#dependências)
+- [Comandos Úteis](#comandos-úteis)
+- [Estrutura de Pastas](#estrutura-de-pastas)
+- [Contribuindo](#contribuindo)
+- [Licença](#licença)
 
-You can also watch a recording of this material presented at a [Global Webinar](https://www.thoughtworks.com/continuous-delivery-for-machine-learning).
+## Visão Geral do Projeto
 
-## Pre-Requisites
+O projeto tem como objetivo facilitar o desenvolvimento e a entrega contínua de modelos de machine learning, com um pipeline automatizado que cobre desde a preparação de dados até a implantação e monitoramento de modelos. Utiliza Docker para orquestrar os serviços necessários e configura pipelines de CI/CD através do Jenkins e ferramentas de monitoramento.
 
-In order to run this workshop, you will need:
+## Serviços Configurados
 
-* A valid Github account
-* A working Docker setup with at least 20 GB of space free (if running on Windows, make sure to use Linux containers)
+1. **Jenkins**: Configurado para automação de CI/CD, com plugins como BlueOcean e GitHub API. Utiliza um Dockerfile personalizado (`Dockerfile-jenkins`) para adicionar plugins, configurações de autenticação e um setup inicial.  
+   - Acesse o Jenkins em: [http://localhost:10000](http://localhost:10000)
 
-## Tools used in this workshop
+2. **Elasticsearch e Kibana**: Monitoramento e visualização de logs e dados. O Elasticsearch está configurado para uso em um cluster único, com controle de memória, e o Kibana está integrado ao Elasticsearch.
+   - Acesse o Kibana em: [http://localhost:5601](http://localhost:5601)
 
-As part of this workshop all of these service will be automatically setup for you as Docker containers. You do not need to download and install these services ahead of time.
+3. **Minio**: Solução de armazenamento S3 compatível, usada para armazenar artefatos do Mlflow. Configurado para criar o bucket padrão `/data/cd4ml-ml-flow-bucket`.
+   - Acesse o Minio em: [http://localhost:9000](http://localhost:9000)
 
-* [Python 3.9](https://www.python.org/downloads/release/python-399/)
-* [Docker](https://www.docker.com/)
-* [Jenkins](https://jenkins.io/)
-* EFK Stack, [ElasticSearch](https://www.elastic.co/elasticsearch/), [Fluentd](https://www.fluentd.org/), [Kibana](https://www.elastic.co/kibana) 
-* [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/)
-* [MLFlow](https://mlflow.org)
-* [Minio](https://min.io/)
+4. **Mlflow**: Gerenciamento e rastreamento de experimentos de machine learning, com integração ao Minio para armazenamento de artefatos.
+   - Acesse o Mlflow em: [http://localhost:12000](http://localhost:12000)
 
-## Workshop Instructions
+5. **Fluentd**: Configurado para coleta e monitoramento de logs dos diferentes serviços.
 
-The workshop is divided into several steps, which build on top of each other. Instructions for each exercise and scenario can be found under the [instructions](./instructions) folder. To start from the beginning click [here](./instructions/1-SystemSetup.md).
+6. **Jupyter Notebook**: Ambiente interativo de desenvolvimento para data science e machine learning.
+   - Acesse o Jupyter em: [http://localhost:8888](http://localhost:8888)
 
-*The exercises build on top of each other, so you will not be able to skip steps ahead without executing them.*
+## Pré-requisitos
 
-## The Machine Learning Problems
+- **Docker** e **Docker Compose** instalados.
+- Defina as variáveis de ambiente `ACCESS_KEY` e `SECRET_KEY` para autenticação no Minio e no Mlflow.
 
-In this workshop there are two different scenarios that you can perform.
+## Configuração e Instalação
 
-The first is a simplified solution to a Kaggle problem posted by Corporación Favorita, a large Ecuadorian-based grocery retailer interested in improving their [Sales Forecasting](https://www.kaggle.com/c/favorita-grocery-sales-forecasting/overview) using data. For the purposes of this workshop, we have combined and simplified their data sets, as our goal is not to find the best predictions, but to demonstrate how to implement CD4ML.
+1. Clone o repositório:
+   ```sh
+   git clone https://github.com/Igorgil-87/cd4ml-Brain-AgriTech.git
+   cd cd4ml-Brain-AgriTech
+2. Defina as variáveis de ambiente no terminal ou em um arquivo .env:
+    export ACCESS_KEY=seu_acesso
+    export SECRET_KEY=sua_chave_secreta
+3. Inicie o ambiente Docker:
+    docker-compose up -d
 
-The second is a scenario based on a problem from the Zillow group, an American online real estate company interested in improving there [predications of real-estate prices](https://www.kaggle.com/c/zillow-prize-1). 
+# Estrutura de Contêineres e Scripts
+## Dockerfiles
+    Dockerfile-jenkins: Configura o Jenkins com plugins essenciais e scripts de inicialização, permitindo automação de CI/CD personalizada.
+    Dockerfile-minio: Configura o armazenamento Minio, inicializando o bucket padrão para armazenamento de artefatos de experimentos.
+    Dockerfile-mlflow: Configura o servidor Mlflow para rastreamento e gerenciamento de experimentos, com armazenamento S3 através do Minio.
+    Dockerfile-model: Define um serviço Flask para servir modelos de machine learning, com integração com Mlflow e configuração para logs no Fluentd.
+## Scripts Auxiliares
+    install_commit_hooks.sh: Configura hooks de commit, incluindo um hook de pré-commit para garantir qualidade do código, copiando-o para .git/hooks e aplicando permissões de execução.
+    local_app.sh: Configura variáveis de ambiente específicas para o Flask, incluindo as integrações com Fluentd e Mlflow. Instala as dependências listadas em requirements.txt e inicia o servidor Flask na porta 5005.
+    run_python_script.py: Script auxiliar para execução de funções específicas em Python dentro do ambiente Docker.
 
-## Links to the different components of this scenario
+## Arquivo Jenkins
+    Jenkinsfile: Define o pipeline de CI/CD para o Jenkins, automatizando etapas de build, teste e deploy para o projeto, com suporte a configurações específicas de autenticação e armazenamento de artefatos.
+## Scripts de Testes e Hooks
+    run_tests.sh: Script para execução de testes automatizados com pytest, gerando um relatório de cobertura de código em HTML. Também executa o flake8 para análise estática do código, ignorando avisos de print() e respeitando convenções de estilo PEP8.
+## Dependências
+    As dependências estão listadas no arquivo requirements.txt e incluem:
+    Bibliotecas de ML e Visualização: numpy, pandas, scikit-learn, flask, mlflow, lime, bokeh
+    Gerenciamento de Logs: fluent-logger
+    Ferramentas de Teste e Qualidade de Código: pytest, flake8, autopep8, requests-mock
 
-After a successful setup of the environment, the following components are running on your machine. You can find a homepage to navigate to any of these services [here](http://localhost:3000)
+## Essas dependências são instaladas automaticamente durante o processo de build dos contêineres, mas você pode instalá-las localmente para desenvolvimento, se necessário:
+    pip install -r requirements.txt
 
-* [Jenkins](http://localhost:10000/blue)
-* [JupyterLab](http://127.0.0.1:8888/lab)
-* [MLFlow](http://localhost:12000)
-* [The ML Model](http://localhost:11000)
-* [Kibana/fluentD/Elasticsearch](http://localhost:5601/app/kibana)
-* [Minio](http://localhost:9000)
+# Comandos Úteis
+## Para verificar o status dos contêineres:
+    docker-compose ps
 
-## Collaborators
+## Para parar o ambiente:
+    docker-compose down
 
-The material, ideas, and content developed for this workshop were contributions from (in alphabetical order):
+## Para executar o script de testes:
+    ./run_tests.sh
 
-* [Arif Wider](https://github.com/arifwider)
-* [Arun Manivannan](https://github.com/arunma)
-* [Christoph Windheuser](https://github.com/ciwin)
-* [Danilo Sato](https://github.com/dtsato)
-* [Danni Yu](https://github.com/danniyu)
-* [David Johnston](https://github.com/dave31415)
-* [David Tan](https://github.com/davified)
-* [Emma Grasmeder](https://github.com/emilyagras)
-* [Emily Gorcenski](https://github.com/Gorcenski)
-* [Eric Nagler](https://github.com/ericnagler)
-* [Jin Yang](https://github.com/yytina)
-* [Jonathan Heng](https://github.com/jonheng)
+## Para iniciar o ambiente local do Flask:
+    ./local_app.sh
+
+
+## Estrutura de Pastas
+    public-html/: Arquivos HTML públicos para o contêiner welcome_server.
+    fluentd/conf/: Configurações para o Fluentd.
+    jenkins/: Configurações e scripts específicos para Jenkins.
+    cd4ml/: Diretório contendo o código-fonte principal do projeto, incluindo a aplicação Flask e outras funcionalidades de machine learning.
