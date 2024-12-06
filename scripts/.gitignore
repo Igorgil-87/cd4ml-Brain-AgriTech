@@ -5,4 +5,4 @@
 /data/*.csv
 
 # Manter o controle de um arquivo CSV específico (caso necessário)
-#!data/example.csv
+!data/agrofitprodutosformulados.csv
