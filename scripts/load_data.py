@@ -141,7 +141,8 @@ files_to_tables = {
     "/app/data/sementes.csv": ("semente", ['produto', 'unidade', 'uf', 'ano', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']),
     "/app/data/FERTILIZANTES.csv": ("producao_fertilizantes", ['produto', 'unidade', 'uf', 'ano', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']),
     "/app/data/AGROTOXICO.csv": ("agrotoxico", ['produto', 'unidade', 'uf', 'ano', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']),
-    "/app/data/agrofitprodutosformulados.csv": ("registro_agrotoxico", ['nr_registro', 'marca_comercial', 'formulacao', 'ingrediente_ativo', 'titular_de_registro', 'classe', 'modo_de_acao', 'cultura', 'praga_nome_cientifico', 'praga_nome_comum', 'empresa_pais_tipo', 'classe_toxicologica', 'classe_ambiental', 'organicos', 'situacao'])
+    "/app/data/agrofitprodutosformulados.csv": ("registro_agrotoxico", ['nr_registro', 'marca_comercial', 'formulacao', 'ingrediente_ativo', 'titular_de_registro', 'classe', 'modo_de_acao', 'cultura', 'praga_nome_cientifico', 'praga_nome_comum', 'empresa_pais_tipo', 'classe_toxicologica', 'classe_ambiental', 'organicos', 'situacao']),
+    "/app/data/estados.csv": ("regions", ['COD,NOME,SIGLA,REGIAO'])
 }
 
 # Processar arquivos menores

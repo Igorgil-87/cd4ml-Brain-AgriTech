@@ -29,6 +29,13 @@ pipeline {
                 sh 'pip3 install -r requirements.txt'
             }
         }
+
+        stage('Fetch Data') {
+            steps {
+                sh 'python3 run_python_script.py pipeline download_data'
+            }
+        }
+
         stage('Run tests') {
             steps {
                 sh './run_tests.sh'

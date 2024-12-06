@@ -1,9 +1,19 @@
 {
     "default_algorithm": "random_forest",
-    "identifier_field": "commodity_id",
-    "target_field": "price",
-    "training_random_seed": 42,
-    "validation_metric_names": ["mae", "rmse"],
-    "training_data_path": "path/to/commodities_training_data.csv",
-    "validation_data_path": "path/to/commodities_validation_data.csv"
-}
+    "training_random_seed": 12345,
+    "identifier_field": "estado",
+    "target_field": "preco_mensal",  
+    "feature_set_name": "default",
+    "acceptance_metric": "r2_score",
+    "acceptance_threshold_min": 0.7,
+    "acceptance_threshold_max": 1.0,
+    "max_rows_to_read": null,
+    "splitting": {
+      "random_seed": 54321,
+      "training_random_start": 0.0,
+      "training_random_end": 0.8,
+      "validation_random_start": 0.8,
+      "validation_random_end": 1.0
+    },
+    "validation_metric_names": ["r2_score", "mae_score", "rmse_score"]
+  }

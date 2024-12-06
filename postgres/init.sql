@@ -268,6 +268,15 @@ CREATE TABLE IF NOT EXISTS tabua_de_risco (
 
 ALTER TABLE registro_agrotoxico ALTER COLUMN marca_comercial TYPE VARCHAR(1000);
 ALTER TABLE declaracao_producao ALTER COLUMN especie TYPE VARCHAR(200);
+
+
+CREATE TABLE IF NOT EXISTS  regions (
+    cod INT PRIMARY KEY,
+    nome VARCHAR(255),
+    sigla VARCHAR(2),
+    regiao VARCHAR(50)
+);
+
 -- Mensagem para depuração
 DO $$ BEGIN RAISE NOTICE 'Tabelas criadas com sucesso'; END $$;
 

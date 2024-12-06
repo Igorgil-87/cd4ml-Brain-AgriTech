@@ -1,8 +1,7 @@
 from cd4ml.problems.problem_base import ProblemBase
-from cd4ml.problems.commodities.download_data.download_data import download
+from cd4ml.problems.commodities.download_data.download_data import download  # Altere para usar a nova função padrão
 import cd4ml.problems.commodities.readers.stream_data as stream_data
 from cd4ml.utils.utils import average_by
-
 
 class CommoditiesProblem(ProblemBase):
     def __init__(self,
@@ -52,38 +51,4 @@ class CommoditiesProblem(ProblemBase):
         """
         Faz o download dos dados para o problema de commodities.
         """
-        download()
-
-        """
-        Recebe os dados de entrada para previsão e retorna a previsão calculada.
-        """
-        # Processar os dados de entrada
-        processed_data = self.feature_set.features(input_data)
-        
-        # Executa a previsão usando o modelo treinado
-        prediction = self.ml_model.predict([processed_data])
-        
-        return prediction[0]  # Retorna apenas o primeiro valor da previsão
-    def predict(self, input_data):
-        try:
-            # Validar e converter os dados de entrada
-            area = float(input_data.get("area"))
-            cultura = int(input_data.get("cultura"))
-
-            # Geração de previsões (exemplo simplificado para múltiplos meses)
-            forecast = [area * (1 + 0.05 * i) / cultura for i in range(1, 13)]  # Previsões para 12 meses
-            labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]  # Meses
-
-            # Garantir que a previsão seja válida
-            if not forecast or len(forecast) != len(labels):
-                raise ValueError("Erro na geração de previsões: tamanhos incompatíveis entre forecast e labels.")
-
-            # Retornar previsão e rótulos
-            return {"forecast": forecast, "labels": labels}
-
-        except ValueError as e:
-            logging.error(f"Erro nos dados fornecidos: {e}")
-            raise ValueError(f"Erro nos dados fornecidos: {e}")
-        except Exception as e:
-            logging.error(f"Erro ao prever dados: {e}")
-            raise
+        download()  # Chama a nova função `download` padrão
