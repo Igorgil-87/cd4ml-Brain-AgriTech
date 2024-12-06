@@ -1,0 +1,9 @@
+{
+    "default_algorithm": "random_forest",
+    "identifier_field": "commodity_id",
+    "target_field": "price",
+    "training_random_seed": 42,
+    "validation_metric_names": ["mae", "rmse"],
+    "training_data_path": "path/to/commodities_training_data.csv",
+    "validation_data_path": "path/to/commodities_validation_data.csv"
+}

@@ -1,0 +1,9 @@
+{
+    "default_algorithm": "random_forest",
+    "training_random_seed": 42,
+    "validation_metric_names": ["accuracy"],
+    "identifier_field": "region",
+    "target_field": "fertilizer_efficiency",
+    "encoder_untransformed_fields": []
+  }
+  

@@ -1,4 +1,5 @@
-version: "3.8"
+version: '3.8'
+
 services:
   welcome:
     container_name: welcome_server
@@ -21,14 +22,19 @@ services:
       FLUENTD_HOST: fluentd
       FLUENTD_PORT: 24224
       TENANT: "jenkins"
-      ACCESS_KEY: admin
-      SECRET_KEY: adminadmin
+      ACCESS_KEY: ${JENKINS_ACCESS_KEY}
+      SECRET_KEY: ${JENKINS_SECRET_KEY}
     volumes:
       - jenkins_home:/var/jenkins_home
     secrets:
       - jenkins-admin-password
     networks:
       - jenkins_nw
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8080/login || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   es01:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
@@ -52,7 +58,7 @@ services:
     networks:
       - jenkins_nw
     healthcheck:
-      test: curl -s http://localhost:9200 >/dev/null; if [[ $$? == 52 ]]; then echo 0; else echo 1; fi
+      test: curl -s http://localhost:9200 >/dev/null || exit 1
       interval: 30s
       timeout: 10s
       retries: 5
@@ -95,8 +101,8 @@ services:
       FLUENTD_HOST: fluentd
       FLUENTD_PORT: 24224
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      ACCESS_KEY: admin
-      SECRET_KEY: adminadmin
+      ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      SECRET_KEY: ${MINIO_SECRET_KEY}
     networks:
       - jenkins_nw
     depends_on: 
@@ -109,8 +115,8 @@ services:
     ports:
       - "9000:9000"
     environment:
-      MINIO_ACCESS_KEY: admin
-      MINIO_SECRET_KEY: adminadmin
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     entrypoint: sh
     command: -c 'mkdir -p /data/cd4ml-ml-flow-bucket && /usr/bin/minio server /data'
     healthcheck:
@@ -130,8 +136,8 @@ services:
       dockerfile: Dockerfile-mlflow
     environment:
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      AWS_ACCESS_KEY_ID: admin
-      AWS_SECRET_ACCESS_KEY: adminadmin
+      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
     ports:
       - "12000:5000"
     networks:
@@ -158,15 +164,70 @@ services:
     depends_on: 
       - jenkins
 
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./cd4ml-Brain-AgriTech/postgres:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jenkins_nw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "8081:80"
+    networks:
+      - jenkins_nw
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:80 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  load_data:
+    build:
+      context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech
+      dockerfile: load_data/Dockerfile
+    container_name: load_data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - ./data:/app/data            
+      - ./scripts:/app/scripts      
+    networks:
+      - jenkins_nw
+    depends_on:
+      - postgres
+    command: ["python", "/app/scripts/load_data.py"]
+
 volumes:
   jenkins_home:
-    driver: local
   data01:
-    driver: local
   minio-storage:
-    driver: local
   mlflow-storage:
-    driver: local
+  postgres_data:
 
 networks:
   jenkins_nw:

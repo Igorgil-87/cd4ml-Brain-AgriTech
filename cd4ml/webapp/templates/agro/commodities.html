@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão de Commodities</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <style>
+        body {
+            background-image: url('/static/commodities_background.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 100px auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #e60000;
+            text-align: center;
+        }
+        #map {
+            height: 400px;
+            margin: 20px 0;
+            border: 2px solid #e60000;
+            border-radius: 10px;
+        }
+        .btn-primary {
+            background-color: #e60000;
+            border-color: #e60000;
+        }
+        .btn-primary:hover {
+            background-color: #b80000;
+            border-color: #b80000;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="/">
+            <img src="/static/santander.gif" width="30" height="30" class="d-inline-block align-top" alt="">
+            Previsão de Commodities
+        </a>
+    </nav>
+
+    <div class="container">
+        <h1>Previsão de Preços de Commodities</h1>
+
+        <form id="forecast-form">
+            <div>
+                <label for="cultura">Selecione a Cultura:</label>
+                <select id="cultura" name="cultura" class="form-control" required>
+                    <option value="" disabled selected>Selecione...</option>
+                    <option value="soja">Soja</option>
+                    <option value="milho">Milho</option>
+                    <option value="arroz">Arroz</option>
+                    <option value="cafe">Café</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="area">Área (em hectares):</label>
+                <input type="number" id="area" name="area" class="form-control" required>
+            </div>
+
+            <div>
+                <label for="production">Produção (em toneladas):</label>
+                <input type="number" id="production" name="production" class="form-control" required>
+            </div>
+
+            <div>
+                <label>Selecione o Período:</label>
+                <input type="month" id="start-date" class="form-control" />
+                <input type="month" id="end-date" class="form-control" />
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="submitPrediction()">Gerar Previsão</button>
+        </form>
+
+        <div id="prediction-result" class="text-center mt-4"></div>
+
+        <div id="map"></div>
+        <canvas id="forecast-chart" class="mt-5"></canvas>
+    </div>
+
+    <script>
+        // Inicializar o mapa
+        const map = L.map('map').setView([-14.235, -51.9253], 4); // Brasil
+
+        // Adicionar camada de mapa base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Regiões com IDs numéricos
+        const regions = [
+            { id: 1, name: "Norte", coordinates: [[[-73, 5], [-60, 5], [-60, -10], [-73, -10], [-73, 5]]] },
+            { id: 2, name: "Nordeste", coordinates: [[[-50, -10], [-34, -10], [-34, -2], [-50, -2], [-50, -10]]] },
+            { id: 3, name: "Centro-Oeste", coordinates: [[[-60, -10], [-50, -10], [-50, -15], [-60, -15], [-60, -10]]] },
+            { id: 4, name: "Sudeste", coordinates: [[[-48, -22], [-40, -22], [-40, -20], [-48, -20], [-48, -22]]] },
+            { id: 5, name: "Sul", coordinates: [[[-54, -30], [-49, -30], [-49, -26], [-54, -26], [-54, -30]]] }
+        ];
+
+        const selectedRegions = new Set();
+
+        // Adicionar regiões ao mapa
+        regions.forEach(region => {
+            L.geoJSON({
+                "type": "Feature",
+                "properties": { "id": region.id, "name": region.name },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": region.coordinates
+                }
+            }, {
+                style: { color: '#e60000', weight: 2, fillOpacity: 0.4 },
+                onEachFeature: (feature, layer) => {
+                    layer.on('click', () => {
+                        const regionId = feature.properties.id;
+
+                        if (selectedRegions.has(regionId)) {
+                            selectedRegions.delete(regionId); // Remover a região se já estiver selecionada
+                            layer.setStyle({ fillOpacity: 0.4 }); // Restaurar a cor padrão
+                        } else {
+                            selectedRegions.add(regionId); // Adicionar a região
+                            layer.setStyle({ fillOpacity: 0.8, color: '#0000FF' }); // Destaque
+                        }
+
+                        document.getElementById('regions').value = Array.from(selectedRegions).join(", ");
+                    });
+                }
+            }).addTo(map);
+        });
+
+        async function submitPrediction() {
+            const formData = new FormData(document.getElementById('forecast-form'));
+            const data = Object.fromEntries(formData);
+
+            // Converter valores relevantes para números
+            if (data.area) {
+                data.area = parseFloat(data.area);
+            }
+            if (data.production) {
+                data.production = parseFloat(data.production);
+            }
+
+            console.log("Dados enviados:", data); // Verificar no console se os dados estão no formato correto
+
+            const response = await fetch('/api/commodities/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                document.getElementById('prediction-result').innerText = "Previsão gerada com sucesso!";
+                updateChart(result.forecast, result.labels); // Atualizar o gráfico com os dados da previsão
+            } else {
+                document.getElementById('prediction-result').innerText = `Erro: ${result.error}`;
+            }
+        }
+
+        // Função para atualizar o gráfico
+        function updateChart(forecast, labels) {
+            const ctx = document.getElementById('forecast-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Previsão de Preço (R$)',
+                        data: forecast,
+                        borderColor: '#e60000',
+                        backgroundColor: 'rgba(230, 0, 0, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

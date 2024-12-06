@@ -1,0 +1,8 @@
+{
+    "default_algorithm": "random_forest",
+    "training_random_seed": 42,
+    "validation_metric_names": ["accuracy", "precision", "recall"],
+    "identifier_field": "id",
+    "target_field": "yield",
+    "fields_to_include": ["field1", "field2"]
+}

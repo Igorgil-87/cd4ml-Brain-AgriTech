@@ -1,0 +1,4 @@
+{
+    "categorical": ["region"],
+    "numerical": ["vegetation_index", "soil_moisture", "temperature", "precipitation"]
+}

@@ -6,9 +6,14 @@ import logging
 import requests
 from flask import Flask, request, render_template
 
+from cd4ml.problems.available_problems import PROBLEMS
 from cd4ml.logger.fluentd_logging import FluentdLogger
 from cd4ml.webapp.model_cache import ModelCache
 from cd4ml.webapp.webapp_data_scorer import get_form_from_model
+from cd4ml.logger.cd4ml_logging import init as init_logging
+
+# Inicializar o logger no início do script
+init_logging()
 
 logger = logging.getLogger(__name__)
 fluentd_logger = FluentdLogger()
@@ -22,6 +27,111 @@ ERROR_NO_MODEL_AT_LOCATION = "No model is available for this identifier scenario
 app = Flask(__name__,
             template_folder='webapp/templates',
             static_folder='webapp/static')
+
+
+@app.route('/agro/commodities', methods=['get', 'post'])
+def agro_commodities():
+    scenario_name = "commodities"
+    printable_scenario_name = "Previsão de Preço de Commodities Agrícolas"
+    return render_template("agro/commodities.html", scenario_name=scenario_name, printable_scenario_name=printable_scenario_name)
+
+@app.route('/agro/clima', methods=['get', 'post'])
+def agro_clima():
+    scenario_name = "clima"
+    printable_scenario_name = "Análise de Clima para Lavouras"
+    return render_template("agro/clima.html", scenario_name=scenario_name, printable_scenario_name=printable_scenario_name)
+
+@app.route('/agro/colheita', methods=['get', 'post'])
+def agro_colheita():
+    scenario_name = "colheita"
+    printable_scenario_name = "Predição de Rendimento da Colheita"
+    return render_template("agro/colheita.html", scenario_name=scenario_name, printable_scenario_name=printable_scenario_name)
+
+@app.route('/agro/insumo', methods=['get', 'post'])
+def agro_insumos():
+    scenario_name = "insumos"
+    printable_scenario_name = "Otimização de Insumos Agrícolas"
+    return render_template("agro/insumo.html", scenario_name=scenario_name, printable_scenario_name=printable_scenario_name)
+
+@app.route('/agro/rendimento', methods=['get', 'post'])
+def agro_rendimento():
+    scenario_name = "rendimento"
+    printable_scenario_name = "Análise de Rendimento de Lavoura"
+    return render_template("agro/rendimento.html", scenario_name=scenario_name, printable_scenario_name=printable_scenario_name)
+
+
+
+@app.route('/api/insumos/predict', methods=['POST'])
+def predict_insumos():
+    input_data = request.json
+    problem = PROBLEMS.get("insumo")
+    if not problem:
+        logging.error("Problema 'insumos' não encontrado no registro.")
+        return {"error": "Modelo de insumos não encontrado"}, 404
+    logging.info("Problema 'insumos' encontrado, iniciando previsão.")
+    try:
+        prediction = problem.predict(input_data)
+
+        # Verifique se o modelo retorna os dois dados necessários
+        forecast = prediction.get("forecast", [])
+        costs = prediction.get("costs", [])
+
+        # Retornar ambos no formato esperado
+        return {"forecast": forecast, "costs": costs}, 200
+
+    except Exception as e:
+        logging.error(f"Erro ao fazer previsão para insumos: {e}")
+        return {"error": f"Erro ao fazer previsão: {str(e)}"}, 500
+
+
+@app.route('/api/commodities/predict', methods=['POST'])
+def predict_commodities():
+    try:
+        input_data = request.json
+        logging.info(f"Dados recebidos para commodities: {input_data}")
+
+        # Validação do campo "area"
+        if "area" not in input_data or not isinstance(input_data["area"], (int, float)):
+            return {"error": "Campo 'area' é obrigatório e deve ser um número válido."}, 400
+
+        # Verificar tipo de cultura
+        if "cultura" not in input_data or not input_data["cultura"]:
+            return {"error": "Cultura é obrigatória e não pode estar vazia."}, 400
+
+        # Mapear culturas para valores numéricos
+        cultura_mapping = {"soja": 1, "milho": 2, "arroz": 3, "cafe": 4}
+        if input_data["cultura"] not in cultura_mapping:
+            return {"error": f"Cultura '{input_data['cultura']}' inválida."}, 400
+
+        input_data["cultura"] = cultura_mapping[input_data["cultura"]]
+
+        logging.info(f"Dados validados: {input_data}")
+
+        # Obter o problema
+        problem = PROBLEMS.get("commodities")
+        if not problem:
+            return {"error": "Modelo de commodities não encontrado."}, 404
+
+        # Gerar previsões múltiplas
+        predictions = problem.predict(input_data)  # Modelo retorna múltiplos valores preditivos
+        if not isinstance(predictions, dict) or "forecast" not in predictions or "labels" not in predictions:
+            return {"error": "O modelo não retornou previsões válidas."}, 500
+
+        forecast = predictions["forecast"]  # Lista de valores preditivos
+        labels = predictions["labels"]  # Lista de rótulos correspondentes
+
+        logging.info(f"Previsões geradas: {forecast} com rótulos: {labels}")
+
+        return {"forecast": forecast, "labels": labels}, 200
+
+    except Exception as e:
+        logging.error(f"Erro ao fazer previsão para commodities: {e}")
+        return {"error": f"Erro ao fazer previsão: {str(e)}"}, 500
+
+@app.route('/api/agro/data', methods=['POST'])
+def get_agro_data():
+    # Código para retornar dados ou processar previsões.
+    pass
 
 
 def make_page_for_scenario_and_identifier(scenario_name, identifier, request_data):
@@ -80,27 +190,7 @@ def call_model_for_scenario_and_identifier(scenario_name, identifier=None):
         "error": "No Model Available To Use"
     }
              #comissao/latest
-@app.route('/comissao/latest', methods=['get', 'post'])
-def comissao():
-    scenario_name = "comissao"
-    printable_scenario_name = "Previsão de Comissões"
-    return render_template("comissao.html", scenario_name=scenario_name, printable_scenario_name=printable_scenario_name)
 
-@app.route('/api/comissao/predict', methods=['post'])
-def predict_comissao():
-    data = request.form
-    # Aqui você processa os dados e faz a previsão usando seu modelo
-    # Substitua o exemplo abaixo pela lógica do seu modelo preditivo
-    prediction = {
-        "numContracts": data.get('numContracts'),
-        "totalValue": data.get('totalValue'),
-        "defaultValue": data.get('defaultValue'),
-        "numSoldInsurances": data.get('numSoldInsurances'),
-        "totalInsuranceValue": data.get('totalInsuranceValue'),
-        "fraudValue": data.get('fraudValue'),
-        "predictedCommission": 12345.67  # Substitua pelo valor predito pelo seu modelo
-    }
-    return render_template("prediction_result.html", prediction=prediction)
 
 @app.route('/<scenario_name>/<identifier>', methods=['get', 'post'])
 def return_webpage_for_scenario_and_identifier(scenario_name, identifier):
@@ -135,3 +225,7 @@ def return_webpage_for_scenario_and_identifier(scenario_name, identifier):
                            title=f"Predicting for Scenario {scenario_name}",
                            form_div=form_div,
                            prediction=prediction)
+
+
+if __name__ == '__main__':
+    app.run(debug=True)

@@ -158,6 +158,17 @@ class ProblemBase:
         target_name = self.feature_set.target_field
         return (row[target_name] for row in stream)
 
+
+    def validate_problem_structure(self):
+        required_dirs = ['ml_pipelines', 'features', 'readers']
+        problem_path = Path(Path(__file__).parent, self.problem_name)
+        for required_dir in required_dirs:
+            dir_path = problem_path / required_dir
+            if not dir_path.exists():
+                self.logger.error(f"A pasta esperada {dir_path} não existe.")
+                raise FileNotFoundError(f"A estrutura do problema está incompleta. Faltando: {dir_path}")
+
+                
     def _write_validation_info(self):
         true_validation_target = list(self.true_target_stream(self.validation_stream()))
         validation_predictions = list(self.ml_model.predict_processed_rows(self.validation_stream()))
@@ -235,9 +246,17 @@ class ProblemBase:
     def get_feature_set_constructor(feature_set_name):
         raise NotImplementedError("This function should be implemented in a parent class")
 
+
     def get_ml_pipeline_params(self, ml_pipeline_params_name):
-        path = 'ml_pipelines/{}.json'.format(ml_pipeline_params_name)
+        path = Path(Path(__file__).parent, self.problem_name, 'ml_pipelines', f"{ml_pipeline_params_name}.json")
+        if not path.exists():
+            self.logger.error(f"O arquivo {path} não existe.")
+            raise FileNotFoundError(f"O arquivo esperado {path} não existe. Verifique a estrutura do projeto.")
         return self.read_json_file_for_current_problem_as_dict(path)
+
+
+
+
 
     def get_algorithm_params(self, algorithm_name, algorithm_params_name):
         path = 'algorithms/{}/{}.json'.format(algorithm_name, algorithm_params_name)
@@ -256,8 +275,16 @@ class ProblemBase:
     def read_json_file_for_current_problem_as_dict(self, file_path):
         path = Path(Path(__file__).parent, self.problem_name, file_path)
 
-        with open(path, "r") as file:
-            return json.load(file)
+        try:
+            with open(path, "r") as file:
+                return json.load(file)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Erro ao carregar o arquivo JSON: {file_path}. Verifique se ele está bem formatado.") from e
+        except FileNotFoundError:
+            raise FileNotFoundError(f"O arquivo esperado {file_path} não foi encontrado. Verifique o caminho.")
+
+
+
 
     def __repr__(self):
         # make it printable

@@ -1,5 +1,5 @@
 """
-    Keep all filename/path logic here rather than hardcoded paths all over the code
+Keep all filename/path logic here rather than hardcoded paths all over the code
 """
 import os
 from cd4ml.utils.utils import ensure_dir_exists
@@ -13,7 +13,7 @@ _model_file_name = "full_model.pkl"
 
 
 def _get_base_dirs(base_data_dir=None):
-    # makes a fresh call to environment for variable each call
+    # Makes a fresh call to environment for variable each call
     if base_data_dir is None:
         base_data_directory = os.getenv('CD4ML_DATA_DIR', _default_data_dir)
     else:
@@ -34,7 +34,7 @@ def _get_base_dirs(base_data_dir=None):
 
 
 def _get_model_file_templates(model_results_dir):
-    # TODO: do we really need encoder cacheing?
+    # File templates for model-related files
     file_names_model = {
         'model_metrics': '%s/model_metrics.json' % model_results_dir,
         'model_specification': '%s/model_specification.json' % model_results_dir,
@@ -49,6 +49,7 @@ def _get_model_file_templates(model_results_dir):
 
 
 def _get_problem_file_templates(raw_problem_data_dir):
+    # Add file templates for each problem
     file_names_problem = {
         'groceries': {
             'raw_grocery_data': '%s/store47-2016.csv' % raw_problem_data_dir,
@@ -60,6 +61,12 @@ def _get_problem_file_templates(raw_problem_data_dir):
         },
         'iris': {
             'raw_iris_data': '%s/iris.csv' % raw_problem_data_dir
+        },
+        'insumo': {
+            'raw_insumo_data': '%s/insumo_data.csv' % raw_problem_data_dir  # Added insumo problem
+        },
+        'commodities': {
+            'raw_commodities_data': '%s/commodities.csv' % raw_problem_data_dir
         }
     }
 
@@ -93,6 +100,9 @@ def get_problem_files(problem_name, base_data_dir=None):
     problem_file_templates = _get_problem_file_templates(raw_problem_data_dir)
 
     ensure_dir_exists(raw_problem_data_dir.format(problem_name=problem_name))
+
+    if problem_name not in problem_file_templates:
+        raise ValueError(f"Problema '{problem_name}' não encontrado na configuração de arquivos.")
 
     problem_files = problem_file_templates[problem_name]
     return {k: v.format(problem_name=problem_name) for k, v in problem_files.items()}

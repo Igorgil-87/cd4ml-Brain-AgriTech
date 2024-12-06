@@ -1,0 +1,5 @@
+{
+    "categorical": ["region", "crop_type"],
+    "numerical": ["price", "yield", "input_cost"]
+  }
+  

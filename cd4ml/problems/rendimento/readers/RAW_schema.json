@@ -1,0 +1,4 @@
+{
+    "categorical": ["region", "crop_type"],
+    "numerical": ["area", "fertilizer_used", "rainfall", "temperature", "yield"]
+}

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previsão de Rendimento</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <style>
+        body {
+            background-image: url('/static/agriculture_yield_background.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 50px;
+        }
+        h1, label {
+            color: #e6e6e6;
+        }
+        .btn-primary {
+            background-color: #e60000;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #bf0000;
+        }
+        #yield-chart {
+            margin-top: 20px;
+        }
+        .map-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="/">
+            <img src="/static/santander.gif" width="30" height="30" class="d-inline-block align-top" alt="">
+            Predição de Rendimento
+        </a>
+    </nav>
+    <div class="container">
+        <h1 class="text-center">Previsão de Rendimento</h1>
+        <form>
+            <div class="form-group">
+                <label for="cultureSelect">Selecione a Cultura</label>
+                <select class="form-control" id="cultureSelect">
+                    <option>Milho</option>
+                    <option>Soja</option>
+                    <option>Trigo</option>
+                    <option>Arroz</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="regionSelect">Selecione a Região</label>
+                <div class="map-container">
+                    <img src="/static/brazil_map.png" alt="Mapa do Brasil" class="img-fluid">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="startDate">Data Inicial</label>
+                <input type="date" class="form-control" id="startDate">
+            </div>
+            <div class="form-group">
+                <label for="endDate">Data Final</label>
+                <input type="date" class="form-control" id="endDate">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Gerar Previsão</button>
+        </form>
+        <canvas id="yield-chart"></canvas>
+    </div>
+
+    <script>
+        // Mock Chart Data
+        const ctx = document.getElementById('yield-chart').getContext('2d');
+        const yieldChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Rendimento (ton/ha)',
+                    data: [2.5, 3.0, 2.8, 3.5, 4.0, 4.2, 4.5, 4.3, 4.0, 3.8, 3.6, 3.2],
+                    backgroundColor: 'rgba(230, 0, 0, 0.2)',
+                    borderColor: 'rgba(230, 0, 0, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '#fff'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#fff'
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#fff'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

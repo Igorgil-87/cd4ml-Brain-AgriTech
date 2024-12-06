@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise da Saúde da Lavoura</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <style>
+        body {
+            background-image: url('/static/agriculture_satellite.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        h1, h3 {
+            text-align: center;
+            color: #e60000;
+        }
+        #map {
+            height: 400px;
+            margin: 20px 0;
+            border: 2px solid #e60000;
+            border-radius: 10px;
+        }
+        .form-control {
+            margin-bottom: 15px;
+        }
+        #chart-container {
+            margin-top: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .satellite-image {
+            margin: 20px 0;
+            display: block;
+            max-width: 100%;
+            border: 3px solid #e60000;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="/">
+            <img src="/static/santander.gif" width="30" height="30" class="d-inline-block align-top" alt="">
+            Analise da Saúde da Lavoura
+        </a>
+    </nav>
+
+    <div class="container">
+        <h1>Análise da Saúde da Lavoura</h1>
+        <form id="analysis-form">
+            <div>
+                <label for="region">Selecione a Região:</label>
+                <select id="region" class="form-control">
+                    <option value="norte">Norte</option>
+                    <option value="nordeste">Nordeste</option>
+                    <option value="centro-oeste">Centro-Oeste</option>
+                    <option value="sudeste">Sudeste</option>
+                    <option value="sul">Sul</option>
+                </select>
+            </div>
+        </form>
+
+        <h3>Mapa Interativo - Selecione a Região</h3>
+        <div id="map"></div>
+        <h4>Região Selecionada: <span id="selected-region">Nenhuma</span></h4>
+
+        <h3>Imagem de Satélite da Região</h3>
+        <img src="/static/satellite_placeholder.jpg" alt="Imagem de Satélite" class="satellite-image">
+
+        <div id="chart-container">
+            <h3>Análise NDVI (Mockado)</h3>
+            <canvas id="ndvi-chart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar o mapa
+        const map = L.map('map').setView([-14.235, -51.9253], 4); // Coordenadas aproximadas do Brasil
+
+        // Adicionar o fundo do mapa
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // GeoJSON mockado para regiões
+        const geojsonData = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": { "name": "Norte" },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [-73.987, 5.267], [-60.858, 5.267], [-60.858, -10.25], [-73.987, -10.25], [-73.987, 5.267]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "Nordeste" },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [-50.0, -10.25], [-34.0, -10.25], [-34.0, -2.5], [-50.0, -2.5], [-50.0, -10.25]
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "Sudeste" },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [-48.0, -22.0], [-40.0, -22.0], [-40.0, -20.0], [-48.0, -20.0], [-48.0, -22.0]
+                            ]
+                        ]
+                    }
+                }
+            ]
+        };
+
+        // Adicionar GeoJSON ao mapa
+        L.geoJSON(geojsonData, {
+            style: function (feature) {
+                return { color: '#e60000', weight: 2, fillOpacity: 0.5 };
+            },
+            onEachFeature: function (feature, layer) {
+                layer.on('click', function () {
+                    document.getElementById('selected-region').innerText = feature.properties.name;
+                });
+            }
+        }).addTo(map);
+
+        // Inicializar o gráfico mockado
+        const ctx = document.getElementById('ndvi-chart').getContext('2d');
+        const ndviChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'NDVI (Índice de Vegetação)',
+                    data: [0.5, 0.6, 0.65, 0.7, 0.8, 0.75, 0.78, 0.85, 0.9, 0.92, 0.88, 0.84],
+                    borderColor: '#e60000',
+                    backgroundColor: 'rgba(230, 0, 0, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '#000'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#000'
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#000'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

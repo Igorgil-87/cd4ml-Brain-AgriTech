@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otimização de Insumos Agrícolas</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-image: url('/static/insumos_background.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            padding-top: 70px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #e60000;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #e60000;
+            border-color: #e60000;
+        }
+        .btn-primary:hover {
+            background-color: #b80000;
+            border-color: #b80000;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="/">
+            <img src="/static/santander.gif" width="30" height="30" class="d-inline-block align-top" alt="">
+            Otimização de Insumos Agrícolas
+        </a>
+    </nav>
+
+    <div class="container">
+        <h1>Otimização de Insumos Agrícolas</h1>
+        <form id="predict-form">
+            <div class="form-group">
+                <label for="cultura">Selecione a Cultura:</label>
+                <select id="cultura" name="cultura" class="form-control" required>
+                    <option value="" disabled selected>Selecione...</option>
+                    <option value="milho">Milho</option>
+                    <option value="soja">Soja</option>
+                    <option value="trigo">Trigo</option>
+                    <option value="arroz">Arroz</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="area">Área (em hectares):</label>
+                <input type="number" id="area" name="area" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="date">Selecione o Calendário Agrícola:</label>
+                <select id="date" name="date" class="form-control" required>
+                    <option value="" disabled selected>Selecione o Mês...</option>
+                    <option value="jan">Janeiro</option>
+                    <option value="fev">Fevereiro</option>
+                    <option value="mar">Março</option>
+                    <option value="abr">Abril</option>
+                    <option value="mai">Maio</option>
+                    <option value="jun">Junho</option>
+                    <option value="jul">Julho</option>
+                    <option value="ago">Agosto</option>
+                    <option value="set">Setembro</option>
+                    <option value="out">Outubro</option>
+                    <option value="nov">Novembro</option>
+                    <option value="dez">Dezembro</option>
+                </select>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" onclick="submitPrediction()">Gerar Previsão</button>
+        </form>
+
+        <div id="prediction-result" class="text-center mt-4"></div>
+
+        <div class="row mt-5">
+            <div class="col-md-6">
+                <canvas id="insumosChart"></canvas>
+            </div>
+            <div class="col-md-6">
+                <canvas id="custoChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function submitPrediction() {
+            const formData = new FormData(document.getElementById('predict-form'));
+            const data = Object.fromEntries(formData);
+        
+            // Conversão para tipos numéricos
+            if (data.area) {
+                data.area = parseFloat(data.area);
+            }
+        
+            const response = await fetch('/api/insumos/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+        
+            const result = await response.json();
+        
+            if (response.ok) {
+                if (result.forecast && result.costs) {
+                    document.getElementById('prediction-result').innerText = "Previsão gerada com sucesso!";
+                    updateCharts(result.forecast, result.costs);
+                } else {
+                    document.getElementById('prediction-result').innerText = "Dados insuficientes para atualizar os gráficos.";
+                }
+            } else {
+                document.getElementById('prediction-result').innerText = `Erro: ${result.error}`;
+            }
+        }
+        
+        
+        function updateCharts(forecast, costs) {
+            const insumosLabels = ['Sementes', 'Fertilizantes', 'Inoculantes', 'Agroquímicos', 'Defensivos', 'Adubo'];
+        
+            const ctx1 = document.getElementById('insumosChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: insumosLabels,
+                    datasets: [{
+                        label: 'Previsão de Insumos (kg)',
+                        data: forecast,
+                        backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        
+            const costLabels = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        
+            const ctx2 = document.getElementById('custoChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: costLabels,
+                    datasets: [{
+                        label: 'Custo Estimado (R$)',
+                        data: costs,
+                        borderColor: '#4caf50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.5)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+        
+    </script>
+</body>
+</html>
