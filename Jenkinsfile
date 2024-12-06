@@ -32,7 +32,7 @@ pipeline {
 
         stage('Fetch Data') {
             steps {
-                sh 'python3 run_python_script.py pipeline download_data'
+                sh 'python3 cd4ml/problems/commodities/download_data/download_data.py'
             }
         }
 
