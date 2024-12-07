@@ -39,7 +39,15 @@ pipeline {
 
         stage('Run tests') {
             steps {
-                sh './run_tests.sh'
+                script {
+                    sh '''
+                    # Garantir dependências compatíveis
+                    pip install --upgrade mlflow numpy<1.20
+
+                    # Executar os testes
+                    ./run_tests.sh
+                    '''
+                }
             }
         }
         stage('Run ML pipeline') {
