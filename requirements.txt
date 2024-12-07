@@ -5,7 +5,7 @@ pytest==7.2.1
 requests-mock==1.10.0
 pandas==1.5.3
 scikit-learn==1.0.2
-flask==2.3.3  # Ajustado para compatibilidade com mlflow
+flask==2.2.5  # Versão compatível com mlflow
 joblib==0.16.0
 lime==0.2.0.1
 fluent-logger==0.10.0
