@@ -1,15 +1,15 @@
+import shutil
 from cd4ml.filenames import get_problem_files
-from cd4ml.utils.utils import download_to_file_from_url
 import pandas as pd
 from sqlalchemy import create_engine
 import os
 
 # Configuração do banco de dados
 DB_CONFIG = {
-    "database": "brain_agro",
+    "database": "brain_agro",  # Certifique-se de que o nome está correto
     "user": "agro_user",
     "password": "agro_password",
-    "host": "postgres",  # Ajuste conforme necessário
+    "host": "postgres",  # Substitua "localhost" pelo host correto
     "port": "5432"
 }
 
@@ -35,6 +35,14 @@ def save_dataframe(dataframe, filename):
     dataframe.to_csv(local_path, index=False)
     print(f"Arquivo salvo em: {local_path}")
     return local_path
+
+def move_file(source, destination):
+    """
+    Move um arquivo entre sistemas de arquivos diferentes.
+    """
+    shutil.copy2(source, destination)
+    os.remove(source)
+    print(f"Arquivo movido de {source} para {destination}")
 
 def download(use_cache=True):
     """
@@ -67,7 +75,7 @@ def download(use_cache=True):
 
         # Salvar os dados combinados no caminho esperado
         print(f"Copiando dados combinados para {commodities_data_path}...")
-        os.replace(combined_file_path, commodities_data_path)
+        move_file(combined_file_path, commodities_data_path)
     else:
         print("Erro: Nenhum dado válido encontrado para commodities.")
         return
@@ -80,7 +88,7 @@ def download(use_cache=True):
 
         # Salvar os dados de regiões no caminho esperado
         print(f"Copiando dados de regiões para {regions_data_path}...")
-        os.replace(regions_file_path, regions_data_path)
+        move_file(regions_file_path, regions_data_path)
     else:
         print("Erro: Nenhum dado encontrado para a tabela 'regions'.")
 
