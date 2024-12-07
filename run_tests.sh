@@ -1,40 +1,30 @@
 #!/usr/bin/env bash
 
-# Ativar modo de depuração para rastrear problemas durante a execução
-set -x
+set -e  # Pare em caso de erro
+set -x  # Ative o modo de depuração para rastreamento
 
-# Limpar cache do pip e remover pacotes problemáticos
-echo "Limpando cache do pip e removendo dependências problemáticas..."
+echo "Executando no container Docker..."
+
+echo "Limpando possíveis caches antigos..."
 pip cache purge
-pip uninstall -y numpy scipy pandas contourpy mlflow
 
-# Instalar dependências com versões específicas
-echo "Instalando dependências com versões específicas..."
-pip install --upgrade \
-    numpy==1.19.5 \
-    pandas==1.5.3 \
-    scipy==1.10.1 \
-    contourpy==1.0.1 \
-    mlflow==2.18.0
+echo "Instalando dependências específicas para evitar conflitos..."
+pip install numpy==1.21.6 pandas==1.3.5 scipy==1.7.3 mlflow==1.23.1
 
-# Reexecutar a instalação do restante das dependências do projeto, se necessário
 if [ -f "requirements.txt" ]; then
-    echo "Instalando dependências do projeto listadas em requirements.txt..."
+    echo "Instalando dependências adicionais do requirements.txt..."
     pip install -r requirements.txt
 fi
 
-# Executar os testes com cobertura de código
 echo "Executando testes com pytest..."
 python3 -m pytest --cov=cd4ml --cov-report html:cov_html test
 
-# Verificar o código com Flake8 para assegurar boas práticas
-echo "Executando Flake8 para verificar o código..."
-flake8 --extend-ignore T001 --max-line-length=120 cd4ml
-
-# Finalizar com uma mensagem indicando sucesso ou falha
 if [ $? -eq 0 ]; then
-    echo "Todos os testes foram executados com sucesso!"
+    echo "Testes executados com sucesso!"
 else
-    echo "Falha durante a execução dos testes. Verifique os logs acima."
+    echo "Falha durante os testes. Verifique os logs acima."
     exit 1
 fi
+
+echo "Executando verificação com Flake8..."
+flake8 --extend-ignore T001 --max-line-length=120 cd4ml
