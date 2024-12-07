@@ -41,8 +41,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    # Garantir dependências compatíveis
-                    pip install --upgrade mlflow numpy<1.20
+                    # Atualizar dependências no ambiente
+                    pip install --upgrade mlflow "numpy<1.20"
 
                     # Executar os testes
                     ./run_tests.sh
