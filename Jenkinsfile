@@ -21,6 +21,7 @@ pipeline {
         MLFLOW_S3_ENDPOINT_URL = 'http://minio:9000'
         AWS_ACCESS_KEY_ID = "${env.ACCESS_KEY}"
         AWS_SECRET_ACCESS_KEY = "${env.SECRET_KEY}"
+        PYTHONPATH = "${WORKSPACE}" 
 
     }
     stages {

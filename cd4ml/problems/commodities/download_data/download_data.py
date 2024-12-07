@@ -25,23 +25,20 @@ QUERY_REGIONS = """
 SELECT * FROM regions;  -- Certifique-se de que esta tabela contém informações sobre regiões
 """
 
-# URLs simuladas para os arquivos locais
-LOCAL_FILE_SERVER_BASE_URL = "http://localhost/files"
-
-def save_and_generate_url(dataframe, filename):
+def save_dataframe(dataframe, filename):
     """
-    Salva um DataFrame localmente e retorna a URL simulada para o arquivo.
+    Salva um DataFrame localmente no diretório configurado.
     """
     local_dir = "/tmp/commodities"  # Diretório temporário para os arquivos locais
     os.makedirs(local_dir, exist_ok=True)
     local_path = os.path.join(local_dir, filename)
     dataframe.to_csv(local_path, index=False)
     print(f"Arquivo salvo em: {local_path}")
-    return f"{LOCAL_FILE_SERVER_BASE_URL}/{filename}"
+    return local_path
 
 def download(use_cache=True):
     """
-    Baixa os dados do banco de dados e utiliza `download_to_file_from_url` para simular o download.
+    Baixa os dados do banco de dados e os salva diretamente no local configurado.
     """
     # Conexão com o banco de dados
     engine = create_engine(
@@ -58,23 +55,34 @@ def download(use_cache=True):
     for commodity, query in QUERIES_COMMODITIES.items():
         print(f"Baixando dados para {commodity}...")
         df = pd.read_sql_query(query, con=engine)
-        df['commodity'] = commodity  # Adiciona uma coluna para identificar a commodity
-        all_commodities.append(df)
+        if not df.empty:
+            df['commodity'] = commodity  # Adiciona uma coluna para identificar a commodity
+            all_commodities.append(df)
+        else:
+            print(f"Aviso: Nenhum dado encontrado para {commodity}.")
 
-    combined_commodities_df = pd.concat(all_commodities, ignore_index=True)
-    url_combined = save_and_generate_url(combined_commodities_df, "combined_commodities.csv")
+    if all_commodities:
+        combined_commodities_df = pd.concat(all_commodities, ignore_index=True)
+        combined_file_path = save_dataframe(combined_commodities_df, "combined_commodities.csv")
 
-    # Simulando o download do arquivo combinado
-    print(f"Baixando dados combinados de commodities de {url_combined}...")
-    download_to_file_from_url(url_combined, commodities_data_path, use_cache)
+        # Salvar os dados combinados no caminho esperado
+        print(f"Copiando dados combinados para {commodities_data_path}...")
+        os.replace(combined_file_path, commodities_data_path)
+    else:
+        print("Erro: Nenhum dado válido encontrado para commodities.")
+        return
 
     # Baixar dados de regiões
+    print("Baixando dados de regiões...")
     regions_df = pd.read_sql_query(QUERY_REGIONS, con=engine)
-    url_regions = save_and_generate_url(regions_df, "regions.csv")
+    if not regions_df.empty:
+        regions_file_path = save_dataframe(regions_df, "regions.csv")
 
-    # Simulando o download dos dados de regiões
-    print(f"Baixando dados de regiões de {url_regions}...")
-    download_to_file_from_url(url_regions, regions_data_path, use_cache)
+        # Salvar os dados de regiões no caminho esperado
+        print(f"Copiando dados de regiões para {regions_data_path}...")
+        os.replace(regions_file_path, regions_data_path)
+    else:
+        print("Erro: Nenhum dado encontrado para a tabela 'regions'.")
 
 if __name__ == "__main__":
     download()

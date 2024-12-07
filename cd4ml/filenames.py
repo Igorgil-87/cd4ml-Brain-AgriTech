@@ -66,12 +66,12 @@ def _get_problem_file_templates(raw_problem_data_dir):
             'raw_insumo_data': '%s/insumo_data.csv' % raw_problem_data_dir  # Added insumo problem
         },
         'commodities': {
-            'raw_commodities_data': '%s/commodities.csv' % raw_problem_data_dir
+            'raw_commodities_data': '%s/commodities.csv' % raw_problem_data_dir,
+            'commodities_regions_lookup': '%s/regions.csv' % raw_problem_data_dir  # Adicionado
         }
     }
 
     return file_names_problem
-
 
 def get_model_files(model_id, base_data_dir=None):
     """
