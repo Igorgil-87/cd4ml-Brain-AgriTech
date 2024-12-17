@@ -34,7 +34,7 @@ pipeline {
             }
         }
 
-        stage('Run tests') {
+      stage('Run tests') {
             steps {
                 script {
                     sh '''
@@ -52,7 +52,7 @@ pipeline {
                     echo "=== Instalando dependências com retry ==="
                     for i in $(seq 1 ${RETRY_COUNT}); do
                         pip3 install --cache-dir=${CACHE_DIR} --upgrade pip > ${LOG_FILE} 2>&1
-                        pip3 install --cache-dir=${CACHE_DIR} numpy>=1.22.0,<1.26.0 pandas>=1.5.0,<1.6.0 mlflow==2.1.1 scipy>=1.9.0,<1.11.0 pytest==7.2.1 requests-mock==1.10.0 >> ${LOG_FILE} 2>&1
+                        pip3 install --cache-dir=${CACHE_DIR} 'numpy>=1.22.0,<1.26.0' 'pandas>=1.5.0,<1.6.0' 'mlflow==2.1.1' 'scipy>=1.9.0,<1.11.0' 'pytest==7.2.1' 'requests-mock==1.10.0' >> ${LOG_FILE} 2>&1
                         if [ $? -eq 0 ]; then
                             echo "Instalação concluída com sucesso!"
                             break
