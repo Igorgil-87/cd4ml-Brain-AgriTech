@@ -41,29 +41,18 @@ pipeline {
                     set -e  # Encerra o script em caso de erro
 
                     echo "=== Configuração Inicial ==="
-                    VENV_DIR="test_env"
                     CACHE_DIR="/tmp/pip-cache"
                     LOG_FILE="test_execution.log"
                     TEST_DIR="cd4ml/problems/rendimento/tests"
                     RETRY_COUNT=3
-
-                    echo "=== Instalando dependências do sistema (python3-venv) ==="
-                    if ! python3 -m ensurepip --version > /dev/null 2>&1; then
-                        echo "python3-venv não encontrado. Instalando..."
-                        sudo apt-get update && sudo apt-get install -y python3-venv
-                    fi
-
-                    echo "=== Criando ambiente virtual ==="
-                    python3 -m venv ${VENV_DIR}
-                    source ${VENV_DIR}/bin/activate
 
                     echo "=== Configurando cache de pacotes ==="
                     mkdir -p ${CACHE_DIR}
 
                     echo "=== Instalando dependências com retry ==="
                     for i in $(seq 1 ${RETRY_COUNT}); do
-                        pip install --upgrade pip > ${LOG_FILE} 2>&1
-                        pip install --cache-dir=${CACHE_DIR} numpy>=1.22.0,<1.26.0 pandas>=1.5.0,<1.6.0 mlflow==2.1.1 scipy>=1.9.0,<1.11.0 pytest==7.2.1 requests-mock==1.10.0 >> ${LOG_FILE} 2>&1
+                        pip3 install --cache-dir=${CACHE_DIR} --upgrade pip > ${LOG_FILE} 2>&1
+                        pip3 install --cache-dir=${CACHE_DIR} numpy>=1.22.0,<1.26.0 pandas>=1.5.0,<1.6.0 mlflow==2.1.1 scipy>=1.9.0,<1.11.0 pytest==7.2.1 requests-mock==1.10.0 >> ${LOG_FILE} 2>&1
                         if [ $? -eq 0 ]; then
                             echo "Instalação concluída com sucesso!"
                             break
@@ -77,14 +66,10 @@ pipeline {
                     done
 
                     echo "=== Listando pacotes instalados ==="
-                    pip freeze | tee -a ${LOG_FILE}
+                    pip3 freeze | tee -a ${LOG_FILE}
 
                     echo "=== Executando pytest nos testes em ${TEST_DIR} ==="
                     pytest ${TEST_DIR} --maxfail=2 --disable-warnings --tb=short | tee -a ${LOG_FILE}
-
-                    echo "=== Desativando e removendo ambiente virtual ==="
-                    deactivate
-                    rm -rf ${VENV_DIR}
 
                     echo "=== Testes concluídos com sucesso! ==="
                     '''
