@@ -1,7 +1,7 @@
 pipeline {
     agent any
     parameters {
-        choice(name: 'problem_name', choices: ['commodities', 'insumo', 'rendimento', 'saude_lavoura'], 
+        choice(name: 'problem_name', choices: ['rendimento', 'insumo',  'saude_lavoura','commodities'], 
                description: 'Choose the problem name')
         string(name: 'ml_pipeline_params_name', defaultValue: 'default', description: 'Specify the ml_pipeline_params file')
         string(name: 'feature_set_name', defaultValue: 'default', description: 'Specify the feature_set name/file')

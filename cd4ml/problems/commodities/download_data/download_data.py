@@ -2,14 +2,18 @@ import shutil
 from cd4ml.filenames import get_problem_files
 import pandas as pd
 from sqlalchemy import create_engine
+from dotenv import load_dotenv
 import os
 
-# Configuração do banco de dados
+# Carrega variáveis de ambiente do arquivo .env
+load_dotenv()
+
+# Configuração do banco de dados usando .env
 DB_CONFIG = {
-    "database": "brain_agro",  # Certifique-se de que o nome está correto
-    "user": "agro_user",
-    "password": "agro_password",
-    "host": "postgres",  # Substitua "localhost" pelo host correto
+    "database": os.getenv("POSTGRES_DB"),
+    "user": os.getenv("POSTGRES_USER"),
+    "password": os.getenv("POSTGRES_PASSWORD"),
+    "host": "postgres",  # Substitua pelo serviço/host correto
     "port": "5432"
 }
 
@@ -25,10 +29,17 @@ QUERY_REGIONS = """
 SELECT * FROM regions;  -- Certifique-se de que esta tabela contém informações sobre regiões
 """
 
+def test_db_connection(engine):
+    """ Testa a conexão ao banco de dados. """
+    try:
+        with engine.connect() as connection:
+            print("Conexão ao banco de dados bem-sucedida!")
+    except Exception as e:
+        print("Erro ao conectar ao banco de dados:", e)
+        exit(1)
+
 def save_dataframe(dataframe, filename):
-    """
-    Salva um DataFrame localmente no diretório configurado.
-    """
+    """ Salva um DataFrame localmente no diretório configurado. """
     local_dir = "/tmp/commodities"  # Diretório temporário para os arquivos locais
     os.makedirs(local_dir, exist_ok=True)
     local_path = os.path.join(local_dir, filename)
@@ -37,9 +48,7 @@ def save_dataframe(dataframe, filename):
     return local_path
 
 def move_file(source, destination):
-    """
-    Move um arquivo entre sistemas de arquivos diferentes.
-    """
+    """ Move um arquivo entre sistemas de arquivos diferentes. """
     shutil.copy2(source, destination)
     os.remove(source)
     print(f"Arquivo movido de {source} para {destination}")
@@ -53,6 +62,9 @@ def download(use_cache=True):
         f"postgresql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
     )
 
+    # Testa a conexão com o banco
+    test_db_connection(engine)
+
     # Obtenção dos caminhos de saída
     file_names = get_problem_files("commodities")
     commodities_data_path = file_names["raw_commodities_data"]
@@ -61,13 +73,17 @@ def download(use_cache=True):
     # Baixar e combinar dados de commodities
     all_commodities = []
     for commodity, query in QUERIES_COMMODITIES.items():
-        print(f"Baixando dados para {commodity}...")
-        df = pd.read_sql_query(query, con=engine)
-        if not df.empty:
-            df['commodity'] = commodity  # Adiciona uma coluna para identificar a commodity
-            all_commodities.append(df)
-        else:
-            print(f"Aviso: Nenhum dado encontrado para {commodity}.")
+        print(f"Executando query para {commodity}: {query}")
+        try:
+            df = pd.read_sql_query(query, con=engine)
+            print(f"Linhas retornadas para {commodity}: {len(df)}")
+            if not df.empty:
+                df['commodity'] = commodity  # Adiciona uma coluna para identificar a commodity
+                all_commodities.append(df)
+            else:
+                print(f"Aviso: Nenhum dado encontrado para {commodity}.")
+        except Exception as e:
+            print(f"Erro ao executar query para {commodity}: {e}")
 
     if all_commodities:
         combined_commodities_df = pd.concat(all_commodities, ignore_index=True)
@@ -81,16 +97,20 @@ def download(use_cache=True):
         return
 
     # Baixar dados de regiões
-    print("Baixando dados de regiões...")
-    regions_df = pd.read_sql_query(QUERY_REGIONS, con=engine)
-    if not regions_df.empty:
-        regions_file_path = save_dataframe(regions_df, "regions.csv")
+    print("Executando query para regiões...")
+    try:
+        regions_df = pd.read_sql_query(QUERY_REGIONS, con=engine)
+        print(f"Linhas retornadas para regiões: {len(regions_df)}")
+        if not regions_df.empty:
+            regions_file_path = save_dataframe(regions_df, "regions.csv")
 
-        # Salvar os dados de regiões no caminho esperado
-        print(f"Copiando dados de regiões para {regions_data_path}...")
-        move_file(regions_file_path, regions_data_path)
-    else:
-        print("Erro: Nenhum dado encontrado para a tabela 'regions'.")
+            # Salvar os dados de regiões no caminho esperado
+            print(f"Copiando dados de regiões para {regions_data_path}...")
+            move_file(regions_file_path, regions_data_path)
+        else:
+            print("Erro: Nenhum dado encontrado para a tabela 'regions'.")
+    except Exception as e:
+        print(f"Erro ao executar query para regiões: {e}")
 
 if __name__ == "__main__":
     download()

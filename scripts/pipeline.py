@@ -18,7 +18,7 @@ def make_argument_parser():
                         help="The name of the problem to run",
                         choices=list_available_scenarios(),
                         nargs='?',
-                        default="houses")
+                        default="rendimento")
 
     for arg in list_of_arguments:
         parser.add_argument(arg['arg_name'],

@@ -24,3 +24,4 @@ pytest-cov==3.0.0
 coverage==6.2
 chardet
 charset-normalizer
+python-dotenv>=0.21.0
