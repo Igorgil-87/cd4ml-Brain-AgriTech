@@ -34,7 +34,7 @@ pipeline {
             }
         }
 
-      stage('Run tests') {
+        stage('Run tests') {
             steps {
                 script {
                     sh '''
@@ -46,6 +46,12 @@ pipeline {
                     LOG_FILE="test_execution.log"
                     TEST_DIR="cd4ml/problems/rendimento/tests"
                     RETRY_COUNT=3
+
+                    echo "=== Instalando dependências do sistema (python3-venv) ==="
+                    if ! python3 -m ensurepip --version > /dev/null 2>&1; then
+                        echo "python3-venv não encontrado. Instalando..."
+                        sudo apt-get update && sudo apt-get install -y python3-venv
+                    fi
 
                     echo "=== Criando ambiente virtual ==="
                     python3 -m venv ${VENV_DIR}
