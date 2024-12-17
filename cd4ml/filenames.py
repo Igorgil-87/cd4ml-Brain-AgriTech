@@ -49,29 +49,30 @@ def _get_model_file_templates(model_results_dir):
 
 
 def _get_problem_file_templates(raw_problem_data_dir):
-    # Add file templates for each problem
+    # Adiciona templates de arquivos para cada problema
     file_names_problem = {
-        'groceries': {
-            'raw_grocery_data': '%s/store47-2016.csv' % raw_problem_data_dir,
-            'grocery_data_shuffled': '%s/store47-2016_shuffled.csv' % raw_problem_data_dir
-        },
-        'houses': {
-            'raw_house_data': '%s/house_sales.csv' % raw_problem_data_dir,
-            'house_data_zip_lookup': '%s/zip_lookup.csv' % raw_problem_data_dir
-        },
-        'iris': {
-            'raw_iris_data': '%s/iris.csv' % raw_problem_data_dir
-        },
         'insumo': {
-            'raw_insumo_data': '%s/insumo_data.csv' % raw_problem_data_dir  # Added insumo problem
+            'raw_insumo_data': '%s/store47-2016.csv' % raw_problem_data_dir,
+            'insumo_data_shuffled': '%s/store47-2016_shuffled.csv' % raw_problem_data_dir
+        },
+        "rendimento": {
+            "ranking_valores": "data/raw_data/rendimento/ranking-agricultura-valor-da-produo-brasil.csv",
+            "milho_transformado": "data/raw_data/rendimento/solomilho_transformado.csv",
+            "soja_transformado": "data/raw_data/rendimento/sojasolo_transformado.csv",
+            "trigo_transformado": "data/raw_data/rendimento/trigosolo_transformado.csv",
+            "arroz_transformado": "data/raw_data/rendimento/arrozsolo_transformado.csv"
+        },
+        'saude_lavoura': {
+            'raw_saude_lavoura_data': '%s/iris.csv' % raw_problem_data_dir
         },
         'commodities': {
             'raw_commodities_data': '%s/commodities.csv' % raw_problem_data_dir,
-            'commodities_regions_lookup': '%s/regions.csv' % raw_problem_data_dir  # Adicionado
+            'commodities_regions_lookup': '%s/regions.csv' % raw_problem_data_dir
         }
     }
 
     return file_names_problem
+
 
 def get_model_files(model_id, base_data_dir=None):
     """

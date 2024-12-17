@@ -1,1 +1,7 @@
 data/agrofitprodutosformulados.csv
+# Ignorar todos os arquivos CSV
+*.csv
+
+# Excluir arquivos específicos (opcional)
+/data/*.csv
+

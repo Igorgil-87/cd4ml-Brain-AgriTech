@@ -269,14 +269,54 @@ CREATE TABLE IF NOT EXISTS tabua_de_risco (
 ALTER TABLE registro_agrotoxico ALTER COLUMN marca_comercial TYPE VARCHAR(1000);
 ALTER TABLE declaracao_producao ALTER COLUMN especie TYPE VARCHAR(200);
 
-
-CREATE TABLE IF NOT EXISTS  regions (
+-- Criação da tabela regions
+CREATE TABLE IF NOT EXISTS regions (
     cod INT PRIMARY KEY,
     nome VARCHAR(255),
     sigla VARCHAR(2),
     regiao VARCHAR(50)
 );
 
+-- Criação da tabela stations
+CREATE TABLE IF NOT EXISTS stations (
+    id SERIAL PRIMARY KEY,
+    regiao VARCHAR(255),
+    uf VARCHAR(2),
+    estacao VARCHAR(255),
+    codigo_wmo VARCHAR(10),
+    latitude FLOAT,
+    longitude FLOAT,
+    altitude FLOAT,
+    data_fundacao DATE
+);
+
+-- Criação da tabela climate_data
+CREATE TABLE IF NOT EXISTS climate_data (
+    id SERIAL PRIMARY KEY,
+    station_id INT REFERENCES stations(id),
+    data DATE,
+    hora_utc TIME,
+    precipitacao_total_mm DECIMAL(10,2),
+    pressao_atm_estacao_mb DECIMAL(10,2),
+    pressao_atm_max_mb DECIMAL(10,2),
+    pressao_atm_min_mb DECIMAL(10,2),
+    radiacao_global_kj DECIMAL(10,2),
+    temp_bulbo_seco_c DECIMAL(10,2),
+    temp_orvalho_c DECIMAL(10,2),
+    temp_max_c DECIMAL(10,2),
+    temp_min_c DECIMAL(10,2),
+    temp_orvalho_max_c DECIMAL(10,2),
+    temp_orvalho_min_c DECIMAL(10,2),
+    umidade_rel_max DECIMAL(10,2),
+    umidade_rel_min DECIMAL(10,2),
+    umidade_rel DECIMAL(10,2),
+    vento_direcao_grados DECIMAL(10,2),
+    vento_rajada_max DECIMAL(10,2),
+    vento_velocidade DECIMAL(10,2)
+);
+
+-- Mensagem de depuração
+DO $$ BEGIN RAISE NOTICE 'Tabelas regions, stations e climate_data criadas com sucesso'; END $$;
 -- Mensagem para depuração
 DO $$ BEGIN RAISE NOTICE 'Tabelas criadas com sucesso'; END $$;
 

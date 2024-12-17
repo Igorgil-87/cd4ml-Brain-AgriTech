@@ -10,7 +10,6 @@ def get_feature_set_params():
 def get_feature_set(identifier_field,
                     target_field,
                     info):
-
     return get_generic_feature_set(identifier_field,
                                    target_field,
                                    info,
@@ -25,7 +24,7 @@ class FeatureSet(FeatureSetBase):
         self.params = feature_set_params
 
     def derived_features_categorical(self, base_features):
-        # some of these might not be selected above
+        # Ajuste para o novo modelo "insumo"
         date = base_features['date']
         year, month, day = ff.date_to_ymd(date)
         day_of_week = ff.date_to_day_of_week(base_features, self.info['date_lookup'])
@@ -42,8 +41,7 @@ class FeatureSet(FeatureSetBase):
         return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
 
     def derived_features_numerical(self, base_features):
-        # some of these might not be selected above
-
+        # Ajuste para o novo modelo "insumo"
         date = base_features['date']
         year, month, day = ff.date_to_ymd(date)
         day_off = ff.date_to_day_off(base_features, self.info['date_lookup'])

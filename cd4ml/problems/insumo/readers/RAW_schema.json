@@ -1,4 +1,0 @@
-{
-    "categorical": ["region"],
-    "numerical": ["fertilizer_quantity", "pesticide_quantity", "equipment_cost", "yield"]
-}

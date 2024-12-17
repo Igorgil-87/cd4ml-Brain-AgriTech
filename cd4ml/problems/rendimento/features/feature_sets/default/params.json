@@ -1,0 +1,31 @@
+{
+  "feature_set_name": "default",
+  "extra_information_fields": [],
+  "base_categorical_n_levels_dict": {
+    "UF": 30,
+    "Município": 2000,
+    "Solo": 5,
+    "Cultura": 10,
+    "Safra": 5,
+    "Grupo": 5,
+    "Decênio": 12
+  },
+  "base_fields_numerical": [
+    "Área colhida (ha)",
+    "Valor da Produção Total"
+  ],
+  "derived_categorical_n_levels_dict": {
+    "is_high_value": 2,
+    "is_milho": 2,
+    "is_soja": 2
+  },
+  "derived_fields_numerical": [
+    "valor_por_area",
+    "quantidade_por_area",
+    "rendimento_normalizado"
+  ],
+  "encoder_excluded_fields": [],
+  "encoder_untransformed_fields": [
+    "Cultura"
+  ]
+}

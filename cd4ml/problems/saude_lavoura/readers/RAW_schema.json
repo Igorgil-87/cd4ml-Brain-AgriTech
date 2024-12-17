@@ -1,4 +1,4 @@
 {
-    "categorical": ["region"],
-    "numerical": ["vegetation_index", "soil_moisture", "temperature", "precipitation"]
+  "categorical": ["species"],
+  "numerical": ["sepal_length", "sepal_width", "petal_length", "petal_width"]
 }

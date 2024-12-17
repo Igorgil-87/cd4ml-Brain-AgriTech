@@ -62,7 +62,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-    depends_on: 
+    depends_on:
       - jenkins
 
   kib01:
@@ -75,7 +75,7 @@ services:
       ELASTICSEARCH_HOSTS: http://es01:9200
     networks:
       - jenkins_nw
-    depends_on: 
+    depends_on:
       - es01
 
   fluentd:
@@ -87,7 +87,7 @@ services:
       - "24224:24224"
     networks:
       - jenkins_nw
-    depends_on: 
+    depends_on:
       - es01
 
   model:
@@ -105,7 +105,7 @@ services:
       SECRET_KEY: ${MINIO_SECRET_KEY}
     networks:
       - jenkins_nw
-    depends_on: 
+    depends_on:
       - fluentd
       - minio
 
@@ -146,7 +146,7 @@ services:
       - mlflow-storage:/mnt/mlflow
     depends_on:
       - minio
-  
+
   dev:
     container_name: dev
     image: jupyter/minimal-notebook:54462805efcb
@@ -154,14 +154,13 @@ services:
       - JUPYTER_ENABLE_LAB=yes
     ports:
       - "8888:8888"
-      - "8889:8888"
     entrypoint: "start.sh"
     command: "jupyter lab --LabApp.token=''"
     volumes:
       - .:/home/jovyan/
     networks:
       - jenkins_nw
-    depends_on: 
+    depends_on:
       - jenkins
 
   postgres:
@@ -174,7 +173,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - ./cd4ml-Brain-AgriTech/postgres:/docker-entrypoint-initdb.d
+      - ./postgres:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
     networks:
       - jenkins_nw
@@ -183,7 +182,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-
 
   pgadmin:
     image: dpage/pgadmin4
@@ -205,7 +203,7 @@ services:
 
   load_data:
     build:
-      context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech
+      context: .
       dockerfile: load_data/Dockerfile
     container_name: load_data
     logging:
@@ -214,13 +212,15 @@ services:
         max-size: "10m"
         max-file: "3"
     volumes:
-      - ./data:/app/data            
-      - ./scripts:/app/scripts      
+      - ./data:/app/data
+      - ./scripts:/app/scripts
     networks:
       - jenkins_nw
     depends_on:
-      - postgres
-    command: ["python", "/app/scripts/load_data.py"]
+      postgres:
+        condition: service_healthy
+    entrypoint: ["sh", "-c", "while ! pg_isready -h postgres -U ${POSTGRES_USER}; do sleep 1; done; python /app/scripts/load_data.py"]
+
 
 volumes:
   jenkins_home:

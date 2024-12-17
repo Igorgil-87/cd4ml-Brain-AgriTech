@@ -22,3 +22,5 @@ autopep8==1.5
 snakeviz==2.0.1
 pytest-cov==3.0.0
 coverage==6.2
+chardet
+charset-normalizer

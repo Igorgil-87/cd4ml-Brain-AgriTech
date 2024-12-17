@@ -6,10 +6,6 @@
     <title>Previsão de Rendimento</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <style>
         body {
@@ -34,24 +30,15 @@
         .btn-primary:hover {
             background-color: #bf0000;
         }
-        #yield-chart {
-            margin-top: 20px;
-        }
-        .map-container {
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-        <a class="navbar-brand" href="/">
-            <img src="/static/santander.gif" width="30" height="30" class="d-inline-block align-top" alt="">
-            Predição de Rendimento
-        </a>
+        <a class="navbar-brand" href="/">Previsão de Rendimento</a>
     </nav>
     <div class="container">
         <h1 class="text-center">Previsão de Rendimento</h1>
-        <form>
+        <form id="prediction-form">
             <div class="form-group">
                 <label for="cultureSelect">Selecione a Cultura</label>
                 <select class="form-control" id="cultureSelect">
@@ -62,62 +49,83 @@
                 </select>
             </div>
             <div class="form-group">
-                <label for="regionSelect">Selecione a Região</label>
-                <div class="map-container">
-                    <img src="/static/brazil_map.png" alt="Mapa do Brasil" class="img-fluid">
-                </div>
+                <label for="regionSelect">Selecione o Estado</label>
+                <select class="form-control" id="regionSelect">
+                    <option>AC</option>
+                    <option>RS</option>
+                    <option>SP</option>
+                    <option>BA</option>
+                </select>
             </div>
             <div class="form-group">
-                <label for="startDate">Data Inicial</label>
-                <input type="date" class="form-control" id="startDate">
+                <label for="municipioSelect">Selecione o Município</label>
+                <select class="form-control" id="municipioSelect">
+                    <option>Acrelândia</option>
+                    <option>Porto Alegre</option>
+                    <option>São Paulo</option>
+                    <option>Salvador</option>
+                </select>
             </div>
             <div class="form-group">
-                <label for="endDate">Data Final</label>
-                <input type="date" class="form-control" id="endDate">
+                <label for="soilType">Tipo de Solo</label>
+                <select class="form-control" id="soilType">
+                    <option>Arenoso</option>
+                    <option>Argiloso</option>
+                    <option>Siltoso</option>
+                    <option>Calcário</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="decenioSelect">Selecione o Decênio</label>
+                <select class="form-control" id="decenioSelect">
+                    <option>01/01-10/01</option>
+                    <option>11/01-20/01</option>
+                    <option>21/01-31/01</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="cropArea">Área Colhida (ha)</label>
+                <input type="number" class="form-control" id="cropArea" placeholder="Digite a área colhida">
             </div>
             <button type="submit" class="btn btn-primary btn-block">Gerar Previsão</button>
         </form>
-        <canvas id="yield-chart"></canvas>
+        <div id="results" class="mt-4" style="display: none;">
+            <h3>Resultado da Previsão</h3>
+            <p><strong>Rendimento Médio:</strong> <span id="rendimento"></span> kg/ha</p>
+            <p><strong>Quantidade Produzida:</strong> <span id="quantidade"></span> t</p>
+            <p><strong>Risco:</strong> <span id="risco"></span></p>
+            <canvas id="yield-chart"></canvas>
+        </div>
     </div>
 
     <script>
-        // Mock Chart Data
-        const ctx = document.getElementById('yield-chart').getContext('2d');
-        const yieldChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Rendimento (ton/ha)',
-                    data: [2.5, 3.0, 2.8, 3.5, 4.0, 4.2, 4.5, 4.3, 4.0, 3.8, 3.6, 3.2],
-                    backgroundColor: 'rgba(230, 0, 0, 0.2)',
-                    borderColor: 'rgba(230, 0, 0, 1)',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            color: '#fff'
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: '#fff'
-                        }
-                    },
-                    y: {
-                        ticks: {
-                            color: '#fff'
-                        }
-                    }
+        document.getElementById('prediction-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Mock predictions
+            const rendimento = 3000;  // Mock rendimento
+            const quantidade = 10000; // Mock quantidade
+            const risco = 20; // Mock risco
+
+            // Display results
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('rendimento').textContent = rendimento.toFixed(2);
+            document.getElementById('quantidade').textContent = quantidade.toFixed(2);
+            document.getElementById('risco').textContent = risco.toFixed(2);
+
+            // Update chart
+            const ctx = document.getElementById('yield-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Rendimento', 'Quantidade', 'Risco'],
+                    datasets: [{
+                        label: 'Previsão',
+                        data: [rendimento, quantidade, risco],
+                        backgroundColor: ['#3498db', '#2ecc71', '#e74c3c']
+                    }]
                 }
-            }
+            });
         });
     </script>
 </body>

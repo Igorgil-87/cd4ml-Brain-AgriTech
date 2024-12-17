@@ -1,8 +1,0 @@
-# Ignorar todos os arquivos CSV
-*.csv
-
-# Excluir arquivos específicos (opcional)
-/data/*.csv
-
-# Manter o controle de um arquivo CSV específico (caso necessário)
-data/agrofitprodutosformulados.csv

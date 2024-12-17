@@ -1,39 +1,73 @@
-## Setting up Jenkins
+# Configurando o Jenkins
 
-## Goals
+## Objetivos
 
-* Learn about [Jenkins](https://jenkins.io/)
-* Setup and Configure a [Deployment Pipeline](https://martinfowler.com/bliki/DeploymentPipeline.html) to build and deploy your application to production
-* Deploy to the Model server running in production
+- Aprender sobre [Jenkins](https://jenkins.io/).
+- Configurar uma [Pipeline de Implantação](https://martinfowler.com/bliki/DeploymentPipeline.html) para construir e implantar sua aplicação em produção.
+- Implantar o modelo no servidor de produção.
 
-Navigate to [Jenkins](http://localhost:10000/blue). After you log in you will be presented with the Jenkins Blue Ocean welcome page.
- 
-![BlueOceanWelcome](./images/BlueOceanWelcomeScreen.png)
+---
 
-Select "Create a Pipeline".
+## Passo a Passo
 
-Click "GitHub".
+### 1. Acessar o Jenkins
+- Abra o Jenkins em: [http://localhost:10000/blue](http://localhost:10000/blue) (verifique a porta no seu ambiente).
+- Após o login, você será apresentado à interface Blue Ocean do Jenkins.
 
-Enter your Github Personal Access Token.
+---
 
-Select your github account, then cd4ml-scenarios and click "Create Pipeline"
+### 2. Criar uma Pipeline
+1. Clique em **"Create a Pipeline"**.
+2. Escolha **"GitHub"** como a origem do código.
+3. Insira o **GitHub Personal Access Token**:
+   - Este token é criado na sua conta do GitHub e permite que o Jenkins acesse seus repositórios.
+4. Selecione seu repositório do GitHub (ex.: `cd4ml-scenarios`) e clique em **"Create Pipeline"**.
 
-At this step the pipeline will build, you can select the pipeline to see the individual steps execute. Jenkins will first index branches, [which can take time](https://support.cloudbees.com/hc/en-us/articles/360055870591-Multibranch-Pipeline-Branch-indexing-job-stuck-and-cannot-be-aborted). It will then checkout the code which [can also take a while](https://stackoverflow.com/questions/36017253/jenkins-git-fetch-timeout). It does get there eventually. At the end the pipeline should run and be 'green' indicating that all the steps were successful (shown below). If it times out then trigger a manual run.
+---
 
-![GreenBuildPipline](./images/GreenBuildPipeline.png)
+### 3. Pipeline no Jenkins
+- A pipeline realizará as seguintes etapas:
+  1. **Indexar branches:** Identifica os branches disponíveis no repositório.
+  2. **Checkout do código:** Faz o download do código do repositório.
+  3. **Executar a pipeline:** Cada etapa será executada automaticamente.
 
-Now, we can verify that our model works in production. Navigate to the ML Model [here](http://localhost:11000). You should see the following welcome page.
+> Observação: Algumas etapas podem demorar (como indexação de branches e checkout). Se necessário, você pode acionar a execução manualmente.
 
-![ModelHomePage](./images/ModelHomePage.png)
+---
 
-Click "Use latest valid model" in the Housing Price Prediction Scenario". From here you should be able to fill fields (see sample below) and click "Submit". Afterwards, you will see the estimated sale price of the house.
+### 4. Verificar a Pipeline
+- Após a execução, uma pipeline "verde" indica que todas as etapas foram bem-sucedidas.
+- Em caso de falhas, revise os logs e ajuste conforme necessário.
 
-![SampleHousePricePrediction](./images/HousePricePrediction.png)
+---
 
-Finally, if you want to build the model for the sales forecasting scenario, navigate back to Jenkins, click Branches and then the play button next to the 'master' branch.  You should see the following window.
+### 5. Verificar o Modelo em Produção
+- Após a pipeline ser concluída, o modelo estará disponível no servidor em: [http://localhost:11000](http://localhost:11000).
+- **Testar o modelo:**
+  1. Clique em **"Use latest valid model"** no cenário de Previsão de Preço de Casas.
+  2. Insira os dados de entrada (veja exemplo abaixo).
+  3. Clique em **"Submit"** para obter a previsão.
 
-![SelectProblem](./images/JenkinsSelectScenario.png)
+---
 
-From here you can select the scenario that you want to execute by selecting the problem name of interest at the top. You can click 'Run' to execute the pipeline.
+### 6. Executar um Novo Cenário
+- Volte para o Jenkins.
+- Acesse a aba **Branches** e clique no botão "play" ao lado do branch `master`.
+- Na janela exibida, selecione o problema/cenário desejado.
+- Clique em **"Run"** para iniciar a execução.
 
-Now, you are ready to get started. You can continue the [Zillow Housing Scenario](./housing/3-MachineLearning.md) (recommended to start here) or the [Shopping Scenario](./groceries/3-MachineLearning.md).
+---
+
+## Próximos Passos
+- Explore o [Zillow rendimento Scenario](./rendimento/3-MachineLearning.md) para previsões de preços de casas (recomendado).
+- Alternativamente, inicie o [Shopping Scenario](./insumo/3-MachineLearning.md).
+
+---
+
+## Imagens de Referência
+- Tela inicial do **Blue Ocean** do Jenkins.
+- Pipeline com status "verde" indicando sucesso.
+- Página de boas-vindas do modelo em produção.
+- Exemplo de previsão de preço de casas.
+
+> Certifique-se de comparar sua configuração com as imagens do tutorial para garantir que está no caminho certo.

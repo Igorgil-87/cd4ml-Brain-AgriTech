@@ -3,6 +3,14 @@ from sqlalchemy import create_engine
 import psycopg2
 import csv
 import logging
+import os
+import glob
+import re
+from datetime import datetime
+import warnings
+import chardet
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Configuração do banco de dados
 DB_CONFIG = {
@@ -22,6 +30,20 @@ logging.basicConfig(
 # Criação da string de conexão SQLAlchemy
 connection_string = f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
 engine = create_engine(connection_string)
+
+# Testa conexão e verifica tabelas
+try:
+    with engine.connect() as connection:
+        result = connection.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public';")
+        tables = [row[0] for row in result]
+        logging.info(f"Tabelas disponíveis no banco: {tables}")
+except Exception as e:
+    logging.error(f"Erro ao conectar e verificar tabelas: {e}")
+    raise
+
+# Chaves obrigatórias para validação de metadados
+required_keys = ["REGIAO", "UF", "ESTACAO", "CODIGO (WMO)", "LATITUDE", "LONGITUDE", "ALTITUDE", "DATA DE FUNDACAO"]
+
 
 # Mapeamento completo das colunas
 column_mapping = {
@@ -46,10 +68,72 @@ column_mapping = {
     **{f"dec{i}": f"dec{i}" for i in range(1, 37)}  # Adicionar todos os decêntios
 }
 
+column_mapping_clima = {
+    "Data": "data",
+    "Hora UTC": "hora_utc",
+    "PRECIPITAÇÃO TOTAL, HORÁRIO (mm)": "precipitacao_total_mm",
+    "PRESSAO ATMOSFERICA AO NIVEL DA ESTACAO, HORARIA (mB)": "pressao_atm_estacao_mb",
+    "PRESSÃO ATMOSFERICA MAX.NA HORA ANT. (AUT) (mB)": "pressao_atm_max_mb",
+    "PRESSÃO ATMOSFERICA MIN. NA HORA ANT. (AUT) (mB)": "pressao_atm_min_mb",
+    "RADIACAO GLOBAL (Kj/m²)": "radiacao_global_kj",
+    "TEMPERATURA DO AR - BULBO SECO, HORARIA (°C)": "temp_bulbo_seco_c",
+    "TEMPERATURA DO PONTO DE ORVALHO (°C)": "temp_orvalho_c",
+    "TEMPERATURA MÁXIMA NA HORA ANT. (AUT) (°C)": "temp_max_c",
+    "TEMPERATURA MÍNIMA NA HORA ANT. (AUT) (°C)": "temp_min_c",
+    "TEMPERATURA ORVALHO MAX. NA HORA ANT. (AUT) (°C)": "temp_orvalho_max_c",
+    "TEMPERATURA ORVALHO MIN. NA HORA ANT. (AUT) (°C)": "temp_orvalho_min_c",
+    "UMIDADE REL. MAX. NA HORA ANT. (AUT) (%)": "umidade_rel_max",
+    "UMIDADE REL. MIN. NA HORA ANT. (AUT) (%)": "umidade_rel_min",
+    "UMIDADE RELATIVA DO AR, HORARIA (%)": "umidade_rel",
+    "VENTO, DIREÇÃO HORARIA (gr) (° (gr))": "vento_direcao_grados",
+    "VENTO, RAJADA MAXIMA (m/s)": "vento_rajada_max",
+    "VENTO, VELOCIDADE HORARIA (m/s)": "vento_velocidade",
+}
+def load_csv_to_table(file_path, table_name, headers):
+    """
+    Lê um arquivo CSV e carrega os dados em uma tabela específica no banco de dados.
+
+    :param file_path: Caminho do arquivo CSV.
+    :param table_name: Nome da tabela no banco de dados onde os dados serão carregados.
+    :param headers: Lista de cabeçalhos que devem estar no CSV para garantir o mapeamento correto.
+    """
+    try:
+        # Verificar se o arquivo existe
+        if not os.path.exists(file_path):
+            logging.error(f"Arquivo {file_path} não encontrado.")
+            return
+
+        # Detectar codificação
+        encoding = detect_encoding(file_path)
+        logging.info(f"Detectada a codificação do arquivo {file_path}: {encoding}")
+
+        # Ler o arquivo CSV
+        df = pd.read_csv(file_path, sep=',', encoding=encoding)
+
+        # Verificar se o CSV contém os cabeçalhos esperados
+        missing_headers = [header for header in headers if header not in df.columns]
+        if missing_headers:
+            logging.error(f"O arquivo {file_path} está faltando os cabeçalhos obrigatórios: {missing_headers}")
+            return
+
+        # Renomear as colunas para corresponder aos nomes da tabela
+        df.rename(columns={col: col.lower() for col in headers}, inplace=True)
+
+        # Inserir os dados no banco de dados
+        logging.info(f"Carregando dados do arquivo {file_path} na tabela {table_name}...")
+        with engine.begin() as connection:  # Usar transações explícitas para segurança
+            df.to_sql(table_name, con=connection, if_exists='append', index=False)
+        logging.info(f"Dados do arquivo {file_path} carregados com sucesso na tabela {table_name}!")
+
+    except Exception as e:
+        logging.error(f"Erro ao carregar o arquivo {file_path} na tabela {table_name}: {e}")
+
+
 def clean_and_load_filtered_csv(csv_path, table_name, column_mapping):
+    """Limpa e carrega o CSV filtrado no banco de dados."""
     try:
         logging.info(f"Lendo o arquivo CSV filtrado: {csv_path}")
-        df = pd.read_csv(csv_path, sep=';', low_memory=False)
+        df = pd.read_csv(csv_path, sep=';', low_memory=False, encoding='latin1')
 
         # Renomear colunas para corresponder à tabela do banco de dados
         df.rename(columns=column_mapping, inplace=True)
@@ -76,58 +160,104 @@ def clean_and_load_filtered_csv(csv_path, table_name, column_mapping):
     except Exception as e:
         logging.error(f"Erro ao processar e carregar o CSV {csv_path} na tabela {table_name}: {e}")
 
+def parse_metadata(file_path):
+    """Lê os metadados do início do arquivo."""
+    metadata = {}
+    try:
+        with open(file_path, 'r', encoding='iso-8859-1') as f:
+            for _ in range(8):  # Ler as 8 primeiras linhas de metadados
+                line = f.readline().strip()
+                if ":" in line:  # Verificar se a linha contém os separadores esperados
+                    key, value = line.split(':;', 1)
+                    metadata[key.strip()] = value.strip().replace(',', '.')  # Substituir vírgula por ponto
 
-def clean_csv_data(csv_path, headers=None):
-    """Limpa e normaliza os dados do CSV."""
-    df = pd.read_csv(csv_path, sep=';', low_memory=False, on_bad_lines='skip', encoding='utf-8')
+        # Verificar se todos os metadados obrigatórios estão presentes
+        missing_keys = [key for key in required_keys if key not in metadata]
+        if missing_keys:
+            raise ValueError(f"Faltando chaves obrigatórias: {missing_keys}")
 
-    # Remover colunas extras, como 'Unnamed:'
-    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    except ValueError as ve:
+        logging.error(f"Erro de validação de metadados no arquivo {file_path}: {ve}")
+    except Exception as e:
+        logging.error(f"Erro ao ler os metadados do arquivo {file_path}: {e}")
+    return metadata
 
-    # Corrigir espaços extras nos nomes das colunas
-    df.columns = df.columns.str.strip()
 
-    if headers:
-        # Verificar se o número de colunas corresponde
-        if len(headers) != len(df.columns):
-            logging.error(f"Desajuste de colunas no arquivo {csv_path}. "
-                          f"Esperado: {len(headers)}, Encontrado: {len(df.columns)}")
-            logging.error(f"Colunas encontradas: {list(df.columns)}")
-            raise ValueError("Desajuste no número de colunas.")
-        df.columns = headers
-
-    # Substituir vírgulas por pontos em colunas numéricas
+def clean_numeric_columns(df):
+    """Remove caracteres não numéricos e converte valores para float."""
     for col in df.columns:
-        if df[col].dtype == 'object':  # Apenas processar colunas de texto
+        if df[col].dtype == 'object':  # Apenas processar colunas do tipo string
             df[col] = df[col].str.replace(',', '.', regex=False)  # Substituir vírgula por ponto
-        if col not in ['localidade', 'unidade', 'uf', 'municipio']:  # Ignorar colunas não numéricas
-            df[col] = pd.to_numeric(df[col], errors='coerce')  # Converter para numérico, ignorando erros
-
+        df[col] = pd.to_numeric(df[col], errors='coerce')  # Converter para numérico
     return df
 
-def load_csv_to_table(csv_path, table_name, headers=None):
-    """Carrega dados de um CSV para uma tabela no banco."""
+
+def detect_encoding(file_path):
+    with open(file_path, 'rb') as f:
+        result = chardet.detect(f.read(10000))  # Detectar com base nos primeiros 10KB
+        return result['encoding']
+
+# Função para processar arquivos
+def process_climate_files(base_path):
+    files = [os.path.join(base_path, f) for f in os.listdir(base_path) if f.endswith(".CSV")]
+    for file_path in files:
+        try:
+            process_climate_file(file_path)
+        except Exception as e:
+            logging.error(f"Erro ao processar arquivo {file_path}: {e}")
+
+def process_climate_file(file_path):
     try:
-        # Limpar os dados do CSV
-        logging.info(f"Lendo e limpando o arquivo CSV: {csv_path}")
-        df = clean_csv_data(csv_path, headers=headers)
+        # Detectar codificação
+        encoding = detect_encoding(file_path)
+        logging.info(f"Detectada a codificação do arquivo {file_path}: {encoding}")
 
-        # Log de quantidade de linhas processadas
-        logging.info(f"Linhas a serem carregadas na tabela {table_name}: {len(df)}")
+        # Ler metadados
+        metadata = parse_metadata(file_path)
 
-        # Inserir os dados no banco
-        logging.info(f"Carregando os dados na tabela {table_name}...")
+        # Validar metadados
+        if not metadata:
+            logging.error(f"Metadados ausentes ou inválidos no arquivo {file_path}.")
+            return
+
+        # Inserir metadados na tabela 'stations'
         with engine.begin() as connection:
-            df.to_sql(table_name, con=connection, if_exists='replace', index=False)
-        logging.info(f"Dados carregados com sucesso na tabela {table_name}!")
+            station_query = """
+                INSERT INTO stations (regiao, uf, estacao, codigo_wmo, latitude, longitude, altitude, data_fundacao)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+            """
+            station_id = connection.execute(
+                station_query,
+                [
+                    metadata["REGIAO"],
+                    metadata["UF"],
+                    metadata["ESTACAO"],
+                    metadata["CODIGO (WMO)"],
+                    float(metadata["LATITUDE"].replace(",", ".")),
+                    float(metadata["LONGITUDE"].replace(",", ".")),
+                    float(metadata["ALTITUDE"].replace(",", ".")),
+                    datetime.strptime(metadata["DATA DE FUNDACAO"], "%d/%m/%y").strftime("%Y-%m-%d"),
+                ]
+            ).scalar()
+
+        # Processar dados climáticos
+        df = pd.read_csv(file_path, encoding=encoding, sep=";", skiprows=9)
+        df.rename(columns=column_mapping_clima, inplace=True)
+        df['station_id'] = station_id
+
+        with engine.begin() as connection:
+            df.to_sql("climate_data", con=connection, if_exists="append", index=False)
+
+        logging.info(f"Arquivo processado com sucesso: {file_path}")
 
     except Exception as e:
-        logging.error(f"Erro ao carregar dados na tabela {table_name}: {e}")
-
+        logging.error(f"Erro ao processar arquivo {file_path}: {e}")
+# Executar o processamento
+process_climate_files("/app/data/clima")
+# Processar e carregar o arquivo filtrado
 csv_path = "/app/data/df_filtrado.csv"
 table_name = "tabua_de_risco"
-# Processar e carregar o arquivo filtrado
-clean_and_load_filtered_csv(csv_path, table_name, column_mapping)
+clean_and_load_filtered_csv(csv_path, table_name, column_mapping)# Processar e carregar o arquivo filtrado
 
 # Tabelas menores
 files_to_tables = {

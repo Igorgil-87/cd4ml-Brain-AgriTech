@@ -1,4 +1,4 @@
 {
-    "categorical": ["region", "crop_type"],
-    "numerical": ["area", "fertilizer_used", "rainfall", "temperature", "yield"]
+  "categorical": ["UF", "Município", "Cultura", "Safra", "Grupo", "Decênio"],
+  "numerical": ["Área colhida (ha)", "Valor da Produção Total", "Rendimento médio (kg/ha)", "Quantidade produzida (t)", "Valor"]
 }
