@@ -31,6 +31,21 @@ def query_db(table_name):
         print(f"Erro ao carregar tabela {table_name}: {e}")
         return None
 
+# Função para limpar e converter valores
+def clean_and_convert(df, column_name):
+    """
+    Remove separadores de milhares e converte a coluna para float.
+    """
+    try:
+        df[column_name] = (
+            df[column_name]
+            .str.replace('.', '', regex=False)  # Remove pontos
+            .str.replace(',', '.', regex=False)  # Substitui vírgulas por pontos (se necessário)
+            .astype(float)
+        )
+    except Exception as e:
+        print(f"Erro ao limpar e converter a coluna {column_name}: {e}")
+
 # Função principal de download
 def download(use_cache=True):
     """
@@ -40,7 +55,7 @@ def download(use_cache=True):
     ranking_valores = query_db("ranking_agricultura_valor")
     if ranking_valores is not None:
         ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
-        ranking_valores['Valor da Produção Total'] = ranking_valores['Valor da Produção Total'].astype(float)
+        clean_and_convert(ranking_valores, "Valor da Produção Total")
 
     # Carregar dados do IBGE (dados fixos no código)
     inicio = time.time()
