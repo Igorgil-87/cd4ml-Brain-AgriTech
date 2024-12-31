@@ -18,7 +18,7 @@ DO $$ BEGIN RAISE NOTICE 'Conectado ao banco de dados brain_agro'; END $$;
 -- Criação das tabelas de culturas
 CREATE TABLE IF NOT EXISTS arroz (
     id SERIAL PRIMARY KEY,
-    localidade VARCHAR(10),
+    localidade VARCHAR(100),
     unidade VARCHAR(20),
     jan NUMERIC(10, 2),
     fev NUMERIC(10, 2),
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS arroz (
 
 CREATE TABLE IF NOT EXISTS milho (
     id SERIAL PRIMARY KEY,
-    localidade VARCHAR(10),
+    localidade VARCHAR(100),
     unidade VARCHAR(20),
     jan NUMERIC(10, 2),
     fev NUMERIC(10, 2),
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS milho (
 
 CREATE TABLE IF NOT EXISTS soja (
     id SERIAL PRIMARY KEY,
-    localidade VARCHAR(10),
+    localidade VARCHAR(100),
     unidade VARCHAR(20),
     jan NUMERIC(10, 2),
     fev NUMERIC(10, 2),
@@ -106,13 +106,13 @@ CREATE TABLE IF NOT EXISTS fertilizantes (
 
 CREATE TABLE IF NOT EXISTS declaracao_producao (
     id SERIAL PRIMARY KEY,
-    tipo_periodo VARCHAR(20),
+    tipo_periodo VARCHAR(200),
     periodo VARCHAR(20),
     area_total NUMERIC(10, 2),
     municipio VARCHAR(50),
     uf VARCHAR(2),
-    especie VARCHAR(50),
-    cultivar VARCHAR(50),
+    especie VARCHAR(500),
+    cultivar VARCHAR(500),
     area_plantada NUMERIC(10, 2),
     area_estimada NUMERIC(10, 2),
     quant_reservada NUMERIC(10, 2),
@@ -277,23 +277,22 @@ CREATE TABLE IF NOT EXISTS regions (
     regiao VARCHAR(50)
 );
 
--- Criação da tabela stations
+
 CREATE TABLE IF NOT EXISTS stations (
     id SERIAL PRIMARY KEY,
-    regiao VARCHAR(255),
-    uf VARCHAR(2),
-    estacao VARCHAR(255),
-    codigo_wmo VARCHAR(10),
-    latitude FLOAT,
-    longitude FLOAT,
-    altitude FLOAT,
+    regiao TEXT NOT NULL,
+    uf TEXT NOT NULL,
+    estacao TEXT NOT NULL,
+    codigo_wmo TEXT,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    altitude DOUBLE PRECISION,
     data_fundacao DATE
 );
 
--- Criação da tabela climate_data
+
 CREATE TABLE IF NOT EXISTS climate_data (
     id SERIAL PRIMARY KEY,
-    station_id INT REFERENCES stations(id),
     data DATE,
     hora_utc TIME,
     precipitacao_total_mm DECIMAL(10,2),
@@ -314,6 +313,78 @@ CREATE TABLE IF NOT EXISTS climate_data (
     vento_rajada_max DECIMAL(10,2),
     vento_velocidade DECIMAL(10,2)
 );
+
+ALTER TABLE climate_data
+ALTER COLUMN data TYPE text,
+ALTER COLUMN hora_utc TYPE text;
+
+-- Tabela para ranking-agricultura-valor-da-produo-brasil.csv
+CREATE TABLE IF NOT EXISTS ranking_agricultura_valor (
+    produto VARCHAR(255),
+    valor NUMERIC(15,2),
+    unidade VARCHAR(50)
+);
+
+-- Tabela para arrozsolo_transformado.csv
+CREATE TABLE IF NOT EXISTS arroz_solo_transformado (
+    safra VARCHAR(20),
+    cultura VARCHAR(50),
+    uf CHAR(2),
+    municipio VARCHAR(100),
+    grupo VARCHAR(50),
+    solo VARCHAR(50),
+    outros_manejos VARCHAR(100),
+    clima VARCHAR(100),
+    decenio VARCHAR(20),
+    valor NUMERIC(10,2),
+    data VARCHAR(20)
+);
+
+-- Tabela para milhosolo_transformado.csv
+CREATE TABLE IF NOT EXISTS milho_solo_transformado (
+    safra VARCHAR(20),
+    cultura VARCHAR(50),
+    uf CHAR(2),
+    municipio VARCHAR(100),
+    grupo VARCHAR(50),
+    solo VARCHAR(50),
+    outros_manejos VARCHAR(100),
+    clima VARCHAR(100),
+    decenio VARCHAR(20),
+    valor NUMERIC(10,2),
+    data VARCHAR(20)
+);
+
+-- Tabela para sojasolo_transformado.csv
+CREATE TABLE IF NOT EXISTS soja_solo_transformado (
+    safra VARCHAR(20),
+    cultura VARCHAR(50),
+    uf CHAR(2),
+    municipio VARCHAR(100),
+    grupo VARCHAR(50),
+    solo VARCHAR(50),
+    outros_manejos VARCHAR(100),
+    clima VARCHAR(100),
+    decenio VARCHAR(20),
+    valor NUMERIC(10,2),
+    data VARCHAR(20)
+);
+
+-- Tabela para trigosolo_transformado.csv
+CREATE TABLE IF NOT EXISTS trigo_solo_transformado (
+    safra VARCHAR(20),
+    cultura VARCHAR(50),
+    uf CHAR(2),
+    municipio VARCHAR(100),
+    grupo VARCHAR(50),
+    solo VARCHAR(50),
+    outros_manejos VARCHAR(100),
+    clima VARCHAR(100),
+    decenio VARCHAR(20),
+    valor NUMERIC(10,2),
+    data VARCHAR(20)
+);
+
 
 -- Mensagem de depuração
 DO $$ BEGIN RAISE NOTICE 'Tabelas regions, stations e climate_data criadas com sucesso'; END $$;

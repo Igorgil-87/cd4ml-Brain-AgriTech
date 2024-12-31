@@ -1,4 +1,4 @@
-from cd4ml.filenames import get_problem_files
+from sqlalchemy import create_engine
 import pandas as pd
 import time
 
@@ -6,23 +6,43 @@ import time
 def log_tempo(inicio, mensagem):
     print(f"{mensagem} - Tempo decorrido: {time.time() - inicio:.2f} segundos")
 
-# Função para realizar o download e processamento
+# Configuração do banco de dados
+DB_CONFIG = {
+    "database": "brain_agro",
+    "user": "agro_user",
+    "password": "agro_password",
+    "host": "postgres",  # Ajuste se necessário
+    "port": "5432"
+}
+
+# Criação da string de conexão SQLAlchemy
+connection_string = f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
+engine = create_engine(connection_string)
+
+# Função para realizar a consulta no banco e buscar os dados
+def query_db(table_name):
+    inicio = time.time()
+    query = f"SELECT * FROM {table_name}"
+    try:
+        df = pd.read_sql(query, engine)
+        log_tempo(inicio, f"Dados carregados da tabela {table_name}")
+        return df
+    except Exception as e:
+        print(f"Erro ao carregar tabela {table_name}: {e}")
+        return None
+
+# Função principal de download
 def download(use_cache=True):
     """
-    Função para carregar e processar os dados necessários para o problema de rendimento.
+    Função para carregar e processar os dados diretamente do banco de dados.
     """
-    # Obter os arquivos relacionados ao problema "rendimento"
-    file_names = get_problem_files("rendimento")
-
     # Carregar dados de ranking de valores
-    inicio = time.time()
-    ranking_valores = pd.read_csv(file_names['ranking_valores'])
-    ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
-    ranking_valores['Valor da Produção Total'] = ranking_valores['Valor da Produção Total'] \
-        .astype(str).str.replace('.', '').astype(float)
-    log_tempo(inicio, "Dados do ranking carregados e processados")
+    ranking_valores = query_db("ranking_agricultura_valor")
+    if ranking_valores is not None:
+        ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
+        ranking_valores['Valor da Produção Total'] = ranking_valores['Valor da Produção Total'].astype(float)
 
-    # Carregar dados do IBGE
+    # Carregar dados do IBGE (dados fixos no código)
     inicio = time.time()
     dados_ibge = {
         "Milho": {"Área colhida (ha)": 13767431, "Rendimento médio (kg/ha)": 3785, "Quantidade produzida (t)": 52112217},
@@ -34,16 +54,36 @@ def download(use_cache=True):
     dados_ibge_df.rename(columns={'index': 'Cultura'}, inplace=True)
     log_tempo(inicio, "Dados do IBGE carregados")
 
-    # Combinar todos os arquivos transformados
+    # Carregar dados combinados (milho, soja, trigo, arroz)
+    milho_transformado = query_db("milho_solo_transformado")
+    soja_transformado = query_db("soja_solo_transformado")
+    trigo_transformado = query_db("trigo_solo_transformado")
+    arroz_transformado = query_db("arroz_solo_transformado")
+
+    # Combinar todos os dados
     inicio = time.time()
-    arquivos_transformados = [
-        file_names['milho_transformado'],
-        file_names['soja_transformado'],
-        file_names['trigo_transformado'],
-        file_names['arroz_transformado']
-    ]
-    dados_combinados = pd.concat([pd.read_csv(arquivo) for arquivo in arquivos_transformados])
-    log_tempo(inicio, "Todos os arquivos transformados combinados")
+    dados_combinados = pd.concat([
+        milho_transformado, 
+        soja_transformado, 
+        trigo_transformado, 
+        arroz_transformado
+    ], ignore_index=True)
+    log_tempo(inicio, "Dados transformados combinados")
 
     # Retornar os datasets carregados
     return ranking_valores, dados_ibge_df, dados_combinados
+
+
+# Execução da função de download
+if __name__ == "__main__":
+    ranking_valores, dados_ibge_df, dados_combinados = download()
+
+    # Exibindo os primeiros registros dos datasets para validação
+    print("### Ranking de Valores ###")
+    print(ranking_valores.head())
+
+    print("\n### Dados IBGE ###")
+    print(dados_ibge_df.head())
+
+    print("\n### Dados Combinados ###")
+    print(dados_combinados.head())
