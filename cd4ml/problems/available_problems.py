@@ -5,8 +5,8 @@ from cd4ml.problems.commodities.problem import CommoditiesProblem
 
 # Dicionário de problemas com referências às classes
 PROBLEMS = {
-    "insumo": insumo_scenario.Problem,  # Referência à classe
-    "rendimento": rendimento_scenario.Problem,  # Referência à classe
-    "saude_lavoura": saude_lavoura_scenario.Problem,  # Referência à classe
+    "insumo": insumo_scenario,  # Referência à classe
+    "rendimento": rendimento_scenario,  # Referência à classe
+    "saude_lavoura": saude_lavoura_scenario,  # Referência à classe
     "commodities": CommoditiesProblem  # Referência à classe
 }
