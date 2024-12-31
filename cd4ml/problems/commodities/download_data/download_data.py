@@ -13,8 +13,8 @@ DB_CONFIG = {
     "database": os.getenv("POSTGRES_DB"),
     "user": os.getenv("POSTGRES_USER"),
     "password": os.getenv("POSTGRES_PASSWORD"),
-    "host": "postgres",  # Substitua pelo serviço/host correto
-    "port": "5432"
+    "host": os.getenv("POSTGRES_HOST", "postgres"),  # Substitua pelo serviço/host correto, se necessário
+    "port": os.getenv("POSTGRES_PORT", "5432"),
 }
 
 # Consultas SQL
@@ -35,7 +35,7 @@ def test_db_connection(engine):
         with engine.connect() as connection:
             print("Conexão ao banco de dados bem-sucedida!")
     except Exception as e:
-        print("Erro ao conectar ao banco de dados:", e)
+        print(f"Erro ao conectar ao banco de dados: {e}")
         exit(1)
 
 def save_dataframe(dataframe, filename):
@@ -87,6 +87,11 @@ def download(use_cache=True):
 
     if all_commodities:
         combined_commodities_df = pd.concat(all_commodities, ignore_index=True)
+
+        # Verificar se a coluna 'region' está presente
+        if 'region' not in combined_commodities_df.columns:
+            combined_commodities_df['region'] = 'Unknown'  # Adiciona valor padrão para evitar erros
+
         combined_file_path = save_dataframe(combined_commodities_df, "combined_commodities.csv")
 
         # Salvar os dados combinados no caminho esperado
