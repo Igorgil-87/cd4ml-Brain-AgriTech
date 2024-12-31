@@ -21,9 +21,6 @@ engine = create_engine(connection_string)
 
 # Função para realizar a consulta no banco e buscar os dados
 def query_db(table_name, chunksize=None):
-    """
-    Realiza a consulta no banco de dados e retorna um DataFrame.
-    """
     inicio = time.time()
     query = f"SELECT * FROM {table_name}"
     try:
@@ -56,10 +53,12 @@ def clean_and_convert(df, column_name):
         print(f"Erro ao limpar e converter a coluna {column_name}: {e}")
 
 # Função principal de download
-def download():
+def download(problem_name=None):
     """
     Função para carregar e processar os dados diretamente do banco de dados.
     """
+    print(f"Executando download para o problema: {problem_name}" if problem_name else "Executando download...")
+
     # Carregar dados de ranking de valores
     ranking_valores = query_db("ranking_agricultura_valor", chunksize=1000)
     if ranking_valores is not None:
@@ -87,27 +86,12 @@ def download():
     # Combinar todos os dados
     inicio = time.time()
     dados_combinados = pd.concat([
-        milho_transformado, 
-        soja_transformado, 
-        trigo_transformado, 
+        milho_transformado,
+        soja_transformado,
+        trigo_transformado,
         arroz_transformado
     ], ignore_index=True)
     log_tempo(inicio, "Dados transformados combinados")
 
     # Retornar os datasets carregados
     return ranking_valores, dados_ibge_df, dados_combinados
-
-
-# Execução da função de download
-if __name__ == "__main__":
-    ranking_valores, dados_ibge_df, dados_combinados = download()
-
-    # Exibindo os primeiros registros dos datasets para validação
-    print("### Ranking de Valores ###")
-    print(ranking_valores.head())
-
-    print("\n### Dados IBGE ###")
-    print(dados_ibge_df.head())
-
-    print("\n### Dados Combinados ###")
-    print(dados_combinados.head())

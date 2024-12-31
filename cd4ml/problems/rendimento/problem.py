@@ -42,5 +42,5 @@ class Problem(ProblemBase):
         Executa o download dos dados do problema.
         """
         self.logger.info("Iniciando download de dados...")
-        dd.download(self.problem_name)
+        dd.download(self.problem_name)  # Passa o problem_name para download
         self.logger.info("Download concluído.")
