@@ -20,11 +20,20 @@ connection_string = f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['pass
 engine = create_engine(connection_string)
 
 # Função para realizar a consulta no banco e buscar os dados
-def query_db(table_name):
+def query_db(table_name, chunksize=None):
+    """
+    Realiza a consulta no banco de dados e retorna um DataFrame.
+    """
     inicio = time.time()
     query = f"SELECT * FROM {table_name}"
     try:
-        df = pd.read_sql(query, engine)
+        if chunksize:
+            chunks = []
+            for chunk in pd.read_sql(query, engine, chunksize=chunksize):
+                chunks.append(chunk)
+            df = pd.concat(chunks, ignore_index=True)
+        else:
+            df = pd.read_sql(query, engine)
         log_tempo(inicio, f"Dados carregados da tabela {table_name}")
         return df
     except Exception as e:
@@ -39,20 +48,20 @@ def clean_and_convert(df, column_name):
     try:
         df[column_name] = (
             df[column_name]
-            .str.replace('.', '', regex=False)  # Remove pontos
-            .str.replace(',', '.', regex=False)  # Substitui vírgulas por pontos (se necessário)
+            .str.replace('.', '', regex=False)  # Remove separadores de milhares
+            .str.replace(',', '.', regex=False)  # Substitui vírgulas por pontos
             .astype(float)
         )
     except Exception as e:
         print(f"Erro ao limpar e converter a coluna {column_name}: {e}")
 
 # Função principal de download
-def download(use_cache=True):
+def download():
     """
     Função para carregar e processar os dados diretamente do banco de dados.
     """
     # Carregar dados de ranking de valores
-    ranking_valores = query_db("ranking_agricultura_valor")
+    ranking_valores = query_db("ranking_agricultura_valor", chunksize=1000)
     if ranking_valores is not None:
         ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
         clean_and_convert(ranking_valores, "Valor da Produção Total")
@@ -70,10 +79,10 @@ def download(use_cache=True):
     log_tempo(inicio, "Dados do IBGE carregados")
 
     # Carregar dados combinados (milho, soja, trigo, arroz)
-    milho_transformado = query_db("milho_solo_transformado")
-    soja_transformado = query_db("soja_solo_transformado")
-    trigo_transformado = query_db("trigo_solo_transformado")
-    arroz_transformado = query_db("arroz_solo_transformado")
+    milho_transformado = query_db("milho_solo_transformado", chunksize=1000)
+    soja_transformado = query_db("soja_solo_transformado", chunksize=1000)
+    trigo_transformado = query_db("trigo_solo_transformado", chunksize=1000)
+    arroz_transformado = query_db("arroz_solo_transformado", chunksize=1000)
 
     # Combinar todos os dados
     inicio = time.time()
