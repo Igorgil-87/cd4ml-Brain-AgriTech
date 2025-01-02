@@ -35,6 +35,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 4g  # Ajuste o limite de memória
 
   es01:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
