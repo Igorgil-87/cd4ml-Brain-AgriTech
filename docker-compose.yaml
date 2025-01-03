@@ -229,6 +229,10 @@ services:
       postgres:
         condition: service_healthy
     entrypoint: ["sh", "-c", "while ! pg_isready -h postgres -U ${POSTGRES_USER}; do sleep 1; done; python /app/scripts/load_data.py"]
+    deploy:
+      resources:
+        limits:
+          memory: 4g  # Ajuste o limite de memória
 
 
 volumes:

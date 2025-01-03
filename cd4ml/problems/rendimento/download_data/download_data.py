@@ -79,16 +79,16 @@ def download(problem_name=None):
 
     # Carregar dados combinados (milho, soja, trigo, arroz)
     milho_transformado = query_db("milho_solo_transformado", chunksize=1000)
-    soja_transformado = query_db("soja_solo_transformado", chunksize=1000)
-    trigo_transformado = query_db("trigo_solo_transformado", chunksize=1000)
+    #soja_transformado = query_db("soja_solo_transformado", chunksize=1000)
+    #trigo_transformado = query_db("trigo_solo_transformado", chunksize=1000)
     arroz_transformado = query_db("arroz_solo_transformado", chunksize=1000)
 
     # Combinar todos os dados
     inicio = time.time()
     dados_combinados = pd.concat([
         milho_transformado,
-        soja_transformado,
-        trigo_transformado,
+        #soja_transformado,
+        #trigo_transformado,
         arroz_transformado
     ], ignore_index=True)
     log_tempo(inicio, "Dados transformados combinados")
