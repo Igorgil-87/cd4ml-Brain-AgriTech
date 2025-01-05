@@ -1,62 +1,81 @@
+from sqlalchemy import create_engine
+import pandas as pd
 import os
 import time
-import pandas as pd
-from sqlalchemy import create_engine
 import psutil
 
-# Funções auxiliares para log
-def log_tempo(inicio, mensagem):
-    print(f"{mensagem} - Tempo decorrido: {time.time() - inicio:.2f} segundos")
-
+# Função para log de uso de memória
 def log_memory_usage(stage):
     process = psutil.Process()
     print(f"Memory usage at {stage}: {process.memory_info().rss / (1024 * 1024):.2f} MB")
+
+# Função para log de tempo
+def log_tempo(inicio, mensagem):
+    print(f"{mensagem} - Tempo decorrido: {time.time() - inicio:.2f} segundos")
 
 # Configuração do banco de dados
 DB_CONFIG = {
     "database": "brain_agro",
     "user": "agro_user",
     "password": "agro_password",
-    "host": "postgres",
+    "host": "postgres",  # Ajuste conforme necessário
     "port": "5432"
 }
+
+# Criação da string de conexão SQLAlchemy
 connection_string = f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
 engine = create_engine(connection_string)
 
-# Função para consultar tabelas com validação
+# Função para carregar dados do banco de forma segura
 def query_db_safe(table_name, chunksize=1000):
     try:
-        data = pd.read_sql(f"SELECT * FROM {table_name}", con=engine, chunksize=chunksize)
+        # Usar o gerador para criar o DataFrame completo
+        data_gen = pd.read_sql(f"SELECT * FROM {table_name}", con=engine, chunksize=chunksize)
+        data = pd.concat(data_gen, ignore_index=True)  # Combina os chunks em um único DataFrame
         print(f"Tabela {table_name} carregada com sucesso.")
         return data
     except Exception as e:
         print(f"Erro ao carregar a tabela {table_name}: {e}")
         return None
 
-# Função para criar rendimento_raw
+# Função para limpar e converter valores
+def clean_and_convert(df, column_name):
+    """
+    Remove separadores de milhares e converte a coluna para float.
+    """
+    try:
+        df[column_name] = (
+            df[column_name]
+            .str.replace('.', '', regex=False)  # Remove separadores de milhares
+            .str.replace(',', '.', regex=False)  # Substitui vírgulas por pontos
+            .astype(float)
+        )
+    except Exception as e:
+        print(f"Erro ao limpar e converter a coluna {column_name}: {e}")
+
+# Função para criar o arquivo rendimento_raw
 def create_rendimento_raw():
     inicio = time.time()
     try:
         log_memory_usage("Antes de carregar tabelas para rendimento_raw")
-
-        # Consultar tabelas
         milho = query_db_safe("milho_solo_transformado")
         arroz = query_db_safe("arroz_solo_transformado")
         ranking_valores = query_db_safe("ranking_agricultura_valor")
 
         if milho is None or arroz is None or ranking_valores is None:
-            print("Erro: Uma ou mais tabelas não foram carregadas. Abortando criação do rendimento_raw.")
+            print("Erro: Uma ou mais tabelas necessárias não foram carregadas. Abortando criação de rendimento_raw.")
             return
 
-        # Processar ranking_valores
+        # Processar tabela ranking de valores
         ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
-        ranking_valores['Valor da Produção Total'] = ranking_valores['Valor da Produção Total'].str.replace('.', '').astype(float)
+        clean_and_convert(ranking_valores, "Valor da Produção Total")
 
         log_memory_usage("Antes de combinar dados")
         dados_combinados = pd.concat([milho, arroz], ignore_index=True)
         dados_combinados = dados_combinados.merge(ranking_valores, on="Cultura", how="left").fillna(0)
 
         log_memory_usage("Antes de salvar rendimento_raw")
+        # Salvar como rendimento_raw.csv
         output_path = "data/raw_data/rendimento/rendimento_raw.csv"
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         dados_combinados.to_csv(output_path, index=False)
@@ -79,10 +98,11 @@ def download(problem_name=None):
         print("Erro: ranking_agricultura_valor não foi carregada. Abortando download.")
         return
 
+    # Renomear colunas e processar dados
     ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
-    ranking_valores['Valor da Produção Total'] = ranking_valores['Valor da Produção Total'].str.replace('.', '').astype(float)
+    clean_and_convert(ranking_valores, "Valor da Produção Total")
 
-    # Carregar dados fixos do IBGE
+    # Carregar dados do IBGE (dados fixos no código)
     inicio = time.time()
     dados_ibge = {
         "Milho": {"Área colhida (ha)": 13767431, "Rendimento médio (kg/ha)": 3785, "Quantidade produzida (t)": 52112217},
@@ -95,16 +115,19 @@ def download(problem_name=None):
     log_tempo(inicio, "Dados do IBGE carregados")
     log_memory_usage("Depois de carregar dados do IBGE")
 
-    # Carregar dados de milho e arroz
+    # Carregar dados combinados (milho, arroz)
     milho_transformado = query_db_safe("milho_solo_transformado")
     arroz_transformado = query_db_safe("arroz_solo_transformado")
 
     if milho_transformado is None or arroz_transformado is None:
-        print("Erro: milho_solo_transformado ou arroz_solo_transformado não foram carregadas. Abortando download.")
+        print("Erro: Uma ou mais tabelas de dados transformados não foram carregadas. Abortando download.")
         return
 
-    log_memory_usage("Antes de combinar dados transformados")
-    dados_combinados = pd.concat([milho_transformado, arroz_transformado], ignore_index=True)
+    inicio = time.time()
+    dados_combinados = pd.concat([
+        milho_transformado,
+        arroz_transformado
+    ], ignore_index=True)
     log_tempo(inicio, "Dados transformados combinados")
     log_memory_usage("Depois de combinar dados transformados")
 
