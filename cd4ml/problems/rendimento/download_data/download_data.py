@@ -42,41 +42,73 @@ def create_rendimento_raw():
     inicio = time.time()
     try:
         log_memory_usage("Antes de carregar tabelas para rendimento_raw")
+        
+        # Carregar tabelas
+        milho = pd.read_sql("SELECT * FROM milho_solo_transformado", con=engine)
+        milho["Cultura"] = "Milho"  # Adiciona a coluna Cultura para identificação
 
-        # Consultar tabelas em arquivos temporários
-        milho_file = query_db_in_chunks("milho_solo_transformado")
-        arroz_file = query_db_in_chunks("arroz_solo_transformado")
-        ranking_file = query_db_in_chunks("ranking_agricultura_valor")
+        arroz = pd.read_sql("SELECT * FROM arroz_solo_transformado", con=engine)
+        arroz["Cultura"] = "Arroz"  # Adiciona a coluna Cultura para identificação
 
-        # Processar e combinar dados em pedaços
+        # Adicionar mais fontes se necessário (ex.: soja, trigo)
+
+        ranking_valores = pd.read_sql("SELECT * FROM ranking_agricultura_valor", con=engine)
+
+        # Log das colunas disponíveis
+        print(f"Colunas em milho: {milho.columns}")
+        print(f"Colunas em arroz: {arroz.columns}")
+        print(f"Colunas em ranking_valores: {ranking_valores.columns}")
+
+        # Processar tabela ranking de valores
+        ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
+        ranking_valores["Valor da Produção Total"] = ranking_valores["Valor da Produção Total"].str.replace('.', '').astype(float)
+
+        log_memory_usage("Antes de combinar dados")
+        
+        # Combinar dados
+        dados_combinados = pd.concat([milho, arroz], ignore_index=True)
+        dados_combinados = dados_combinados.merge(ranking_valores, on="Cultura", how="left").fillna(0)
+
+        log_memory_usage("Antes de salvar rendimento_raw")
+        
+        # Salvar como rendimento_raw.csv
         output_path = "data/raw_data/rendimento/rendimento_raw.csv"
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-        with open(output_path, "w") as out_f:
-            milho = pd.read_csv(milho_file, chunksize=1000)
-            arroz = pd.read_csv(arroz_file, chunksize=1000)
-            ranking = pd.read_csv(ranking_file, chunksize=1000)
-
-            for milho_chunk, arroz_chunk in zip(milho, arroz):
-                combined_chunk = pd.concat([milho_chunk, arroz_chunk], ignore_index=True)
-                for ranking_chunk in ranking:
-                    ranking_chunk.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
-                    ranking_chunk["Valor da Produção Total"] = ranking_chunk["Valor da Produção Total"].str.replace('.', '', regex=False).astype(float)
-                    combined_chunk = combined_chunk.merge(ranking_chunk, on="Cultura", how="left").fillna(0)
-                    combined_chunk.to_csv(out_f, mode="a", header=False, index=False)
-
+        dados_combinados.to_csv(output_path, index=False)
         log_tempo(inicio, "Arquivo rendimento_raw.csv criado com sucesso")
         log_memory_usage("Depois de salvar rendimento_raw")
-
-        # Limpar arquivos temporários
-        os.remove(milho_file)
-        os.remove(arroz_file)
-        os.remove(ranking_file)
-        gc.collect()
     except Exception as e:
         print(f"Erro ao criar rendimento_raw: {e}")
 
+
 def download(problem_name=None):
+    """
+    Função para carregar e processar os dados diretamente do banco de dados.
+    """
+    print(f"Executando download para o problema: {problem_name}" if problem_name else "Executando download...")
+    log_memory_usage("Início do download")
+
+    try:
+        # Carregar dados do IBGE
+        inicio = time.time()
+        dados_ibge = {
+            "Milho": {"Área colhida (ha)": 13767431, "Rendimento médio (kg/ha)": 3785, "Quantidade produzida (t)": 52112217},
+            "Soja": {"Área colhida (ha)": 20565279, "Rendimento médio (kg/ha)": 2813, "Quantidade produzida (t)": 57857172},
+            "Trigo": {"Área colhida (ha)": 1853224, "Rendimento médio (kg/ha)": 2219, "Quantidade produzida (t)": 4114057},
+            "Arroz": {"Área colhida (ha)": 2890926, "Rendimento médio (kg/ha)": 3826, "Quantidade produzida (t)": 11060741},
+        }
+        dados_ibge_df = pd.DataFrame.from_dict(dados_ibge, orient="index").reset_index()
+        dados_ibge_df.rename(columns={"index": "Cultura"}, inplace=True)
+        log_tempo(inicio, "Dados do IBGE carregados")
+        log_memory_usage("Depois de carregar dados do IBGE")
+
+        # Criar rendimento_raw
+        create_rendimento_raw()
+        log_memory_usage("Depois de criar rendimento_raw")
+    except Exception as e:
+        print(f"Erro durante o download: {e}")
+
+    print("Download completo.")
     print(f"Executando download para o problema: {problem_name}" if problem_name else "Executando download...")
     log_memory_usage("Início do download")
 
