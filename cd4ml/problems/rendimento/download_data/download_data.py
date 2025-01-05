@@ -27,26 +27,35 @@ connection_string = f"postgresql+psycopg2://{DB_CONFIG['user']}:{DB_CONFIG['pass
 engine = create_engine(connection_string)
 
 # Função para realizar a consulta no banco e buscar os dados
-def query_db(table_name, chunksize=None):
+# Função para carregar dados em chunks
+def query_db(table_name, chunksize=5000):
+    """
+    Lê dados de uma tabela em chunks para otimizar o uso de memória.
+    """
     inicio = time.time()
-    log_memory_usage(f"Antes de carregar tabela {table_name}")
     query = f"SELECT * FROM {table_name}"
+    log_memory_usage(f"Antes de carregar {table_name}")
     try:
-        if chunksize:
-            chunks = []
-            for chunk in pd.read_sql(query, engine, chunksize=chunksize):
-                chunks.append(chunk)
-                log_memory_usage(f"Carregando chunk de {table_name}")
-            df = pd.concat(chunks, ignore_index=True)
-        else:
-            df = pd.read_sql(query, engine)
-        log_memory_usage(f"Depois de carregar tabela {table_name}")
-        log_tempo(inicio, f"Dados carregados da tabela {table_name}")
+        # Processar os chunks
+        temp_file = f"/tmp/{table_name}_processed.csv"
+        with pd.read_sql(query, engine, chunksize=chunksize) as reader:
+            for i, chunk in enumerate(reader):
+                log_memory_usage(f"Processando chunk {i} de {table_name}")
+                if not os.path.exists(temp_file):
+                    chunk.to_csv(temp_file, index=False, mode='w')
+                else:
+                    chunk.to_csv(temp_file, index=False, mode='a', header=False)
+                del chunk  # Remove o chunk da memória
+                gc.collect()  # Força o garbage collector a liberar memória
+
+        # Carregar o arquivo processado para um DataFrame
+        log_memory_usage(f"Carregando arquivo consolidado {temp_file}")
+        df = pd.read_csv(temp_file)
+        log_tempo(inicio, f"Tabela {table_name} carregada e processada")
         return df
     except Exception as e:
         print(f"Erro ao carregar tabela {table_name}: {e}")
         return None
-
 # Função para limpar e converter valores
 def clean_and_convert(df, column_name):
     """
