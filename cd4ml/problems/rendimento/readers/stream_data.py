@@ -1,7 +1,7 @@
+import os
 from csv import DictReader
 from cd4ml.filenames import get_problem_files
 from cd4ml.utils.utils import float_or_zero
-
 
 def stream_raw(problem_name):
     """
