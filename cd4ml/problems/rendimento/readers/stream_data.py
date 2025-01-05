@@ -7,17 +7,29 @@ def stream_raw(problem_name):
     """
     Lê os dados brutos do arquivo rendimento_raw.csv.
     """
+    from csv import DictReader
+    from cd4ml.filenames import get_problem_files
+
     # Obtém o caminho para o arquivo rendimento_raw.csv
     file_names = get_problem_files(problem_name)
     filename = file_names["rendimento_raw"]
-    
+
     # Verifica se o arquivo existe
     if not os.path.exists(filename):
         raise FileNotFoundError(f"O arquivo {filename} não foi encontrado.")
-    
+
+    # Log para verificar as primeiras linhas do arquivo
+    with open(filename, "r") as f:
+        reader = DictReader(f)
+        for i, row in enumerate(reader):
+            print(f"Linha {i}: {row}")
+            if i >= 5:  # Mostrar apenas as primeiras 5 linhas
+                break
+
     # Retorna um generator para iterar sobre os dados
     return (dict(row) for row in DictReader(open(filename, "r")))
 
+    
 
 def stream_data(problem_name):
     """

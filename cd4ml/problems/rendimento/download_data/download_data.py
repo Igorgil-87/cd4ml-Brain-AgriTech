@@ -46,20 +46,19 @@ def process_row(row, categorical_fields, numeric_fields):
 
     # Processar campos categóricos
     for k in categorical_fields:
-        try:
+        if k in row:
             row_out[k] = row[k]
-        except KeyError:
-            print(f"Coluna '{k}' não encontrada na linha. Adicionando valor padrão.")
-            row_out[k] = None  # Valor padrão para colunas ausentes
+        else:
+            print(f"Coluna '{k}' não encontrada na linha: {row}. Adicionando valor padrão.")
+            row_out[k] = "Desconhecido"  # Valor padrão para colunas ausentes
 
     # Processar campos numéricos
     for field in numeric_fields:
-        row_out[field] = float_or_zero(row.get(field))
+        row_out[field] = float_or_zero(row.get(field, 0))  # Valor padrão 0 se ausente
 
     # Adicionar coluna 'split_value'
-    row_out["split_value"] = float(row.get("split", 0))
+    row_out["split_value"] = float_or_zero(row.get("split", 0))
     return row_out
-
 
 
 def create_rendimento_raw():

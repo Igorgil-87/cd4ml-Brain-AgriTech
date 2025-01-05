@@ -1,4 +1,4 @@
 {
-  "categorical": ["UF", "Município", "Cultura", "Safra", "Grupo", "Decênio"],
-  "numerical": ["Área colhida (ha)", "Valor da Produção Total", "Rendimento médio (kg/ha)", "Quantidade produzida (t)", "Valor"]
+  "categorical_fields": ["Cultura", "UF", "Município", "Grupo", "Solo", "Outros manejos", "Clima", "Decênio"],
+  "numeric_fields": ["Valor"]
 }
