@@ -40,10 +40,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
+          memory: 6g
           cpus: "2" # Limitar o uso de CPU
         reservations:
-          memory: 512m # Garantir um mínimo de memória
+          memory: 4g # Garantir um mínimo de memória
           cpus: "1" # Garantir um mínimo de CPU
     restart: unless-stopped # Reiniciar o container caso falhe
 
