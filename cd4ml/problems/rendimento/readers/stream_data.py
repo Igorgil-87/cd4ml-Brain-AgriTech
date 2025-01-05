@@ -45,3 +45,15 @@ def process_row(row, categorical_fields, numeric_fields):
     # Adiciona uma coluna 'split_value' para divisão dos dados (ajuste se necessário)
     row_out["split_value"] = float(row.get("split", 0))  # Substituir conforme o formato do dataset
     return row_out
+
+def get_training_validation_filters(params):
+    """
+    Gera filtros de treino e validação com base nos parâmetros.
+    """
+    def training_filter(row):
+        return params['splitting']['training_random_start'] <= row['split_value'] < params['splitting']['training_random_end']
+
+    def validation_filter(row):
+        return params['splitting']['validation_random_start'] <= row['split_value'] < params['splitting']['validation_random_end']
+
+    return training_filter, validation_filter
