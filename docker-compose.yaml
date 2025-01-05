@@ -26,6 +26,8 @@ services:
       SECRET_KEY: ${JENKINS_SECRET_KEY}
     volumes:
       - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock # Permitir que Jenkins crie containers no host
+      - /usr/bin/docker:/usr/bin/docker # Necessário para o Jenkins usar o Docker CLI
     secrets:
       - jenkins-admin-password
     networks:
@@ -38,7 +40,12 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g  # Ajuste o limite de memória
+          memory: 4g
+          cpus: "2" # Limitar o uso de CPU
+        reservations:
+          memory: 512m # Garantir um mínimo de memória
+          cpus: "1" # Garantir um mínimo de CPU
+    restart: unless-stopped # Reiniciar o container caso falhe
 
   es01:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
