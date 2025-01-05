@@ -38,48 +38,78 @@ def query_db_in_chunks(table_name, chunksize=1000):
         print(f"Erro ao carregar tabela {table_name}: {e}")
         return None
 
+def process_row(row, categorical_fields, numeric_fields):
+    """
+    Processa uma linha bruta de dados e ajusta ao esquema correto.
+    """
+    row_out = {}
+
+    # Processar campos categóricos
+    for k in categorical_fields:
+        try:
+            row_out[k] = row[k]
+        except KeyError:
+            print(f"Coluna '{k}' não encontrada na linha. Adicionando valor padrão.")
+            row_out[k] = None  # Valor padrão para colunas ausentes
+
+    # Processar campos numéricos
+    for field in numeric_fields:
+        row_out[field] = float_or_zero(row.get(field))
+
+    # Adicionar coluna 'split_value'
+    row_out["split_value"] = float(row.get("split", 0))
+    return row_out
+
+
+
 def create_rendimento_raw():
+    """
+    Cria o arquivo `rendimento_raw.csv` combinando dados e processando os datasets.
+    """
     inicio = time.time()
     try:
         log_memory_usage("Antes de carregar tabelas para rendimento_raw")
-        
-        # Carregar tabelas
+
+        # Carregar datasets
         milho = pd.read_sql("SELECT * FROM milho_solo_transformado", con=engine)
-        milho["Cultura"] = "Milho"  # Adiciona a coluna Cultura para identificação
-
         arroz = pd.read_sql("SELECT * FROM arroz_solo_transformado", con=engine)
-        arroz["Cultura"] = "Arroz"  # Adiciona a coluna Cultura para identificação
-
-        # Adicionar mais fontes se necessário (ex.: soja, trigo)
-
         ranking_valores = pd.read_sql("SELECT * FROM ranking_agricultura_valor", con=engine)
 
-        # Log das colunas disponíveis
+        # Garantir colunas consistentes
+        milho["Cultura"] = "Milho"
+        arroz["Cultura"] = "Arroz"
+
+        # Logs detalhados das colunas
         print(f"Colunas em milho: {milho.columns}")
         print(f"Colunas em arroz: {arroz.columns}")
         print(f"Colunas em ranking_valores: {ranking_valores.columns}")
 
-        # Processar tabela ranking de valores
+        # Processar tabela `ranking_valores`
         ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
-        ranking_valores["Valor da Produção Total"] = ranking_valores["Valor da Produção Total"].str.replace('.', '').astype(float)
+        ranking_valores["Valor da Produção Total"] = ranking_valores["Valor da Produção Total"].str.replace('.', '', regex=False).astype(float)
 
         log_memory_usage("Antes de combinar dados")
-        
-        # Combinar dados
+
+        # Combinar datasets
         dados_combinados = pd.concat([milho, arroz], ignore_index=True)
         dados_combinados = dados_combinados.merge(ranking_valores, on="Cultura", how="left").fillna(0)
 
+        # Logs para verificar a combinação
+        print(f"Colunas após combinação: {dados_combinados.columns}")
+        print(f"Exemplo de dados combinados:\n{dados_combinados.head()}")
+
         log_memory_usage("Antes de salvar rendimento_raw")
-        
-        # Salvar como rendimento_raw.csv
+
+        # Salvar como CSV
         output_path = "data/raw_data/rendimento/rendimento_raw.csv"
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         dados_combinados.to_csv(output_path, index=False)
+
         log_tempo(inicio, "Arquivo rendimento_raw.csv criado com sucesso")
         log_memory_usage("Depois de salvar rendimento_raw")
+
     except Exception as e:
         print(f"Erro ao criar rendimento_raw: {e}")
-
 
 def download(problem_name=None):
     """
