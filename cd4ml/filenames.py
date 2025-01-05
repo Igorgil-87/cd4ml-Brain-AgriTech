@@ -60,7 +60,8 @@ def _get_problem_file_templates(raw_problem_data_dir):
             "milho_transformado": "data/raw_data/rendimento/solomilho_transformado.csv",
             "soja_transformado": "data/raw_data/rendimento/sojasolo_transformado.csv",
             "trigo_transformado": "data/raw_data/rendimento/trigosolo_transformado.csv",
-            "arroz_transformado": "data/raw_data/rendimento/arrozsolo_transformado.csv"
+            "arroz_transformado": "data/raw_data/rendimento/arrozsolo_transformado.csv",
+            "rendimento_raw": "data/raw_data/rendimento/rendimento_raw.csv"  # Adicionado
         },
         'saude_lavoura': {
             'raw_saude_lavoura_data': '%s/iris.csv' % raw_problem_data_dir
@@ -72,7 +73,6 @@ def _get_problem_file_templates(raw_problem_data_dir):
     }
 
     return file_names_problem
-
 
 def get_model_files(model_id, base_data_dir=None):
     """

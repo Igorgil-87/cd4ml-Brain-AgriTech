@@ -51,6 +51,32 @@ def clean_and_convert(df, column_name):
         )
     except Exception as e:
         print(f"Erro ao limpar e converter a coluna {column_name}: {e}")
+# Função para criar o arquivo rendimento_raw
+def create_rendimento_raw():
+    inicio = time.time()
+    try:
+        # Consultar tabelas do banco de dados
+        milho = pd.read_sql("SELECT * FROM milho_solo_transformado", con=engine)
+        arroz = pd.read_sql("SELECT * FROM arroz_solo_transformado", con=engine)
+        ranking_valores = pd.read_sql("SELECT * FROM ranking_agricultura_valor", con=engine)
+        
+        # Processar tabela ranking de valores
+        ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
+        ranking_valores['Valor da Produção Total'] = ranking_valores['Valor da Produção Total'].str.replace('.', '').astype(float)
+        
+        # Merge e preenchimento
+        dados_combinados = pd.concat([milho, arroz], ignore_index=True)
+        dados_combinados = dados_combinados.merge(ranking_valores, on="Cultura", how="left").fillna(0)
+
+        # Salvar como rendimento_raw.csv
+        output_path = "data/raw_data/rendimento/rendimento_raw.csv"
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        dados_combinados.to_csv(output_path, index=False)
+        log_tempo(inicio, "Arquivo rendimento_raw.csv criado com sucesso")
+    except Exception as e:
+        print(f"Erro ao criar rendimento_raw: {e}")
+
+
 
 # Função principal de download
 def download(problem_name=None):
@@ -93,5 +119,10 @@ def download(problem_name=None):
     ], ignore_index=True)
     log_tempo(inicio, "Dados transformados combinados")
 
-    # Retornar os datasets carregados
-    return ranking_valores, dados_ibge_df, dados_combinados
+    # Chamar a função de criação de rendimento_raw
+    print("Criando o arquivo rendimento_raw.csv...")
+    rendimento_raw_df = create_rendimento_raw()
+
+    print("Download completo.")
+    # Retornar todos os datasets carregados
+    return ranking_valores, dados_ibge_df, dados_combinados, rendimento_raw_df
