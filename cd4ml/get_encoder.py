@@ -6,7 +6,13 @@ logger = logging.getLogger(__name__)
 
 
 def get_encoder_from_stream(stream, ml_fields, omit_cols=None):
-    # ensure target variable is not included as input variable
+    # Verificação do stream inicial
+    for idx, row in enumerate(stream):
+        if 'uf' not in row:
+            print(f"Erro: Campo 'uf' ausente na linha {idx}: {row}")
+            break  # Apenas para inspeção inicial
+
+    # Continuação do código existente
     target = ml_fields['target_name']
     categorical = {k: v for k, v in ml_fields['categorical'].items() if k != target}
     numerical = [field for field in ml_fields['numerical'] if field != target]

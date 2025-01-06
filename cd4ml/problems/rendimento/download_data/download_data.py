@@ -41,12 +41,12 @@ def query_db_in_chunks(table_name, chunksize=1000):
 def process_row(row, categorical_fields, numeric_fields):
     """
     Processa uma linha bruta de dados e ajusta ao esquema correto.
-    
+
     Args:
         row (dict): Linha de dados brutos.
         categorical_fields (list): Lista de campos categóricos esperados.
         numeric_fields (list): Lista de campos numéricos esperados.
-    
+
     Returns:
         dict: Linha processada com valores ajustados.
     """
@@ -73,6 +73,7 @@ def process_row(row, categorical_fields, numeric_fields):
 
     return row_out
 
+    
 def create_rendimento_raw():
     """
     Cria o arquivo `rendimento_raw.csv` combinando dados e processando os datasets.

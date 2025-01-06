@@ -1,16 +1,15 @@
 import os
 from csv import DictReader
+from pathlib import Path
 from cd4ml.filenames import get_problem_files
 from cd4ml.utils.utils import float_or_zero
 
+
 def stream_raw(problem_name):
     """
-    Lê os dados brutos do arquivo rendimento_raw.csv.
+    Lê os dados brutos do arquivo rendimento_raw.csv e retorna um gerador.
     """
-    from csv import DictReader
-    from cd4ml.filenames import get_problem_files
-
-    # Obtém o caminho para o arquivo rendimento_raw.csv
+    # Obtém o caminho do arquivo rendimento_raw.csv
     file_names = get_problem_files(problem_name)
     filename = file_names["rendimento_raw"]
 
@@ -18,16 +17,26 @@ def stream_raw(problem_name):
     if not os.path.exists(filename):
         raise FileNotFoundError(f"O arquivo {filename} não foi encontrado.")
 
-    # Log para verificar as primeiras linhas do arquivo
+    # Exibe as colunas disponíveis no arquivo
     with open(filename, "r") as f:
         reader = DictReader(f)
-        for i, row in enumerate(reader):
-            print(f"Linha {i}: {row}")
-            if i >= 5:  # Mostrar apenas as primeiras 5 linhas
-                break
+        print(f"Colunas disponíveis no arquivo: {reader.fieldnames}")
 
-    # Retorna um generator para iterar sobre os dados
+        # Verificar se os campos necessários estão presentes
+        schema_path = Path(__file__).parent / "RAW_schema.json"
+        categorical_fields, numeric_fields = read_schema_file(schema_path)
+
+        missing_fields = [
+            field
+            for field in categorical_fields + numeric_fields
+            if field not in reader.fieldnames
+        ]
+        if missing_fields:
+            raise ValueError(f"Os seguintes campos estão ausentes no arquivo CSV: {missing_fields}")
+
+    # Retorna um gerador para processar os dados
     return (dict(row) for row in DictReader(open(filename, "r")))
+
 
 def read_schema_file(schema_path):
     """
@@ -39,16 +48,13 @@ def read_schema_file(schema_path):
         with open(schema_path, "r") as f:
             schema = json.load(f)
 
-        # Verificar se as chaves categóricas e numéricas estão presentes
-        if "categorical" not in schema:
-            raise KeyError(f"A chave 'categorical' está ausente no schema: {schema_path}")
-        if "numeric" not in schema:
-            raise KeyError(f"A chave 'numeric' está ausente no schema: {schema_path}")
+        # Validar estrutura do schema
+        if "categorical" not in schema or not isinstance(schema["categorical"], list):
+            raise KeyError(f"'categorical' ausente ou não é uma lista no schema: {schema_path}")
+        if "numerical" not in schema or not isinstance(schema["numerical"], list):
+            raise KeyError(f"'numerical' ausente ou não é uma lista no schema: {schema_path}")
 
-        categorical_fields = schema["categorical"]
-        numeric_fields = schema["numeric"]
-
-        return categorical_fields, numeric_fields
+        return schema["categorical"], schema["numerical"]
 
     except FileNotFoundError:
         raise FileNotFoundError(f"O arquivo de schema não foi encontrado: {schema_path}")
@@ -56,13 +62,29 @@ def read_schema_file(schema_path):
         raise ValueError(f"Erro ao decodificar o arquivo JSON: {schema_path}. Detalhes: {e}")
 
 
+def process_row(row, categorical_fields, numeric_fields):
+    """
+    Processa uma linha bruta de dados e ajusta ao esquema correto.
+    """
+    row_out = {}
+
+    # Garantir campos categóricos
+    for field in categorical_fields:
+        row_out[field] = row.get(field, "Desconhecido")  # Valor padrão para categóricos
+
+    # Garantir campos numéricos
+    for field in numeric_fields:
+        row_out[field] = float_or_zero(row.get(field, 0))  # Valor padrão para numéricos
+
+    # Adicionar coluna 'split_value'
+    row_out["split_value"] = float_or_zero(row.get("split", 0))
+    return row_out
+
+
 def stream_data(problem_name):
     """
     Processa os dados brutos de acordo com o esquema definido.
     """
-    from cd4ml.problems import read_schema_file
-    from pathlib import Path
-
     schema_path = Path(Path(__file__).parent, "RAW_schema.json")
     print(f"Carregando schema do arquivo: {schema_path}")
     categorical_fields, numeric_fields = read_schema_file(schema_path)
@@ -70,21 +92,12 @@ def stream_data(problem_name):
     print(f"Campos categóricos carregados: {categorical_fields}")
     print(f"Campos numéricos carregados: {numeric_fields}")
 
-    return (process_row(row, categorical_fields, numeric_fields) for row in stream_raw(problem_name))
+    for idx, row in enumerate(stream_raw(problem_name)):
+        processed_row = process_row(row, categorical_fields, numeric_fields)
+        if idx < 5:  # Apenas para os primeiros 5 registros
+            print(f"Linha processada {idx}: {processed_row}")
+        yield processed_row
 
-    
-def process_row(row, categorical_fields, numeric_fields):
-    """
-    Processa uma linha bruta de dados e ajusta ao esquema correto.
-    """
-    row_out = {k: row[k] for k in categorical_fields}
-
-    for field in numeric_fields:
-        row_out[field] = float_or_zero(row[field])
-
-    # Adiciona uma coluna 'split_value' para divisão dos dados (ajuste se necessário)
-    row_out["split_value"] = float(row.get("split", 0))  # Substituir conforme o formato do dataset
-    return row_out
 
 def get_training_validation_filters(params):
     """
