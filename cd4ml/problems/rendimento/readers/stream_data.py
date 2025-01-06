@@ -29,7 +29,33 @@ def stream_raw(problem_name):
     # Retorna um generator para iterar sobre os dados
     return (dict(row) for row in DictReader(open(filename, "r")))
 
-    
+def read_schema_file(schema_path):
+    """
+    Lê o arquivo de schema JSON e retorna campos categóricos e numéricos.
+    """
+    import json
+
+    try:
+        with open(schema_path, "r") as f:
+            schema = json.load(f)
+
+        # Validar se as chaves categóricas e numéricas estão presentes
+        if "categorical" not in schema:
+            raise KeyError(f"A chave 'categorical' está ausente no schema: {schema_path}")
+        if "numeric" not in schema:
+            raise KeyError(f"A chave 'numeric' está ausente no schema: {schema_path}")
+
+        categorical_fields = schema["categorical"]
+        numeric_fields = schema["numeric"]
+
+        return categorical_fields, numeric_fields
+
+    except FileNotFoundError:
+        raise FileNotFoundError(f"O arquivo de schema não foi encontrado: {schema_path}")
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Erro ao decodificar o arquivo JSON: {schema_path}. Detalhes: {e}")
+
+        
 
 def stream_data(problem_name):
     """
@@ -39,11 +65,15 @@ def stream_data(problem_name):
     from pathlib import Path
 
     # Lê o esquema JSON (definido em RAW_schema.json)
-    categorical_fields, numeric_fields = read_schema_file(Path(Path(__file__).parent, "RAW_schema.json"))
+    schema_path = Path(Path(__file__).parent, "RAW_schema.json")
+    print(f"Lendo schema do arquivo: {schema_path}")
+    categorical_fields, numeric_fields = read_schema_file(schema_path)
+
+    print(f"Campos categóricos: {categorical_fields}")
+    print(f"Campos numéricos: {numeric_fields}")
 
     # Processa cada linha dos dados brutos
     return (process_row(row, categorical_fields, numeric_fields) for row in stream_raw(problem_name))
-
 
 def process_row(row, categorical_fields, numeric_fields):
     """

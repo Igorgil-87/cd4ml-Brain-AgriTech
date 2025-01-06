@@ -1,4 +1,4 @@
 {
-  "categorical_fields": ["Cultura", "UF", "Município", "Grupo", "Solo", "Outros manejos", "Clima", "Decênio"],
-  "numeric_fields": ["Valor"]
+  "categorical": ["Cultura", "UF", "Município", "Grupo", "Solo", "Outros manejos", "Clima", "Decênio"],
+  "numeric": ["Valor"]
 }
