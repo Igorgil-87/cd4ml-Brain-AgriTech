@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from csv import DictReader
 from pathlib import Path
 from cd4ml.filenames import get_problem_files
@@ -44,7 +45,7 @@ def stream_raw(problem_name):
     )
 
 
-    
+
 def read_schema_file(schema_path):
     """
     Lê o arquivo de schema JSON e retorna campos categóricos e numéricos.
