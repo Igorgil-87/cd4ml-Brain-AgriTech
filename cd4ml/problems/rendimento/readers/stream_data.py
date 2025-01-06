@@ -68,21 +68,28 @@ def process_row(row, categorical_fields, numeric_fields):
     """
     row_out = {}
 
-    # Garantir campos categóricos
+    # Processar campos categóricos
     for field in categorical_fields:
-        row_out[field] = row.get(field, "Desconhecido")  # Valor padrão para categóricos
+        row_out[field] = row.get(field, "Desconhecido")  # Valor padrão para campos categóricos ausentes
 
-    # Garantir campos numéricos
+    # Processar campos numéricos
     for field in numeric_fields:
-        row_out[field] = float_or_zero(row.get(field, 0))  # Valor padrão para numéricos
-
-    # Tratar campos opcionais
-    row_out["Área colhida (ha)"] = float_or_zero(row.get("Área colhida (ha)", 0))  # Valor padrão 0
+        try:
+            row_out[field] = float(row.get(field, 0))  # Valor padrão 0 se ausente ou inválido
+        except (ValueError, TypeError):
+            print(f"Erro ao converter o campo '{field}' para float na linha: {row}. Atribuindo valor padrão 0.")
+            row_out[field] = 0
 
     # Adicionar coluna 'split_value'
-    row_out["split_value"] = float_or_zero(row.get("split", 0))
+    try:
+        row_out["split_value"] = float(row.get("split", 0))  # Valor padrão 0 se ausente ou inválido
+    except (ValueError, TypeError):
+        print(f"Erro ao converter o campo 'split' para float na linha: {row}. Atribuindo valor padrão 0.")
+        row_out["split_value"] = 0
+
     return row_out
 
+    
 def stream_data(problem_name):
     """
     Processa os dados brutos de acordo com o esquema definido.

@@ -73,7 +73,21 @@ def process_row(row, categorical_fields, numeric_fields):
 
     return row_out
 
-    
+def validate_rendimento_raw(file_path):
+    """
+    Valida se o arquivo rendimento_raw.csv contém as colunas esperadas.
+    """
+    expected_columns = ["safra", "cultura", "uf", "municipio", "grupo", "solo",
+                        "outros_manejos", "clima", "decenio", "valor", "data",
+                        "Valor da Produção Total", "Área colhida (ha)", "split_value"]
+    df = pd.read_csv(file_path)
+    missing_columns = [col for col in expected_columns if col not in df.columns]
+    if missing_columns:
+        print(f"As colunas seguintes estão faltando: {missing_columns}")
+    else:
+        print("Todas as colunas esperadas estão presentes no arquivo rendimento_raw.csv.")
+
+
 def create_rendimento_raw():
     """
     Cria o arquivo `rendimento_raw.csv` combinando dados e processando os datasets.
@@ -106,6 +120,10 @@ def create_rendimento_raw():
         dados_combinados = pd.concat([milho, arroz], ignore_index=True)
         dados_combinados = dados_combinados.merge(ranking_valores, on="Cultura", how="left").fillna(0)
 
+        # **Garantir que "Área colhida (ha)" esteja presente**
+        if "Área colhida (ha)" not in dados_combinados.columns:
+            dados_combinados["Área colhida (ha)"] = 0.0  # Valor padrão se não estiver presente
+
         # Logs para verificar a combinação
         print(f"Colunas após combinação: {dados_combinados.columns}")
         print(f"Exemplo de dados combinados:\n{dados_combinados.head()}")
@@ -119,9 +137,11 @@ def create_rendimento_raw():
 
         log_tempo(inicio, "Arquivo rendimento_raw.csv criado com sucesso")
         log_memory_usage("Depois de salvar rendimento_raw")
-
+        # Validação do arquivo criado
+        validate_rendimento_raw(output_path)  # Adicionando a validação
     except Exception as e:
         print(f"Erro ao criar rendimento_raw: {e}")
+
 
 def download(problem_name=None):
     """

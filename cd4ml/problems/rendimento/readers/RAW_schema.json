@@ -1,4 +1,4 @@
 {
   "categorical": ["safra", "cultura", "uf", "municipio", "grupo", "solo", "outros_manejos", "clima", "decenio", "data"],
-  "numerical": ["valor", "Valor da Produção Total"]
+  "numerical": ["valor", "Valor da Produção Total", "Área colhida (ha)"]
 }
