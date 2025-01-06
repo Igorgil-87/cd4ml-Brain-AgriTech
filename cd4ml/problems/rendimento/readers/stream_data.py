@@ -76,10 +76,12 @@ def process_row(row, categorical_fields, numeric_fields):
     for field in numeric_fields:
         row_out[field] = float_or_zero(row.get(field, 0))  # Valor padrão para numéricos
 
+    # Tratar campos opcionais
+    row_out["Área colhida (ha)"] = float_or_zero(row.get("Área colhida (ha)", 0))  # Valor padrão 0
+
     # Adicionar coluna 'split_value'
     row_out["split_value"] = float_or_zero(row.get("split", 0))
     return row_out
-
 
 def stream_data(problem_name):
     """
