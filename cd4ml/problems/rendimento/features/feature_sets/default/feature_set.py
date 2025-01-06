@@ -40,17 +40,17 @@ class FeatureSet(FeatureSetBase):
 
     def base_features(self, processed_row):
         """
-        Retorna as features base.
+        Retorna as features base, garantindo valores padrão para campos ausentes.
         """
         features = {
-            'uf': processed_row['uf'],
-            'municipio': processed_row['municipio'],
-            'solo': processed_row['solo'],
-            'cultura': processed_row['cultura'],
-            'safra': processed_row['safra'],
-            'grupo': processed_row['grupo'],
-            'decenio': processed_row['decenio'],
-            'area_colhida_ha': processed_row['Área colhida (ha)'],
-            'valor_producao_total': processed_row['Valor da Produção Total']
+            'uf': processed_row.get('uf', 'N/A'),
+            'municipio': processed_row.get('municipio', 'N/A'),
+            'solo': processed_row.get('solo', 'Desconhecido'),
+            'cultura': processed_row.get('cultura', 'Indefinida'),
+            'safra': processed_row.get('safra', '0000/0000'),
+            'grupo': processed_row.get('grupo', 'Grupo Desconhecido'),
+            'decenio': processed_row.get('decenio', '01/01-10/01'),
+            'area_colhida_ha': processed_row.get('Área colhida (ha)', 0),
+            'valor_producao_total': processed_row.get('Valor da Produção Total', 0.0)
         }
         return features
