@@ -43,14 +43,14 @@ class FeatureSet(FeatureSetBase):
         Retorna as features base.
         """
         features = {
-            'UF': processed_row['UF'],
-            'Município': processed_row['Município'],
-            'Solo': processed_row['Solo'],
-            'Cultura': processed_row['Cultura'],
-            'Safra': processed_row['Safra'],
-            'Grupo': processed_row['Grupo'],
-            'Decênio': processed_row['Decênio'],
-            'Área colhida (ha)': processed_row['Área colhida (ha)'],
-            'Valor da Produção Total': processed_row['Valor da Produção Total']
+            'uf': processed_row['uf'],
+            'municipio': processed_row['municipio'],
+            'solo': processed_row['solo'],
+            'cultura': processed_row['cultura'],
+            'safra': processed_row['safra'],
+            'grupo': processed_row['grupo'],
+            'decenio': processed_row['decenio'],
+            'area_colhida_ha': processed_row['Área colhida (ha)'],
+            'valor_producao_total': processed_row['Valor da Produção Total']
         }
         return features
