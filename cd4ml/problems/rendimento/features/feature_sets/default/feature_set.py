@@ -50,7 +50,7 @@ class FeatureSet(FeatureSetBase):
             'safra': processed_row.get('safra', '0000/0000'),
             'grupo': processed_row.get('grupo', 'Grupo Desconhecido'),
             'decenio': processed_row.get('decenio', '01/01-10/01'),
-            'area_colhida_ha': processed_row.get('Área colhida (ha)', 0),
+            'area_colhida_ha': processed_row.get('Área colhida (ha)', 100),
             'valor_producao_total': processed_row.get('Valor da Produção Total', 0.0)
         }
         return features
