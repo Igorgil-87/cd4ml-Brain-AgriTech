@@ -1,3 +1,4 @@
+import pandas as pd
 from cd4ml.feature_set import FeatureSetBase
 from cd4ml.utils.feature_utils import get_feature_params, get_generic_feature_set
 
