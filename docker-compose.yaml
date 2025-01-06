@@ -40,7 +40,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 6g
+          memory: 8g
           cpus: "2" # Limitar o uso de CPU
         reservations:
           memory: 4g # Garantir um mínimo de memória
