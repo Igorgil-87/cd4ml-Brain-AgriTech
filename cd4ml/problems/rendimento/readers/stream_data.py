@@ -7,7 +7,7 @@ from cd4ml.utils.utils import float_or_zero
 
 def stream_raw(problem_name):
     """
-    Lê os dados brutos do arquivo rendimento_raw.csv e retorna um gerador.
+    Lê os dados brutos do arquivo rendimento_raw.csv em chunks para lidar com grandes arquivos.
     """
     # Obtém o caminho do arquivo rendimento_raw.csv
     file_names = get_problem_files(problem_name)
@@ -22,22 +22,29 @@ def stream_raw(problem_name):
         reader = DictReader(f)
         print(f"Colunas disponíveis no arquivo: {reader.fieldnames}")
 
-        # Verificar se os campos necessários estão presentes
-        schema_path = Path(__file__).parent / "RAW_schema.json"
-        categorical_fields, numeric_fields = read_schema_file(schema_path)
+    # Verificar se os campos necessários estão presentes
+    schema_path = Path(__file__).parent / "RAW_schema.json"
+    categorical_fields, numeric_fields = read_schema_file(schema_path)
 
-        missing_fields = [
-            field
-            for field in categorical_fields + numeric_fields
-            if field not in reader.fieldnames
-        ]
-        if missing_fields:
-            raise ValueError(f"Os seguintes campos estão ausentes no arquivo CSV: {missing_fields}")
+    expected_fields = set(categorical_fields + numeric_fields)
+    missing_fields = [field for field in expected_fields if field not in reader.fieldnames]
 
-    # Retorna um gerador para processar os dados
-    return (dict(row) for row in DictReader(open(filename, "r")))
+    if missing_fields:
+        raise ValueError(f"Os seguintes campos estão ausentes no arquivo CSV: {missing_fields}")
+
+    # Lê os dados em chunks para evitar alto uso de memória
+    chunksize = 10000  # Define o tamanho do chunk
+    print(f"Lendo o arquivo em chunks de tamanho {chunksize}...")
+
+    return pd.read_csv(
+        filename,
+        chunksize=chunksize,
+        dtype={field: "float64" if field in numeric_fields else "string" for field in expected_fields},
+        low_memory=False,
+    )
 
 
+    
 def read_schema_file(schema_path):
     """
     Lê o arquivo de schema JSON e retorna campos categóricos e numéricos.
