@@ -43,13 +43,13 @@ class FeatureSet(FeatureSetBase):
         Retorna as features base, garantindo valores padrão para campos ausentes.
         """
         features = {
-            'uf': processed_row.get('uf', 'N/A'),
-            'municipio': processed_row.get('municipio', 'N/A'),
-            'solo': processed_row.get('solo', 'Desconhecido'),
-            'cultura': processed_row.get('cultura', 'Indefinida'),
-            'safra': processed_row.get('safra', '0000/0000'),
-            'grupo': processed_row.get('grupo', 'Grupo Desconhecido'),
-            'decenio': processed_row.get('decenio', '01/01-10/01'),
+            'uf': processed_row.get('UF', 'N/A'),  # Deve ser 'UF' (uppercase) se assim estiver nos dados.
+            'municipio': processed_row.get('Município', 'N/A'),
+            'solo': processed_row.get('Solo', 'Desconhecido'),
+            'cultura': processed_row.get('Cultura', 'Indefinida'),
+            'safra': processed_row.get('Safra', '0000/0000'),
+            'grupo': processed_row.get('Grupo', 'Grupo Desconhecido'),
+            'decenio': processed_row.get('Decênio', '01/01-10/01'),
             'area_colhida_ha': processed_row.get('Área colhida (ha)', 100),
             'valor_producao_total': processed_row.get('Valor da Produção Total', 0.0),
             'Quantidade produzida (t)': processed_row.get('Quantidade produzida (t)', 0.0),

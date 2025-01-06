@@ -41,25 +41,37 @@ def query_db_in_chunks(table_name, chunksize=1000):
 def process_row(row, categorical_fields, numeric_fields):
     """
     Processa uma linha bruta de dados e ajusta ao esquema correto.
+    
+    Args:
+        row (dict): Linha de dados brutos.
+        categorical_fields (list): Lista de campos categóricos esperados.
+        numeric_fields (list): Lista de campos numéricos esperados.
+    
+    Returns:
+        dict: Linha processada com valores ajustados.
     """
     row_out = {}
 
     # Processar campos categóricos
-    for k in categorical_fields:
-        if k in row:
-            row_out[k] = row[k]
-        else:
-            print(f"Coluna '{k}' não encontrada na linha: {row}. Adicionando valor padrão.")
-            row_out[k] = "Desconhecido"  # Valor padrão para colunas ausentes
+    for field in categorical_fields:
+        row_out[field] = row.get(field, "Desconhecido")  # Valor padrão para campos categóricos ausentes
 
     # Processar campos numéricos
     for field in numeric_fields:
-        row_out[field] = float_or_zero(row.get(field, 0))  # Valor padrão 0 se ausente
+        try:
+            row_out[field] = float(row.get(field, 0))  # Valor padrão 0 se ausente ou inválido
+        except (ValueError, TypeError):
+            print(f"Erro ao converter o campo '{field}' para float na linha: {row}. Atribuindo valor padrão 0.")
+            row_out[field] = 0
 
     # Adicionar coluna 'split_value'
-    row_out["split_value"] = float_or_zero(row.get("split", 0))
-    return row_out
+    try:
+        row_out["split_value"] = float(row.get("split", 0))  # Valor padrão 0 se ausente ou inválido
+    except (ValueError, TypeError):
+        print(f"Erro ao converter o campo 'split' para float na linha: {row}. Atribuindo valor padrão 0.")
+        row_out["split_value"] = 0
 
+    return row_out
 
 def create_rendimento_raw():
     """
