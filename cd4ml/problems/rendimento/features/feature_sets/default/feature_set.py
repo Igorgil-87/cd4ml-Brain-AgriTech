@@ -19,11 +19,18 @@ class FeatureSet(FeatureSetBase):
         """
         Gera características derivadas categóricas.
         """
-        features = {
-            'is_high_value': 1 if base_features.get('valor_producao_total', 0.0) > 5000000 else 0,
-            'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
-            'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0
-        }
+        if isinstance(base_features, pd.Series):  # Checar se é uma linha de um DataFrame
+            features = {
+                'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
+                'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
+                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0
+            }
+        else:  # Caso base_features seja um dicionário (normal)
+            features = {
+                'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
+                'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
+                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0
+            }
         return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
 
     def derived_features_numerical(self, base_features):
