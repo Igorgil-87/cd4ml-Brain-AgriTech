@@ -20,9 +20,9 @@ class FeatureSet(FeatureSetBase):
         Gera características derivadas categóricas.
         """
         features = {
-            'is_high_value': 1 if base_features['Valor da Produção Total'] > 5000000 else 0,  # Exemplo: Marcador de alto valor
-            'is_milho': 1 if base_features['Cultura'] == 'Milho' else 0,
-            'is_soja': 1 if base_features['Cultura'] == 'Soja' else 0
+            'is_high_value': 1 if base_features.get('valor_producao_total', 0.0) > 5000000 else 0,
+            'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
+            'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0
         }
         return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
 
@@ -32,9 +32,9 @@ class FeatureSet(FeatureSetBase):
         """
         # Exemplo de derivação de features numéricas
         features = {
-            'valor_por_area': base_features['Valor da Produção Total'] / (base_features['Área colhida (ha)'] + 1),  # Evita divisão por zero
-            'quantidade_por_area': base_features['Quantidade produzida (t)'] / (base_features['Área colhida (ha)'] + 1),
-            'rendimento_normalizado': base_features['Rendimento médio (kg/ha)'] / 1000.0  # Normalização simples
+            'valor_por_area': base_features.get('valor_producao_total', 0.0) / (base_features.get('area_colhida_ha', 1) + 1),
+            'quantidade_por_area': base_features.get('Quantidade produzida (t)', 0.0) / (base_features.get('area_colhida_ha', 1) + 1),
+            'rendimento_normalizado': base_features.get('Rendimento médio (kg/ha)', 0.0) / 1000.0  # Normalização simples
         }
         return {k: features[k] for k in self.params['derived_fields_numerical']}
 
@@ -51,6 +51,8 @@ class FeatureSet(FeatureSetBase):
             'grupo': processed_row.get('grupo', 'Grupo Desconhecido'),
             'decenio': processed_row.get('decenio', '01/01-10/01'),
             'area_colhida_ha': processed_row.get('Área colhida (ha)', 100),
-            'valor_producao_total': processed_row.get('Valor da Produção Total', 0.0)
+            'valor_producao_total': processed_row.get('Valor da Produção Total', 0.0),
+            'Quantidade produzida (t)': processed_row.get('Quantidade produzida (t)', 0.0),
+            'Rendimento médio (kg/ha)': processed_row.get('Rendimento médio (kg/ha)', 0.0)
         }
         return features
