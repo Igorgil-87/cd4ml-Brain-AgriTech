@@ -92,20 +92,8 @@ class ProblemBase:
         self.algorithm_params = self.get_algorithm_params(self.resolved_algorithm_name,
                                                           self.algorithm_params_name)
 
-
-
     def stream_processed(self):
-        """
-        Processa os dados do stream_raw, incluindo a criação de campos derivados.
-        """
-        for chunk in stream_raw(self.problem_name):  # Supondo que stream_raw retorna chunks de DataFrame
-            chunk['is_high_value'] = chunk['Valor da Produção Total'].apply(lambda x: 1 if x > 5000000 else 0)
-            chunk['is_milho'] = chunk['cultura'].apply(lambda x: 1 if x == 'Milho' else 0)
-            chunk['is_soja'] = chunk['cultura'].apply(lambda x: 1 if x == 'Soja' else 0)
-            
-            # Converte o chunk em dicionários para o pipeline
-            for row in chunk.to_dict(orient="records"):
-                yield row
+        return self._stream_data(self.problem_name)
 
     def stream_features(self):
         return (self.feature_set.features(processed_row) for processed_row in self.stream_processed())

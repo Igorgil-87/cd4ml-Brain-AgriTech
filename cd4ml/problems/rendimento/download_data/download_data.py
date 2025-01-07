@@ -105,8 +105,7 @@ def validate_rendimento_raw(file_path):
             print("Todas as colunas esperadas estão presentes no arquivo rendimento_raw.csv.")
     except Exception as e:
         print(f"Erro ao validar rendimento_raw: {e}")
-
-
+#voltando
 def create_rendimento_raw():
     """
     Cria o arquivo `rendimento_raw.csv` combinando dados e processando os datasets.
@@ -115,7 +114,7 @@ def create_rendimento_raw():
     try:
         log_memory_usage("Antes de carregar tabelas para rendimento_raw")
 
-        # Carregar datasets
+        # Carregar datasets em chunks
         milho = pd.read_sql("SELECT * FROM milho_solo_transformado", con=engine)
         arroz = pd.read_sql("SELECT * FROM arroz_solo_transformado", con=engine)
         ranking_valores = pd.read_sql("SELECT * FROM ranking_agricultura_valor", con=engine)
@@ -141,12 +140,7 @@ def create_rendimento_raw():
 
         # Garantir que "Área colhida (ha)" esteja presente
         if "Área colhida (ha)" not in dados_combinados.columns:
-            dados_combinados["Área colhida (ha)"] = 0.0
-
-        # Adicionar campos derivados
-        dados_combinados['is_high_value'] = dados_combinados['Valor da Produção Total'].apply(lambda x: 1 if x > 5000000 else 0)
-        dados_combinados['is_milho'] = dados_combinados['Cultura'].apply(lambda x: 1 if x == 'Milho' else 0)
-        dados_combinados['is_soja'] = dados_combinados['Cultura'].apply(lambda x: 1 if x == 'Soja' else 0)
+            dados_combinados["Área colhida (ha)"] = 0.0  # Valor padrão
 
         # Logs para verificar a combinação
         print(f"Colunas após combinação: {dados_combinados.columns}")
@@ -154,16 +148,18 @@ def create_rendimento_raw():
 
         log_memory_usage("Antes de salvar rendimento_raw")
 
-        # Salvar como CSV
+        # Salvar como CSV em chunks
         output_path = "data/raw_data/rendimento/rendimento_raw.csv"
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        dados_combinados.to_csv(output_path, index=False)
+        dados_combinados.to_csv(output_path, index=False, chunksize=10000)
 
         log_tempo(inicio, "Arquivo rendimento_raw.csv criado com sucesso")
         log_memory_usage("Depois de salvar rendimento_raw")
 
     except Exception as e:
         print(f"Erro ao criar rendimento_raw: {e}")
+
+
 
 
 def download(problem_name=None):
