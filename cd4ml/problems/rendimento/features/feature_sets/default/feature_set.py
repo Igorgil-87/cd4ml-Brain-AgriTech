@@ -20,19 +20,24 @@ class FeatureSet(FeatureSetBase):
         """
         Gera características derivadas categóricas.
         """
-        if isinstance(base_features, pd.Series):  # Checar se é uma linha de um DataFrame
+        if isinstance(base_features, pd.Series):  # Se base_features for uma linha de um DataFrame
             features = {
                 'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
                 'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
                 'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0
             }
-        else:  # Caso base_features seja um dicionário (normal)
+        elif isinstance(base_features, dict):  # Caso seja um dicionário
             features = {
                 'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
                 'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
                 'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0
             }
+        else:
+            raise ValueError("Formato de entrada inesperado para base_features. Esperado dict ou pandas.Series.")
+        
         return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
+
+
 
     def derived_features_numerical(self, base_features):
         """
