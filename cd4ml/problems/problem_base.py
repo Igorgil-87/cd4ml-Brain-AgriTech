@@ -197,36 +197,52 @@ class ProblemBase:
         runtime = time() - start
         self.logger.info('Training time: {0:.1f} seconds'.format(runtime))
 
+
     def validate(self):
-        self.logger.info('Starting validating')
+        self.logger.info('Starting validation')
         start = time()
 
-        logger.info('Getting predictions')
-
+        # Obter dados de validação
+        logger.info('Fetching validation data')
         true_validation_target = list(self.true_target_stream(self.validation_stream()))
         validation_prediction = list(self.ml_model.predict_processed_rows(self.validation_stream()))
+
+        # Verificar se o conjunto de validação está vazio
+        if not true_validation_target or len(true_validation_target) == 0:
+            logger.error("O conjunto de validação está vazio. Verifique os dados de entrada ou os filtros.")
+            raise ValueError("O conjunto de validação está vazio. Não é possível calcular métricas de validação.")
+
         if self.ml_model.model_type == 'classifier':
-            validation_pred_prob = np.array(list(self.ml_model.predict_processed_rows(self.validation_stream(),
-                                                                                      prob=True)))
+            validation_pred_prob = np.array(list(self.ml_model.predict_processed_rows(self.validation_stream(), prob=True)))
             target_levels = self.ml_model.trained_model.classes_
         elif self.ml_model.model_type == 'regressor':
             validation_pred_prob = None
             target_levels = None
         else:
-            raise ValueError('Do not understand classification type: %s' % self.ml_model.model_type)
+            raise ValueError('Unknown classification type: %s' % self.ml_model.model_type)
 
         logger.info('Done with predictions')
 
-        self.logger.info('Getting validation metrics')
+        # Calcular métricas de validação
+        self.logger.info('Calculating validation metrics')
         validation_metric_names = self.ml_pipeline_params['validation_metric_names']
 
-        self.validation_metrics = get_validation_metrics(validation_metric_names,
-                                                         true_validation_target,
-                                                         validation_prediction,
-                                                         validation_pred_prob,
-                                                         target_levels)
+        try:
+            self.validation_metrics = get_validation_metrics(validation_metric_names,
+                                                            true_validation_target,
+                                                            validation_prediction,
+                                                            validation_pred_prob,
+                                                            target_levels)
+        except Exception as e:
+            self.logger.error(f"Erro ao calcular métricas de validação: {e}")
+            raise
 
-        self.logger.info('Validation time: {0:.1f} seconds'.format(time() - start))
+        self.logger.info('Validation completed successfully')
+        runtime = time() - start
+        self.logger.info('Validation time: {0:.1f} seconds'.format(runtime))
+
+
+
 
     def true_target_stream(self, stream):
         target_name = self.feature_set.target_field
