@@ -16,58 +16,60 @@ class FeatureSet(FeatureSetBase):
         super(FeatureSet, self).__init__(identifier_field, target_field)
         self.info = info
         self.params = feature_set_params
+        self.logger = logging.getLogger(__name__)
+        logging.basicConfig(level=logging.INFO)
 
     def derived_features_categorical(self, base_features):
         """
         Gera características derivadas categóricas de maneira robusta.
         """
-
-        # Verificar o tipo de entrada
         self.logger.info(f"Tipo de entrada: {type(base_features)}")
-        if isinstance(base_features, dict):
-            # Para dicionário, tratar cada valor individualmente
-            features = {
-                'is_high_value': 1 if float(base_features.get('Valor da Produção Total', 0.0)) > 5000000 else 0,
-                'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
-                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0,
-            }
-        elif isinstance(base_features, pd.Series):
-            # Para uma única linha (pd.Series)
+
+        if isinstance(base_features, pd.Series):
+            # Tratamento para pandas.Series (uma única linha)
             features = {
                 'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
                 'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
                 'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0,
             }
+        elif isinstance(base_features, dict):
+            # Tratamento para dicionário
+            features = {
+                'is_high_value': 1 if float(base_features.get('Valor da Produção Total', 0.0)) > 5000000 else 0,
+                'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
+                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0,
+            }
         elif isinstance(base_features, pd.DataFrame):
-            # Para DataFrame, aplicar operações vetorizadas
+            # Tratamento para DataFrame (vetorizado)
             features = pd.DataFrame({
                 'is_high_value': (base_features['Valor da Produção Total'].astype(float) > 5000000).astype(int),
                 'is_milho': (base_features['cultura'] == 'Milho').astype(int),
                 'is_soja': (base_features['cultura'] == 'Soja').astype(int),
             })
         else:
+            self.logger.error(f"Formato de entrada inesperado: {type(base_features)}")
             raise ValueError("Formato de entrada inesperado para base_features. Esperado dict, pandas.Series ou pandas.DataFrame.")
 
-        # Retornar as features processadas
+        # Log dos resultados
         if isinstance(features, dict):
+            self.logger.info(f"Features derivadas (dict): {features}")
             return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
         elif isinstance(features, pd.DataFrame):
+            self.logger.info(f"Features derivadas (DataFrame) com shape {features.shape}")
             return features[list(self.params['derived_categorical_n_levels_dict'].keys())]
-
-
- 
 
     def derived_features_numerical(self, base_features):
         """
         Gera características derivadas numéricas.
         """
-        print(f"Tipo de entrada: {type(base_features)}")
+        self.logger.info(f"Tipo de entrada: {type(base_features)}")
         # Exemplo de derivação de features numéricas
         features = {
             'valor_por_area': base_features.get('valor_producao_total', 0.0) / (base_features.get('area_colhida_ha', 1) + 1),
             'quantidade_por_area': base_features.get('Quantidade produzida (t)', 0.0) / (base_features.get('area_colhida_ha', 1) + 1),
             'rendimento_normalizado': base_features.get('Rendimento médio (kg/ha)', 0.0) / 1000.0  # Normalização simples
         }
+        self.logger.info(f"Features derivadas numéricas: {features}")
         return {k: features[k] for k in self.params['derived_fields_numerical']}
 
     def base_features(self, processed_row):
@@ -87,4 +89,5 @@ class FeatureSet(FeatureSetBase):
             'Quantidade produzida (t)': processed_row.get('Quantidade produzida (t)', 0.0),
             'Rendimento médio (kg/ha)': processed_row.get('Rendimento médio (kg/ha)', 0.0)
         }
+        self.logger.info(f"Features base processadas: {features}")
         return features
