@@ -74,7 +74,7 @@ class FeatureSet(FeatureSetBase):
             'safra': processed_row.get('Safra', '0000/0000'),
             'grupo': processed_row.get('Grupo', 'Grupo Desconhecido'),
             'decenio': processed_row.get('Decênio', '01/01-10/01'),
-            'area_colhida_ha': processed_row.get('Área colhida (ha)', 100),
+            'area_colhida_ha': processed_row.get('Área colhida (ha)', 0.0),  # Valor padrão corrigido
             'valor_producao_total': processed_row.get('Valor da Produção Total', 0.0),
             'Quantidade produzida (t)': processed_row.get('Quantidade produzida (t)', 0.0),
             'Rendimento médio (kg/ha)': processed_row.get('Rendimento médio (kg/ha)', 0.0)
