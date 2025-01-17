@@ -81,15 +81,15 @@ class ProblemBase:
 
     def stream_features(self):
         """
-        Gera features processadas, garantindo que chaves necessárias estejam presentes.
+        Generates processed features, ensuring required keys are present.
         """
         required_keys = ['Área colhida (ha)', 'Valor da Produção Total', 'cultura']
         for processed_row in self.stream_processed():
             missing_keys = [key for key in required_keys if key not in processed_row]
             if missing_keys:
-                self.logger.warning(f"Chaves ausentes detectadas: {missing_keys}. Adicionando valores padrão.")
+                self.logger.warning(f"Missing keys detected: {missing_keys}. Adding default values.")
                 for key in missing_keys:
-                    processed_row[key] = 0.0  # Adiciona valor padrão para campos ausentes
+                    processed_row[key] = 0.0  # Add default value for missing fields
             yield self.feature_set.features(processed_row)
 
     def prepare_feature_data(self):
@@ -109,11 +109,11 @@ class ProblemBase:
                                            read_from_file=read_from_file,
                                            base_features_omitted=omitted)
 
-        # Adicionando validação robusta no `add_numeric_stats`
+        # Adding robust validation in `add_numeric_stats`
         try:
             self.encoder.add_numeric_stats(self.stream_features())
         except KeyError as e:
-            self.logger.error(f"Erro de chave durante a adição de estatísticas numéricas: {e}")
+            self.logger.error(f"KeyError during numeric stats addition: {e}")
             raise
 
         runtime = time() - start
@@ -183,4 +183,46 @@ class ProblemBase:
 
         self.logger.info('Validation time: {0:.1f} seconds'.format(time() - start))
 
-    # Outros métodos permanecem inalterados...
+    def true_target_stream(self, stream):
+        target_name = self.feature_set.target_field
+        return (row[target_name] for row in stream)
+
+    def write_ml_model(self):
+        self.tracker.log_model(self.ml_model)
+
+    def setup_tracker(self):
+        self.tracker = tracking.Track(self.model_id, self.specification.spec)
+
+    def run_all(self):
+        start = time()
+        self.setup_tracker()
+        self.tracker.log_ml_pipeline_params(self.ml_pipeline_params)
+        self.download_data()
+        self.get_encoder()
+        self.train()
+        self.write_ml_model()
+        self.validate()
+
+        runtime = time() - start
+        self.tracker.save_results()
+
+        self.logger.info('All ML steps time: {0:.1f} seconds'.format(runtime))
+        self.logger.info('Finished model: %s' % self.model_id)
+
+    def download_data(self):
+        raise ValueError("This function should be implemented in a parent class")
+
+    @staticmethod
+    def get_feature_set_constructor(feature_set_name):
+        raise NotImplementedError("This function should be implemented in a parent class")
+
+    def get_ml_pipeline_params(self, ml_pipeline_params_name):
+        path = Path(Path(__file__).parent, self.problem_name, 'ml_pipelines', f"{ml_pipeline_params_name}.json")
+        if not path.exists():
+            self.logger.error(f"The file {path} does not exist.")
+            raise FileNotFoundError(f"The expected file {path} does not exist. Check the project structure.")
+        return self.read_json_file_for_current_problem_as_dict(path)
+
+    def get_algorithm_params(self, algorithm_name, algorithm_params_name):
+        path = f'algorithms/{algorithm_name}/{algorithm_params_name}.json'
+        return self.read_json_file
