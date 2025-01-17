@@ -19,37 +19,38 @@ class FeatureSet(FeatureSetBase):
     def derived_features_categorical(self, base_features):
         """
         Gera características derivadas categóricas.
-
-        Args:
-            base_features: Pode ser um pandas.Series (linha de DataFrame), um dict (linha como dicionário)
-                        ou um pandas.DataFrame (várias linhas).
-
-        Returns:
-            dict com as features categóricas derivadas, ou DataFrame se a entrada for múltiplas linhas.
         """
-        if isinstance(base_features, pd.Series):  # Caso seja uma linha de um DataFrame
+        # Para DataFrame ou Series
+        if isinstance(base_features, pd.Series):  # Linha individual
             features = {
                 'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
                 'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
-                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0
+                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0,
             }
-        elif isinstance(base_features, dict):  # Caso seja um dicionário
+        elif isinstance(base_features, pd.DataFrame):  # DataFrame completo
+            features = pd.DataFrame({
+                'is_high_value': (base_features['Valor da Produção Total'] > 5000000).astype(int),
+                'is_milho': (base_features['cultura'] == 'Milho').astype(int),
+                'is_soja': (base_features['cultura'] == 'Soja').astype(int),
+            })
+        elif isinstance(base_features, dict):  # Linha em formato de dicionário
             features = {
                 'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
                 'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
-                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0
+                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0,
             }
-        elif isinstance(base_features, pd.DataFrame):  # Caso seja um DataFrame com várias linhas
-            features = base_features.copy()
-            features['is_high_value'] = features['Valor da Produção Total'].apply(lambda x: 1 if x > 5000000 else 0)
-            features['is_milho'] = features['cultura'].apply(lambda x: 1 if x == 'Milho' else 0)
-            features['is_soja'] = features['cultura'].apply(lambda x: 1 if x == 'Soja' else 0)
-            return features
         else:
             raise ValueError("Formato de entrada inesperado para base_features. Esperado dict, pandas.Series ou pandas.DataFrame.")
         
-        return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
+        # Certifique-se de retornar apenas as chaves configuradas
+        if isinstance(features, dict):
+            return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
+        elif isinstance(features, pd.DataFrame):
+            return features[list(self.params['derived_categorical_n_levels_dict'].keys())]
 
+
+
+ 
 
     def derived_features_numerical(self, base_features):
         """
