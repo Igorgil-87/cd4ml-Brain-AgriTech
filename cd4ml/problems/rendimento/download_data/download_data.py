@@ -108,59 +108,52 @@ def validate_rendimento_raw(file_path):
 #voltando
 def create_rendimento_raw():
     """
-    Cria o arquivo `rendimento_raw.csv` combinando dados e processando os datasets.
+    Cria o arquivo `rendimento_raw.csv` combinando dados e processando os datasets em chunks.
     """
     inicio = time.time()
     try:
         log_memory_usage("Antes de carregar tabelas para rendimento_raw")
 
+        # Tamanhos de chunk
+        chunksize = 5000  # Ajuste conforme necessário
+
         # Carregar datasets em chunks
-        milho = pd.read_sql("SELECT * FROM milho_solo_transformado", con=engine)
-        arroz = pd.read_sql("SELECT * FROM arroz_solo_transformado", con=engine)
+        milho_chunks = pd.read_sql("SELECT * FROM milho_solo_transformado", con=engine, chunksize=chunksize)
+        arroz_chunks = pd.read_sql("SELECT * FROM arroz_solo_transformado", con=engine, chunksize=chunksize)
         ranking_valores = pd.read_sql("SELECT * FROM ranking_agricultura_valor", con=engine)
 
-        # Garantir colunas consistentes
-        milho["Cultura"] = "Milho"
-        arroz["Cultura"] = "Arroz"
-
-        # Logs detalhados das colunas
-        print(f"Colunas em milho: {milho.columns}")
-        print(f"Colunas em arroz: {arroz.columns}")
-        print(f"Colunas em ranking_valores: {ranking_valores.columns}")
-
-        # Processar tabela `ranking_valores`
+        # Garantir colunas consistentes para ranking_valores
         ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
         ranking_valores["Valor da Produção Total"] = ranking_valores["Valor da Produção Total"].str.replace('.', '', regex=False).astype(float)
 
         log_memory_usage("Antes de combinar dados")
 
-        # Combinar datasets
-        dados_combinados = pd.concat([milho, arroz], ignore_index=True)
-        dados_combinados = dados_combinados.merge(ranking_valores, on="Cultura", how="left").fillna(0)
-
-        # Garantir que "Área colhida (ha)" esteja presente
-        if "Área colhida (ha)" not in dados_combinados.columns:
-            dados_combinados["Área colhida (ha)"] = 0.0  # Valor padrão
-
-        # Logs para verificar a combinação
-        print(f"Colunas após combinação: {dados_combinados.columns}")
-        print(f"Exemplo de dados combinados:\n{dados_combinados.head()}")
-
-        log_memory_usage("Antes de salvar rendimento_raw")
-
-        # Salvar como CSV em chunks
+        # Processar milho e arroz em chunks
         output_path = "data/raw_data/rendimento/rendimento_raw.csv"
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        dados_combinados.to_csv(output_path, index=False, chunksize=10000)
+
+        for milho_chunk, arroz_chunk in zip(milho_chunks, arroz_chunks):
+            milho_chunk["Cultura"] = "Milho"
+            arroz_chunk["Cultura"] = "Arroz"
+
+            # Combinar os dados do chunk atual
+            dados_combinados = pd.concat([milho_chunk, arroz_chunk], ignore_index=True)
+            dados_combinados = dados_combinados.merge(ranking_valores, on="Cultura", how="left").fillna(0)
+
+            # Garantir colunas esperadas
+            if "Área colhida (ha)" not in dados_combinados.columns:
+                dados_combinados["Área colhida (ha)"] = 0.0  # Valor padrão
+
+            # Salvar o chunk no arquivo de saída
+            dados_combinados.to_csv(output_path, mode='a', header=not os.path.exists(output_path), index=False)
+
+            log_memory_usage("Depois de processar um chunk")
 
         log_tempo(inicio, "Arquivo rendimento_raw.csv criado com sucesso")
-        log_memory_usage("Depois de salvar rendimento_raw")
 
     except Exception as e:
         print(f"Erro ao criar rendimento_raw: {e}")
-
-
-
+        
 
 def download(problem_name=None):
     """
