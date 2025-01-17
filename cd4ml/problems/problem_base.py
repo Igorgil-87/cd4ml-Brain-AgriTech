@@ -77,7 +77,24 @@ class ProblemBase:
                                                           self.algorithm_params_name)
 
     def stream_processed(self):
-        return self._stream_data(self.problem_name)
+        """
+        Gera o fluxo de dados processados, garantindo que todas as chaves obrigatórias existam.
+        """
+        required_keys = [
+            'Cultura',
+            'Área colhida (ha)',
+            'Valor da Produção Total',
+            'Rendimento médio (kg/ha)',  # Incluindo o campo faltante
+        ]
+
+        def ensure_keys(row):
+            for key in required_keys:
+                if key not in row:
+                    self.logger.warning(f"Campo ausente '{key}' detectado nos dados processados. Adicionando valor padrão.")
+                    row[key] = 0.0 if key != 'Cultura' else 'Indefinido'  # Adiciona valores padrão
+            return row
+
+        return (ensure_keys(row) for row in self._stream_data(self.problem_name))
 
     def stream_features(self):
         """
