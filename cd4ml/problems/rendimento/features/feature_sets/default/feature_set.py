@@ -19,8 +19,15 @@ class FeatureSet(FeatureSetBase):
     def derived_features_categorical(self, base_features):
         """
         Gera características derivadas categóricas.
+
+        Args:
+            base_features: Pode ser um pandas.Series (linha de DataFrame), um dict (linha como dicionário)
+                        ou um pandas.DataFrame (várias linhas).
+
+        Returns:
+            dict com as features categóricas derivadas, ou DataFrame se a entrada for múltiplas linhas.
         """
-        if isinstance(base_features, pd.Series):  # Se base_features for uma linha de um DataFrame
+        if isinstance(base_features, pd.Series):  # Caso seja uma linha de um DataFrame
             features = {
                 'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
                 'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
@@ -32,17 +39,23 @@ class FeatureSet(FeatureSetBase):
                 'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
                 'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0
             }
+        elif isinstance(base_features, pd.DataFrame):  # Caso seja um DataFrame com várias linhas
+            features = base_features.copy()
+            features['is_high_value'] = features['Valor da Produção Total'].apply(lambda x: 1 if x > 5000000 else 0)
+            features['is_milho'] = features['cultura'].apply(lambda x: 1 if x == 'Milho' else 0)
+            features['is_soja'] = features['cultura'].apply(lambda x: 1 if x == 'Soja' else 0)
+            return features
         else:
-            raise ValueError("Formato de entrada inesperado para base_features. Esperado dict ou pandas.Series.")
+            raise ValueError("Formato de entrada inesperado para base_features. Esperado dict, pandas.Series ou pandas.DataFrame.")
         
         return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
-
 
 
     def derived_features_numerical(self, base_features):
         """
         Gera características derivadas numéricas.
         """
+        print(f"Tipo de entrada: {type(base_features)}")
         # Exemplo de derivação de features numéricas
         features = {
             'valor_por_area': base_features.get('valor_producao_total', 0.0) / (base_features.get('area_colhida_ha', 1) + 1),
