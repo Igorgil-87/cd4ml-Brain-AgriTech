@@ -24,39 +24,29 @@ class FeatureSet(FeatureSetBase):
         Gera características derivadas categóricas de maneira robusta.
         """
         self.logger.info(f"Tipo de entrada: {type(base_features)}")
-
+        
+        # Forçar `base_features` a ser um dicionário
         if isinstance(base_features, pd.Series):
-            # Tratamento para pandas.Series (uma única linha)
-            features = {
-                'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
-                'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
-                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0,
-            }
-        elif isinstance(base_features, dict):
-            # Tratamento para dicionário
-            features = {
-                'is_high_value': 1 if float(base_features.get('Valor da Produção Total', 0.0)) > 5000000 else 0,
-                'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
-                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0,
-            }
-        elif isinstance(base_features, pd.DataFrame):
-            # Tratamento para DataFrame (vetorizado)
-            features = pd.DataFrame({
-                'is_high_value': (base_features['Valor da Produção Total'].astype(float) > 5000000).astype(int),
-                'is_milho': (base_features['cultura'] == 'Milho').astype(int),
-                'is_soja': (base_features['cultura'] == 'Soja').astype(int),
-            })
-        else:
-            self.logger.error(f"Formato de entrada inesperado: {type(base_features)}")
-            raise ValueError("Formato de entrada inesperado para base_features. Esperado dict, pandas.Series ou pandas.DataFrame.")
+            base_features = base_features.to_dict()
+        elif not isinstance(base_features, dict):
+            raise ValueError(f"Formato inesperado de base_features: {type(base_features)}")
+        
+        # Garantir que os valores são strings para evitar ambiguidades
+        cultura = str(base_features.get('cultura', ''))
+        valor_total = float(base_features.get('Valor da Produção Total', 0.0))
+        
+        # Criar as features derivadas
+        features = {
+            'is_high_value': 1 if valor_total > 5000000 else 0,
+            'is_milho': 1 if cultura == 'Milho' else 0,
+            'is_soja': 1 if cultura == 'Soja' else 0,
+        }
+        
+        self.logger.info(f"Features derivadas categóricas: {features}")
+        return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
 
-        # Log dos resultados
-        if isinstance(features, dict):
-            self.logger.info(f"Features derivadas (dict): {features}")
-            return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
-        elif isinstance(features, pd.DataFrame):
-            self.logger.info(f"Features derivadas (DataFrame) com shape {features.shape}")
-            return features[list(self.params['derived_categorical_n_levels_dict'].keys())]
+
+
 
     def derived_features_numerical(self, base_features):
         """
