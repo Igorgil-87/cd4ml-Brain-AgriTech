@@ -1,6 +1,7 @@
 import pandas as pd
 from cd4ml.feature_set import FeatureSetBase
 from cd4ml.utils.feature_utils import get_feature_params, get_generic_feature_set
+import logging
 
 def get_feature_set_params():
     """Carrega os parâmetros do conjunto de features a partir do JSON."""
@@ -18,36 +19,40 @@ class FeatureSet(FeatureSetBase):
 
     def derived_features_categorical(self, base_features):
         """
-        Gera características derivadas categóricas.
+        Gera características derivadas categóricas de maneira robusta.
         """
-        # Para DataFrame ou Series
-        if isinstance(base_features, pd.Series):  # Linha individual
+
+        # Verificar o tipo de entrada
+        self.logger.info(f"Tipo de entrada: {type(base_features)}")
+        if isinstance(base_features, dict):
+            # Para dicionário, tratar cada valor individualmente
+            features = {
+                'is_high_value': 1 if float(base_features.get('Valor da Produção Total', 0.0)) > 5000000 else 0,
+                'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
+                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0,
+            }
+        elif isinstance(base_features, pd.Series):
+            # Para uma única linha (pd.Series)
             features = {
                 'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
                 'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
                 'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0,
             }
-        elif isinstance(base_features, pd.DataFrame):  # DataFrame completo
+        elif isinstance(base_features, pd.DataFrame):
+            # Para DataFrame, aplicar operações vetorizadas
             features = pd.DataFrame({
-                'is_high_value': (base_features['Valor da Produção Total'] > 5000000).astype(int),
+                'is_high_value': (base_features['Valor da Produção Total'].astype(float) > 5000000).astype(int),
                 'is_milho': (base_features['cultura'] == 'Milho').astype(int),
                 'is_soja': (base_features['cultura'] == 'Soja').astype(int),
             })
-        elif isinstance(base_features, dict):  # Linha em formato de dicionário
-            features = {
-                'is_high_value': 1 if base_features.get('Valor da Produção Total', 0.0) > 5000000 else 0,
-                'is_milho': 1 if base_features.get('cultura', '') == 'Milho' else 0,
-                'is_soja': 1 if base_features.get('cultura', '') == 'Soja' else 0,
-            }
         else:
             raise ValueError("Formato de entrada inesperado para base_features. Esperado dict, pandas.Series ou pandas.DataFrame.")
-        
-        # Certifique-se de retornar apenas as chaves configuradas
+
+        # Retornar as features processadas
         if isinstance(features, dict):
             return {k: features[k] for k in self.params['derived_categorical_n_levels_dict'].keys()}
         elif isinstance(features, pd.DataFrame):
             return features[list(self.params['derived_categorical_n_levels_dict'].keys())]
-
 
 
  
