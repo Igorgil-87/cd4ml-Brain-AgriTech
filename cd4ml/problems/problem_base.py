@@ -96,27 +96,47 @@ class ProblemBase:
         pass
 
     def get_encoder(self, write=False, read_from_file=False):
+        """
+        Obtém ou cria o encoder para os dados do problema.
+        """
         self.prepare_feature_data()
 
         start = time()
         ml_fields = self.feature_set.ml_fields()
         omitted = self.feature_set.params['encoder_untransformed_fields']
 
-        self.encoder = get_trained_encoder(self.stream_features(),
-                                           ml_fields,
-                                           self.problem_name,
-                                           write=write,
-                                           read_from_file=read_from_file,
-                                           base_features_omitted=omitted)
+        self.encoder = get_trained_encoder(
+            self.stream_features(),
+            ml_fields,
+            self.problem_name,
+            write=write,
+            read_from_file=read_from_file,
+            base_features_omitted=omitted
+        )
 
+        # Garantir que todas as chaves necessárias existam antes de adicionar estatísticas numéricas
+        def ensure_keys(row, required_keys):
+            for key in required_keys:
+                if key not in row:
+                    self.logger.warning(f"Adicionando chave ausente '{key}' com valor padrão 0.0")
+                    row[key] = 0.0
+            return row
+
+        # Validação para `add_numeric_stats`
         try:
-            self.encoder.add_numeric_stats(self.stream_features())
+            required_keys = ['Área colhida (ha)', 'Valor da Produção Total', 'cultura']
+            validated_stream = (ensure_keys(row, required_keys) for row in self.stream_features())
+            self.encoder.add_numeric_stats(validated_stream)
         except KeyError as e:
-            self.logger.error(f"KeyError during numeric stats addition: {e}")
+            self.logger.error(f"KeyError durante a adição de estatísticas numéricas: {e}")
             raise
 
         runtime = time() - start
         self.logger.info('Encoder time: {0:.1f} seconds'.format(runtime))
+
+
+
+
 
     def training_stream(self):
         return (row for row in self.stream_processed() if self.training_filter(row))
