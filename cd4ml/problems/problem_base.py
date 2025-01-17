@@ -135,11 +135,20 @@ class ProblemBase:
         self.logger.info('Encoder time: {0:.1f} seconds'.format(runtime))
 
 
-
-
-
     def training_stream(self):
-        return (row for row in self.stream_processed() if self.training_filter(row))
+        """
+        Gera o fluxo de treinamento, garantindo que os campos obrigatórios existam.
+        """
+        required_keys = ['Cultura', 'Área colhida (ha)', 'Valor da Produção Total']  # Adicione todos os campos obrigatórios aqui.
+
+        def ensure_keys(row):
+            for key in required_keys:
+                if key not in row:
+                    self.logger.warning(f"Campo ausente '{key}' detectado no treinamento. Adicionando valor padrão.")
+                    row[key] = 'Indefinido' if key == 'Cultura' else 0.0  # Valor padrão para campos ausentes.
+            return row
+
+        return (ensure_keys(row) for row in self.stream_processed() if self.training_filter(row))
 
     def validation_stream(self):
         return (row for row in self.stream_processed() if self.validation_filter(row))
