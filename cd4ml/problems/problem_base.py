@@ -89,7 +89,7 @@ class ProblemBase:
             if missing_keys:
                 self.logger.warning(f"Missing keys detected: {missing_keys}. Adding default values.")
                 for key in missing_keys:
-                    processed_row[key] = 0.0  # Add default value for missing fields
+                    processed_row[key] = 0.0  # Default value for missing fields
             yield self.feature_set.features(processed_row)
 
     def prepare_feature_data(self):
@@ -109,7 +109,6 @@ class ProblemBase:
                                            read_from_file=read_from_file,
                                            base_features_omitted=omitted)
 
-        # Adding robust validation in `add_numeric_stats`
         try:
             self.encoder.add_numeric_stats(self.stream_features())
         except KeyError as e:
@@ -225,4 +224,35 @@ class ProblemBase:
 
     def get_algorithm_params(self, algorithm_name, algorithm_params_name):
         path = f'algorithms/{algorithm_name}/{algorithm_params_name}.json'
-        return self.read_json_file
+        return self.read_json_file_for_current_problem_as_dict(path)
+
+    def make_specification(self):
+        return Specification(self.problem_name,
+                             self.data_downloader,
+                             self.ml_pipeline_params_name,
+                             self.feature_set_name,
+                             self.algorithm_name,
+                             self.algorithm_params_name,
+                             self.resolved_algorithm_name)
+
+    def read_json_file_for_current_problem_as_dict(self, file_path):
+        path = Path(Path(__file__).parent, self.problem_name, file_path)
+
+        try:
+            with open(path, "r") as file:
+                return json.load(file)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Error loading JSON file: {file_path}. Check if it is well-formatted.") from e
+        except FileNotFoundError:
+            raise FileNotFoundError(f"The expected file {file_path} was not found. Check the path.")
+
+    def __repr__(self):
+        messages = ['Problem']
+        for k, v in self.__dict__.items():
+            if v is None:
+                continue
+            if str(v.__class__) == "<class 'function'>":
+                continue
+            messages.append("%s: \n%s\n" % (k, v))
+
+        return '\n'.join(messages)
