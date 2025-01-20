@@ -143,13 +143,33 @@ class ProblemBase:
         return iter(filtered_data)
 
     def validation_stream(self):
-        logger.info("Generating validation data stream.")
-        filtered_data = [row for row in self.stream_processed() if self.validation_filter(row)]
-        logger.info(f"Validation stream contains {len(filtered_data)} rows.")
-        if not filtered_data:
-            logger.error("Validation stream is empty. Check filters or input data.")
-            raise ValueError("Validation stream is empty.")
-        return iter(filtered_data)
+        """
+        Gera o fluxo de dados de validação, garantindo que os filtros sejam aplicados corretamente.
+        """
+        logger.info("Iniciando geração do fluxo de validação.")
+        total_rows = 0
+        filtered_rows = 0
+
+        try:
+            data = list(self.stream_processed())
+            total_rows = len(data)
+
+            # Aplica o filtro de validação
+            filtered_data = [row for row in data if self.validation_filter(row)]
+            filtered_rows = len(filtered_data)
+
+            if filtered_rows == 0:
+                logger.error(f"O fluxo de validação está vazio. Total de linhas processadas: {total_rows}. "
+                            f"Linhas após filtro de validação: {filtered_rows}.")
+                logger.info(f"Dados disponíveis para validação antes do filtro: {data[:5]}")
+                raise ValueError("Validation stream is empty.")
+
+            logger.info(f"Fluxo de validação gerado com sucesso. Total: {filtered_rows} linhas de {total_rows} processadas.")
+            return iter(filtered_data)
+
+        except Exception as e:
+            logger.error(f"Erro ao gerar o fluxo de validação: {e}")
+            raise
 
     def train(self):
         """
@@ -209,21 +229,30 @@ class ProblemBase:
         return (row[self.feature_set.target_field] for row in stream)
 
     def run_all(self):
-        """
-        Executa todo o pipeline de dados e modelos.
-        """
-        logger.info("Starting full pipeline execution.")
-        start = time()
+        logger.info("Executando o pipeline completo.")
+        try:
+            self.setup_tracker()
+            self.tracker.log_ml_pipeline_params(self.ml_pipeline_params)
 
-        self.setup_tracker()
-        self.tracker.log_ml_pipeline_params(self.ml_pipeline_params)
-        self.download_data()
-        self.get_encoder()
-        self.train()
-        self.validate()
+            self.download_data()
+            logger.info("Dados baixados com sucesso.")
 
-        runtime = time() - start
-        logger.info(f"Pipeline execution completed in {runtime:.2f} seconds.")
+            self.get_encoder()
+            logger.info("Encoder configurado com sucesso.")
+
+            self.train()
+            logger.info("Modelo treinado com sucesso.")
+
+            logger.info("Iniciando a validação do modelo.")
+            self.validate()
+
+            logger.info("Pipeline completo executado com sucesso.")
+        except ValueError as ve:
+            logger.error(f"Erro durante a execução do pipeline: {ve}")
+            raise
+        except Exception as e:
+            logger.error(f"Erro inesperado: {e}")
+            raise
 
     def setup_tracker(self):
         self.tracker = tracking.Track(self.model_id, self.specification.spec)
