@@ -1,8 +1,16 @@
 from cd4ml.utils.utils import hash_to_uniform_random
 import logging
-
+import sys
+print(sys.path)
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+# Exemplo de teste
+identifier = "test_identifier"
+seed = 42
+hash_value = hash_to_uniform_random(identifier, seed)
+print(f"Hash para {identifier} com semente {seed}: {hash_value}")
+
+
 
 def validate_splitting(ml_pipeline_params):
     """
