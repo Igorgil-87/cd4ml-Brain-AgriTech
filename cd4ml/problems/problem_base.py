@@ -245,7 +245,14 @@ class ProblemBase:
         logger.info(f"Carregando parâmetros do algoritmo de {path}.")
         return self.read_json_file(path)
 
-
+    def read_json_file(self, path):
+        try:
+            with open(path, 'r') as file:
+                return json.load(file)
+        except Exception as e:
+            logger.error(f"Erro ao carregar arquivo JSON {path}: {e}")
+            raise
+        
     def make_specification(self):
         return Specification(self.problem_name,
                              self.data_downloader,
