@@ -69,23 +69,59 @@ class ProblemBase:
         self.feature_data = None
         self.importance = None
 
+    def ensure_keys(self, row, required_keys):
+        """
+        Garante que todas as chaves obrigatórias estejam presentes no dicionário.
+        """
+        for key in required_keys:
+            if key not in row:
+                logger.warning(f"Adicionando chave ausente '{key}' com valor padrão.")
+                row[key] = 0.0 if key != 'Cultura' else 'Indefinido'
+        return row
+
     def stream_processed(self):
         """
-        Gera o fluxo de dados processados, garantindo que todas as chaves obrigatórias existam.
+        Gera um fluxo de dados processados, garantindo que todas as chaves obrigatórias existam.
         """
-        logger.info("Starting processed data stream generation.")
+        logger.info("Gerando fluxo de dados processados.")
         required_keys = ['Cultura', 'Área colhida (ha)', 'Valor da Produção Total', 'Rendimento médio (kg/ha)']
 
-        def ensure_keys(row):
-            for key in required_keys:
-                if key not in row:
-                    logger.warning(f"Missing key '{key}' detected in data. Adding default value.")
-                    row[key] = 0.0 if key != 'Cultura' else 'Indefinido'
-            return row
-
-        processed_stream = (ensure_keys(row) for row in self._stream_data(self.problem_name))
-        logger.info("Processed data stream generated.")
+        processed_stream = (self.ensure_keys(row, required_keys) for row in self._stream_data(self.problem_name))
+        logger.info("Fluxo de dados processados gerado com sucesso.")
         return processed_stream
+
+    def get_encoder(self, write=False, read_from_file=False):
+        """
+        Cria ou recupera o encoder treinado para os dados.
+        """
+        logger.info("Criando ou recuperando o encoder.")
+        self.prepare_feature_data()
+        start = time()
+
+        ml_fields = self.feature_set.ml_fields()
+        omitted = self.feature_set.params.get('encoder_untransformed_fields', [])
+
+        self.encoder = get_trained_encoder(
+            self.stream_features(),
+            ml_fields,
+            self.problem_name,
+            write=write,
+            read_from_file=read_from_file,
+            base_features_omitted=omitted
+        )
+        logger.info("Encoder inicializado. Adicionando estatísticas numéricas.")
+
+        try:
+            required_keys = ['Área colhida (ha)', 'Valor da Produção Total', 'Rendimento médio (kg/ha)']
+            validated_stream = (self.ensure_keys(row, required_keys) for row in self.stream_features())
+            self.encoder.add_numeric_stats(validated_stream)
+        except KeyError as e:
+            logger.error(f"Erro ao adicionar estatísticas numéricas ao encoder: {e}")
+            raise
+
+        runtime = time() - start
+        logger.info(f"Configuração do encoder concluída em {runtime:.2f} segundos.")
+
 
     def stream_features(self):
         """
@@ -98,36 +134,8 @@ class ProblemBase:
 
     def prepare_feature_data(self):
         logger.info("Preparing feature data. This step can be overridden.")
-
-    def get_encoder(self, write=False, read_from_file=False):
-        """
-        Cria ou recupera o encoder treinado para os dados.
-        """
-        logger.info("Starting encoder creation or retrieval.")
-        self.prepare_feature_data()
-        start = time()
-
-        ml_fields = self.feature_set.ml_fields()
-        omitted = self.feature_set.params['encoder_untransformed_fields']
-
-        self.encoder = get_trained_encoder(
-            self.stream_features(),
-            ml_fields,
-            self.problem_name,
-            write=write,
-            read_from_file=read_from_file,
-            base_features_omitted=omitted
-        )
-        self.logger.info("Encoder initialized. Adding numeric stats.")
-        try:
-            self.encoder.add_numeric_stats(self.stream_features())
-        except KeyError as e:
-            logger.error(f"Error adding numeric stats to encoder: {e}")
-            raise
-
-        runtime = time() - start
-        logger.info(f"Encoder setup completed in {runtime:.2f} seconds.")
-
+    
+    
     def training_stream(self):
         """
         Gera o fluxo de dados de treinamento.
@@ -252,7 +260,8 @@ class ProblemBase:
         except Exception as e:
             logger.error(f"Erro ao carregar arquivo JSON {path}: {e}")
             raise
-        
+    
+
     def make_specification(self):
         return Specification(self.problem_name,
                              self.data_downloader,
