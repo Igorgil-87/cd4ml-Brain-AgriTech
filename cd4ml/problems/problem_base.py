@@ -12,6 +12,7 @@ from cd4ml.model_tracking.validation_plots import get_validation_plot
 from cd4ml.utils.utils import get_uuid
 from pathlib import Path
 import json
+from cd4ml.utils.utils import hash_to_uniform_random
 import logging
 
 logger = logging.getLogger(__name__)
