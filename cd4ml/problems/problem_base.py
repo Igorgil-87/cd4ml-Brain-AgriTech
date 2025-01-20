@@ -12,10 +12,10 @@ from cd4ml.model_tracking.validation_plots import get_validation_plot
 from cd4ml.utils.utils import get_uuid
 from pathlib import Path
 import json
-
 import logging
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 class ProblemBase:
     """
@@ -30,7 +30,7 @@ class ProblemBase:
                  feature_set_name='default',
                  algorithm_name='default',
                  algorithm_params_name='default'):
-
+        logger.info(f"Initializing ProblemBase for problem: {problem_name}")
         self.model_id = get_uuid()
         self.logger = logging.getLogger(__name__)
         self.fluentd_logger = FluentdLogger()
@@ -43,7 +43,7 @@ class ProblemBase:
         self.algorithm_params_name = algorithm_params_name
         self.ml_pipeline_params = self.get_ml_pipeline_params(ml_pipeline_params_name)
 
-        self.logger.info("Created model_id: %s" % self.model_id)
+        self.logger.info(f"Model ID created: {self.model_id}")
 
         if algorithm_name == 'default':
             self.resolved_algorithm_name = self.ml_pipeline_params['default_algorithm']
@@ -51,11 +51,15 @@ class ProblemBase:
             self.resolved_algorithm_name = algorithm_name
 
         self.specification = self.make_specification()
-
         self._stream_data = None
-        self.training_filter = None
-        self.validation_filter = None
-        self.get_validation_metrics = None
+        self.training_filter, self.validation_filter = splitter(self.ml_pipeline_params)
+
+        feature_set_class = self.get_feature_set_constructor(feature_set_name)
+        self.feature_set = feature_set_class(self.ml_pipeline_params['identifier_field'],
+                                             self.ml_pipeline_params['target_field'],
+                                             {})
+        self.algorithm_params = self.get_algorithm_params(self.resolved_algorithm_name,
+                                                          self.algorithm_params_name)
 
         self.trained_model = None
         self.validation_metrics = None
@@ -65,62 +69,44 @@ class ProblemBase:
         self.feature_data = None
         self.importance = None
 
-        self.training_filter, self.validation_filter = splitter(self.ml_pipeline_params)
-
-        feature_set_class = self.get_feature_set_constructor(feature_set_name)
-
-        self.feature_set = feature_set_class(self.ml_pipeline_params['identifier_field'],
-                                             self.ml_pipeline_params['target_field'],
-                                             {})
-
-        self.algorithm_params = self.get_algorithm_params(self.resolved_algorithm_name,
-                                                          self.algorithm_params_name)
-
     def stream_processed(self):
-        self.logger.info(f"Processed stream contains {len(processed)} rows.")
-
         """
         Gera o fluxo de dados processados, garantindo que todas as chaves obrigatórias existam.
         """
-        required_keys = [
-            'Cultura',
-            'Área colhida (ha)',
-            'Valor da Produção Total',
-            'Rendimento médio (kg/ha)',  # Incluindo o campo faltante
-        ]
+        logger.info("Starting processed data stream generation.")
+        required_keys = ['Cultura', 'Área colhida (ha)', 'Valor da Produção Total', 'Rendimento médio (kg/ha)']
 
         def ensure_keys(row):
             for key in required_keys:
                 if key not in row:
-                    self.logger.warning(f"Campo ausente '{key}' detectado nos dados processados. Adicionando valor padrão.")
-                    row[key] = 0.0 if key != 'Cultura' else 'Indefinido'  # Adiciona valores padrão
+                    logger.warning(f"Missing key '{key}' detected in data. Adding default value.")
+                    row[key] = 0.0 if key != 'Cultura' else 'Indefinido'
             return row
 
-        return (ensure_keys(row) for row in self._stream_data(self.problem_name))
+        processed_stream = (ensure_keys(row) for row in self._stream_data(self.problem_name))
+        logger.info("Processed data stream generated.")
+        return processed_stream
 
     def stream_features(self):
         """
-        Generates processed features, ensuring required keys are present.
+        Gera o fluxo de features processadas.
         """
-        required_keys = ['Área colhida (ha)', 'Valor da Produção Total', 'cultura']
+        logger.info("Starting feature stream generation.")
         for processed_row in self.stream_processed():
-            missing_keys = [key for key in required_keys if key not in processed_row]
-            if missing_keys:
-                self.logger.warning(f"Missing keys detected: {missing_keys}. Adding default values.")
-                for key in missing_keys:
-                    processed_row[key] = 0.0  # Default value for missing fields
             yield self.feature_set.features(processed_row)
+        logger.info("Feature stream generation completed.")
 
     def prepare_feature_data(self):
-        pass
+        logger.info("Preparing feature data. This step can be overridden.")
 
     def get_encoder(self, write=False, read_from_file=False):
         """
-        Obtém ou cria o encoder para os dados do problema.
+        Cria ou recupera o encoder treinado para os dados.
         """
+        logger.info("Starting encoder creation or retrieval.")
         self.prepare_feature_data()
-
         start = time()
+
         ml_fields = self.feature_set.ml_fields()
         omitted = self.feature_set.params['encoder_untransformed_fields']
 
@@ -132,56 +118,46 @@ class ProblemBase:
             read_from_file=read_from_file,
             base_features_omitted=omitted
         )
-
-        # Garantir que todas as chaves necessárias existam antes de adicionar estatísticas numéricas
-        def ensure_keys(row, required_keys):
-            for key in required_keys:
-                if key not in row:
-                    self.logger.warning(f"Adicionando chave ausente '{key}' com valor padrão 0.0")
-                    row[key] = 0.0
-            return row
-
-        # Validação para `add_numeric_stats`
+        self.logger.info("Encoder initialized. Adding numeric stats.")
         try:
-            required_keys = ['Área colhida (ha)', 'Valor da Produção Total', 'cultura']
-            validated_stream = (ensure_keys(row, required_keys) for row in self.stream_features())
-            self.encoder.add_numeric_stats(validated_stream)
+            self.encoder.add_numeric_stats(self.stream_features())
         except KeyError as e:
-            self.logger.error(f"KeyError durante a adição de estatísticas numéricas: {e}")
+            logger.error(f"Error adding numeric stats to encoder: {e}")
             raise
 
         runtime = time() - start
-        self.logger.info('Encoder time: {0:.1f} seconds'.format(runtime))
-
+        logger.info(f"Encoder setup completed in {runtime:.2f} seconds.")
 
     def training_stream(self):
         """
-        Gera o fluxo de treinamento, garantindo que os campos obrigatórios existam.
+        Gera o fluxo de dados de treinamento.
         """
-        required_keys = ['Cultura', 'Área colhida (ha)', 'Valor da Produção Total']  # Adicione todos os campos obrigatórios aqui.
-
-        def ensure_keys(row):
-            for key in required_keys:
-                if key not in row:
-                    self.logger.warning(f"Campo ausente '{key}' detectado no treinamento. Adicionando valor padrão.")
-                    row[key] = 'Indefinido' if key == 'Cultura' else 0.0  # Valor padrão para campos ausentes.
-            return row
-
-        return (ensure_keys(row) for row in self.stream_processed() if self.training_filter(row))
-
+        logger.info("Generating training data stream.")
+        return (row for row in self.stream_processed() if self.training_filter(row))
 
     def validation_stream(self):
+        """
+        Gera o fluxo de dados de validação.
+        """
+        logger.info("Generating validation data stream.")
         filtered_data = [row for row in self.stream_processed() if self.validation_filter(row)]
-        self.logger.info(f"Validation stream contains {len(filtered_data)} rows.")
+        logger.info(f"Validation stream contains {len(filtered_data)} rows.")
+        if not filtered_data:
+            logger.error("Validation stream is empty. Check filters or input data.")
+            raise ValueError("Validation stream is empty.")
         return iter(filtered_data)
 
     def train(self):
-        if self.ml_model is not None:
-            self.logger.warning('Model is already trained, cannot retrain')
+        """
+        Realiza o treinamento do modelo.
+        """
+        if self.ml_model:
+            logger.warning("Model is already trained. Retraining is not allowed.")
             return
 
-        self.logger.info('Starting training')
+        logger.info("Starting model training.")
         start = time()
+
         if self.encoder is None:
             self.get_encoder()
 
@@ -195,98 +171,78 @@ class ProblemBase:
             self.tracker.log_algorithm_params(self.algorithm_params)
 
         self.ml_model.train(self.training_stream())
-
         model_name = self.specification.spec['algorithm_name_actual']
         self.importance = get_feature_importance(self.ml_model.trained_model, model_name, self.encoder)
 
         runtime = time() - start
-        self.logger.info('Training time: {0:.1f} seconds'.format(runtime))
+        logger.info(f"Model training completed in {runtime:.2f} seconds.")
 
+    def validate(self):
+        """
+        Realiza a validação do modelo.
+        """
+        logger.info("Starting model validation.")
+        start = time()
 
-def validate(self):
-    self.logger.info('Starting validation')
-    true_validation_target = list(self.true_target_stream(self.validation_stream()))
-    self.logger.info(f"Number of validation targets: {len(true_validation_target)}")
-    validation_prediction = list(self.ml_model.predict_processed_rows(self.validation_stream()))
+        true_validation_target = list(self.true_target_stream(self.validation_stream()))
+        validation_prediction = list(self.ml_model.predict_processed_rows(self.validation_stream()))
 
-    if not true_validation_target:
-        self.logger.error("O conjunto de validação está vazio. Verifique os dados de entrada ou os filtros.")
-        raise ValueError("O conjunto de validação está vazio. Não é possível calcular métricas de validação.")
+        if not true_validation_target:
+            logger.error("Validation set is empty. Unable to calculate validation metrics.")
+            raise ValueError("Validation set is empty.")
 
-    if self.ml_model.model_type == 'classifier':
-        validation_pred_prob = np.array(list(self.ml_model.predict_processed_rows(self.validation_stream(), prob=True)))
-        target_levels = self.ml_model.trained_model.classes_
-    elif self.ml_model.model_type == 'regressor':
-        validation_pred_prob = None
-        target_levels = None
-    else:
-        raise ValueError('Unknown classification type: %s' % self.ml_model.model_type)
-
-    logger.info('Done with predictions')
-
-    # Calcular métricas de validação
-    self.logger.info('Calculating validation metrics')
-    validation_metric_names = self.ml_pipeline_params['validation_metric_names']
-
-    try:
+        validation_metric_names = self.ml_pipeline_params['validation_metric_names']
         self.validation_metrics = get_validation_metrics(validation_metric_names,
                                                          true_validation_target,
                                                          validation_prediction,
-                                                         validation_pred_prob,
-                                                         target_levels)
-    except Exception as e:
-        self.logger.error(f"Erro ao calcular métricas de validação: {e}")
-        raise
+                                                         None,  # Probabilities not used in regression
+                                                         None)
 
-    self.logger.info('Validation completed successfully')
-    runtime = time() - start
-    self.logger.info('Validation time: {0:.1f} seconds'.format(runtime))
-
-
-
+        runtime = time() - start
+        logger.info(f"Model validation completed in {runtime:.2f} seconds.")
 
     def true_target_stream(self, stream):
-        target_name = self.feature_set.target_field
-        return (row[target_name] for row in stream)
-
-    def write_ml_model(self):
-        self.tracker.log_model(self.ml_model)
-
-    def setup_tracker(self):
-        self.tracker = tracking.Track(self.model_id, self.specification.spec)
+        return (row[self.feature_set.target_field] for row in stream)
 
     def run_all(self):
+        """
+        Executa todo o pipeline de dados e modelos.
+        """
+        logger.info("Starting full pipeline execution.")
         start = time()
+
         self.setup_tracker()
         self.tracker.log_ml_pipeline_params(self.ml_pipeline_params)
         self.download_data()
         self.get_encoder()
         self.train()
-        self.write_ml_model()
         self.validate()
 
         runtime = time() - start
-        self.tracker.save_results()
+        logger.info(f"Pipeline execution completed in {runtime:.2f} seconds.")
 
-        self.logger.info('All ML steps time: {0:.1f} seconds'.format(runtime))
-        self.logger.info('Finished model: %s' % self.model_id)
+    def setup_tracker(self):
+        self.tracker = tracking.Track(self.model_id, self.specification.spec)
+        logger.info("Tracker setup completed.")
 
     def download_data(self):
-        raise ValueError("This function should be implemented in a parent class")
+        raise NotImplementedError("This method should be implemented in a subclass.")
 
     @staticmethod
     def get_feature_set_constructor(feature_set_name):
-        raise NotImplementedError("This function should be implemented in a parent class")
+        raise NotImplementedError("This method should be implemented in a subclass.")
 
     def get_ml_pipeline_params(self, ml_pipeline_params_name):
         path = Path(Path(__file__).parent, self.problem_name, 'ml_pipelines', f"{ml_pipeline_params_name}.json")
+        logger.info(f"Loading ML pipeline parameters from {path}.")
         if not path.exists():
-            self.logger.error(f"The file {path} does not exist.")
-            raise FileNotFoundError(f"The expected file {path} does not exist. Check the project structure.")
+            logger.error(f"Pipeline parameters file {path} does not exist.")
+            raise FileNotFoundError(f"Pipeline parameters file {path} not found.")
         return self.read_json_file_for_current_problem_as_dict(path)
 
     def get_algorithm_params(self, algorithm_name, algorithm_params_name):
         path = f'algorithms/{algorithm_name}/{algorithm_params_name}.json'
+        logger.info(f"Loading algorithm parameters from {path}.")
         return self.read_json_file_for_current_problem_as_dict(path)
 
     def make_specification(self):
@@ -299,23 +255,12 @@ def validate(self):
                              self.resolved_algorithm_name)
 
     def read_json_file_for_current_problem_as_dict(self, file_path):
-        path = Path(Path(__file__).parent, self.problem_name, file_path)
-
         try:
-            with open(path, "r") as file:
+            with open(file_path, "r") as file:
                 return json.load(file)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Error loading JSON file: {file_path}. Check if it is well-formatted.") from e
-        except FileNotFoundError:
-            raise FileNotFoundError(f"The expected file {file_path} was not found. Check the path.")
+        except Exception as e:
+            logger.error(f"Error loading JSON file {file_path}: {e}")
+            raise
 
     def __repr__(self):
-        messages = ['Problem']
-        for k, v in self.__dict__.items():
-            if v is None:
-                continue
-            if str(v.__class__) == "<class 'function'>":
-                continue
-            messages.append("%s: \n%s\n" % (k, v))
-
-        return '\n'.join(messages)
+        return '\n'.join([f"{key}: {value}" for key, value in self.__dict__.items() if value is not None])
