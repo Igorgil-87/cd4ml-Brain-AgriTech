@@ -137,16 +137,12 @@ class ProblemBase:
     
     
     def training_stream(self):
-        """
-        Gera o fluxo de dados de treinamento.
-        """
         logger.info("Generating training data stream.")
-        return (row for row in self.stream_processed() if self.training_filter(row))
+        filtered_data = [row for row in self.stream_processed() if self.training_filter(row)]
+        logger.info(f"Training stream contains {len(filtered_data)} rows.")
+        return iter(filtered_data)
 
     def validation_stream(self):
-        """
-        Gera o fluxo de dados de validação.
-        """
         logger.info("Generating validation data stream.")
         filtered_data = [row for row in self.stream_processed() if self.validation_filter(row)]
         logger.info(f"Validation stream contains {len(filtered_data)} rows.")
