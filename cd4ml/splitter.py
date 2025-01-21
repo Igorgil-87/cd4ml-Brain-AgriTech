@@ -79,16 +79,29 @@ def splitter(ml_pipeline_params):
 
     def validation_filter(row):
         try:
+            # Calcula o hash
             hash_val = hash_to_uniform_random(row[identifier], seed)
-            assert 0 <= hash_val < 1, f"Hash value out of bounds: {hash_val}"
+            
+            # Valida o intervalo do hash
+            if not (0 <= hash_val < 1):
+                logger.error(f"Hash fora do limite: {hash_val}. Row: {row}")
+                return False
+
+            # Verifica se o hash está na faixa de validação
             is_validation = validation_start <= hash_val < validation_end
-            logger.debug(f"Validation filter applied: id={row[identifier]}, hash_val={hash_val}, is_validation={is_validation}")
+            if not is_validation:
+                logger.debug(f"Linha fora da faixa de validação: id={row[identifier]}, hash_val={hash_val}")
+            else:
+                logger.debug(f"Linha aceita para validação: id={row[identifier]}, hash_val={hash_val}")
+            
             return is_validation
-        except KeyError:
-            logger.error(f"Missing identifier '{identifier}' in row: {row}")
+
+        except KeyError as e:
+            logger.error(f"Erro de chave: Identificador '{identifier}' ausente na linha. Row: {row}. Error: {e}")
             raise
+
         except Exception as e:
-            logger.error(f"Error applying validation filter: {e}. Row: {row}")
+            logger.error(f"Erro ao aplicar o filtro de validação. Row: {row}. Error: {e}")
             raise
 
     logger.info("Splitter filters created successfully.")
