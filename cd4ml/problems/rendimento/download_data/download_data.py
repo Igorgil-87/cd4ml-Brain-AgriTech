@@ -154,10 +154,10 @@ def create_rendimento_raw():
     except Exception as e:
         print(f"Erro ao criar rendimento_raw: {e}")
         
-
 def download(problem_name=None):
     """
-    Função para carregar e processar os dados diretamente do banco de dados.
+    Função para carregar e processar os dados diretamente do banco de dados,
+    combinando todas as tabelas em um único DataFrame.
     """
     print(f"Executando download para o problema: {problem_name}" if problem_name else "Executando download...")
     log_memory_usage("Início do download")
@@ -176,33 +176,20 @@ def download(problem_name=None):
         log_tempo(inicio, "Dados do IBGE carregados")
         log_memory_usage("Depois de carregar dados do IBGE")
 
-        # Criar rendimento_raw
+        # Criar rendimento_raw.csv
         create_rendimento_raw()
         log_memory_usage("Depois de criar rendimento_raw")
+
+        # Carregar o CSV consolidado em um único DataFrame
+        final_df_path = "data/raw_data/rendimento/rendimento_raw.csv"
+        if os.path.exists(final_df_path):
+            final_df = pd.read_csv(final_df_path, low_memory=False)
+            log_memory_usage("Depois de carregar o DataFrame final")
+            print("Download completo.")
+            return final_df
+        else:
+            raise FileNotFoundError(f"Arquivo consolidado {final_df_path} não encontrado.")
+
     except Exception as e:
         print(f"Erro durante o download: {e}")
-
-    print("Download completo.")
-    print(f"Executando download para o problema: {problem_name}" if problem_name else "Executando download...")
-    log_memory_usage("Início do download")
-
-    # Carregar dados de ranking de valores em chunks
-    query_db_in_chunks("ranking_agricultura_valor")
-
-    # Dados do IBGE (fixos)
-    inicio = time.time()
-    dados_ibge = {
-        "Milho": {"Área colhida (ha)": 13767431, "Rendimento médio (kg/ha)": 3785, "Quantidade produzida (t)": 52112217},
-        "Soja": {"Área colhida (ha)": 20565279, "Rendimento médio (kg/ha)": 2813, "Quantidade produzida (t)": 57857172},
-        "Trigo": {"Área colhida (ha)": 1853224, "Rendimento médio (kg/ha)": 2219, "Quantidade produzida (t)": 4114057},
-        "Arroz": {"Área colhida (ha)": 2890926, "Rendimento médio (kg/ha)": 3826, "Quantidade produzida (t)": 11060741},
-    }
-    dados_ibge_df = pd.DataFrame.from_dict(dados_ibge, orient="index").reset_index()
-    dados_ibge_df.rename(columns={"index": "Cultura"}, inplace=True)
-    log_tempo(inicio, "Dados do IBGE carregados")
-    log_memory_usage("Depois de carregar dados do IBGE")
-
-    # Criar rendimento_raw
-    create_rendimento_raw()
-
-    print("Download completo.")
+        return None

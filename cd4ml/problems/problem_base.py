@@ -15,6 +15,11 @@ import json
 from cd4ml.utils.utils import hash_to_uniform_random
 import logging
 
+
+from download_script import download  # Importa a função download que você já criou
+
+
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -339,3 +344,27 @@ class ProblemBase:
 
     def __repr__(self):
         return '\n'.join([f"{key}: {value}" for key, value in self.__dict__.items() if value is not None])
+
+class SpecificProblem(ProblemBase):
+    """
+    Subclasse que implementa o método de download de dados.
+    """
+    def download_data(self):
+        """
+        Faz o download dos dados utilizando a função fornecida.
+        """
+        logger.info("Executando download de dados...")
+        self._stream_data = download(problem_name=self.problem_name)
+        logger.info("Download de dados concluído com sucesso.")
+
+# Exemplo de uso
+if __name__ == "__main__":
+    problem = SpecificProblem(
+        problem_name="agriculture_analysis",
+        data_downloader="custom_downloader",
+        ml_pipeline_params_name="default",
+        feature_set_name="default",
+        algorithm_name="default",
+        algorithm_params_name="default"
+    )
+    problem.run_all()
