@@ -66,15 +66,20 @@ class FeatureSet(FeatureSetBase):
         """
         Retorna as features base, garantindo valores padrão para campos ausentes.
         """
+        # Inclua um fallback para valores repetidos
+        cultura = processed_row.get('Cultura', 'Indefinida')
+        if cultura == 'Indefinida':
+            cultura = f"fallback_{hash(str(processed_row))}"  # Gera um identificador único baseado no hash da linha
+
         features = {
-            'uf': processed_row.get('UF', 'N/A'),  # Deve ser 'UF' (uppercase) se assim estiver nos dados.
+            'uf': processed_row.get('UF', 'N/A'),
             'municipio': processed_row.get('Município', 'N/A'),
             'solo': processed_row.get('Solo', 'Desconhecido'),
-            'cultura': processed_row.get('Cultura', 'Indefinida'),
+            'cultura': cultura,
             'safra': processed_row.get('Safra', '0000/0000'),
             'grupo': processed_row.get('Grupo', 'Grupo Desconhecido'),
             'decenio': processed_row.get('Decênio', '01/01-10/01'),
-            'area_colhida_ha': processed_row.get('Área colhida (ha)', 0.0),  # Valor padrão corrigido
+            'area_colhida_ha': processed_row.get('Área colhida (ha)', 0.0),
             'valor_producao_total': processed_row.get('Valor da Produção Total', 0.0),
             'Quantidade produzida (t)': processed_row.get('Quantidade produzida (t)', 0.0),
             'Rendimento médio (kg/ha)': processed_row.get('Rendimento médio (kg/ha)', 0.0)

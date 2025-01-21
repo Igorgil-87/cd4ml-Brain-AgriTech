@@ -87,7 +87,16 @@ class ProblemBase:
         logger.info("Gerando fluxo de dados processados.")
         required_keys = ['Cultura', 'Área colhida (ha)', 'Valor da Produção Total', 'Rendimento médio (kg/ha)']
 
-        processed_stream = (self.ensure_keys(row, required_keys) for row in self._stream_data(self.problem_name))
+        def ensure_identifier(row):
+            # Certifique-se de que 'Cultura' tenha um valor único
+            if row['Cultura'] == 'Indefinido':
+                row['Cultura'] = f"fallback_{hash(str(row))}"
+            return row
+
+        processed_stream = (
+            ensure_identifier(self.ensure_keys(row, required_keys))
+            for row in self._stream_data(self.problem_name)
+        )
         logger.info("Fluxo de dados processados gerado com sucesso.")
         return processed_stream
 
@@ -144,6 +153,11 @@ class ProblemBase:
         return iter(filtered_data)
 
     def validation_stream(self):
+        logger.info("Iniciando geração do fluxo de validação.")
+        for row in self.stream_processed():
+            hash_val = hash_to_uniform_random(row[self.feature_set.identifier_field], 
+                                            self.ml_pipeline_params['splitting']['random_seed'])
+            logger.info(f"Hash gerado para {row[self.feature_set.identifier_field]}: {hash_val}")
         """
         Gera o fluxo de dados de validação, garantindo que os filtros sejam aplicados corretamente.
         """
