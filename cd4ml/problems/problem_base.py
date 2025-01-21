@@ -153,16 +153,17 @@ class ProblemBase:
             total_rows = len(data)
             logger.info(f"Total de linhas processadas: {total_rows}. Exemplo de dados: {data[:5]}")
 
+            # Depuração dos valores de hash
+            logger.info("Verificando valores de hash para validação.")
             filtered_data = []
             for row in data:
-                hash_val = hash_to_uniform_random(
-                    row[self.feature_set.identifier_field],
-                    self.ml_pipeline_params['splitting']['random_seed']
-                )
-                logger.debug(f"Hash para linha {row}: {hash_val}")
+                hash_val = hash_to_uniform_random(row[self.feature_set.identifier_field], 
+                                                self.ml_pipeline_params['splitting']['random_seed'])
+                logger.info(f"Hash gerado para '{row[self.feature_set.identifier_field]}': {hash_val}")
+
                 if self.validation_filter(row):
+                    logger.debug(f"Linha aceita para validação: {row}")
                     filtered_data.append(row)
-                    logger.debug(f"Linha aceita na validação: {row} com hash {hash_val}")
 
             filtered_rows = len(filtered_data)
             logger.info(f"Linhas após filtro de validação: {filtered_rows} de {total_rows}.")
@@ -175,6 +176,9 @@ class ProblemBase:
         except Exception as e:
             logger.error(f"Erro ao gerar fluxo de validação: {e}")
             raise
+
+
+
 
     def train(self):
         """

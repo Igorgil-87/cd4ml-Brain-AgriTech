@@ -9,8 +9,8 @@
     "splitting": {
         "random_seed": 42,
         "training_random_start": 0.0,
-        "training_random_end": 0.8,
-        "validation_random_start": 0.8,
+        "training_random_end": 0.7,
+        "validation_random_start": 0.7,
         "validation_random_end": 1.0
     },
     "validation_metric_names": ["mean_squared_error", "r2_score"]
