@@ -153,35 +153,46 @@ class ProblemBase:
         return iter(filtered_data)
 
     def validation_stream(self):
-        logger.info("Iniciando geração do fluxo de validação.")
-        for row in self.stream_processed():
-            hash_val = hash_to_uniform_random(row[self.feature_set.identifier_field], 
-                                            self.ml_pipeline_params['splitting']['random_seed'])
-            logger.info(f"Hash gerado para {row[self.feature_set.identifier_field]}: {hash_val}")
         """
         Gera o fluxo de dados de validação, garantindo que os filtros sejam aplicados corretamente.
+        Inclui depuração adicional para verificar a distribuição dos hashes e melhorar o entendimento.
         """
         logger.info("Iniciando geração do fluxo de validação.")
+        
+        # Contadores para depuração de distribuição de hashes
+        hash_counts = {'<0.8': 0, '0.8-1.0': 0}
+        
         try:
+            # Coleta e processamento de dados
             data = list(self.stream_processed())
             total_rows = len(data)
             logger.info(f"Total de linhas processadas: {total_rows}. Exemplo de dados: {data[:5]}")
 
-            # Depuração dos valores de hash
-            logger.info("Verificando valores de hash para validação.")
+            # Aplica o filtro de validação e registra distribuição dos hashes
             filtered_data = []
             for row in data:
-                hash_val = hash_to_uniform_random(row[self.feature_set.identifier_field], 
-                                                self.ml_pipeline_params['splitting']['random_seed'])
-                logger.info(f"Hash gerado para '{row[self.feature_set.identifier_field]}': {hash_val}")
+                hash_val = hash_to_uniform_random(
+                    row[self.feature_set.identifier_field],
+                    self.ml_pipeline_params['splitting']['random_seed']
+                )
+                
+                # Depuração da distribuição dos hashes
+                if hash_val < 0.8:
+                    hash_counts['<0.8'] += 1
+                elif 0.8 <= hash_val < 1.0:
+                    hash_counts['0.8-1.0'] += 1
 
+                # Filtrar linhas para validação
                 if self.validation_filter(row):
-                    logger.debug(f"Linha aceita para validação: {row}")
+                    logger.debug(f"Linha aceita para validação: {row} com hash {hash_val}")
                     filtered_data.append(row)
 
+            # Registra distribuição e resultados
+            logger.info(f"Distribuição de hashes: {hash_counts}")
             filtered_rows = len(filtered_data)
             logger.info(f"Linhas após filtro de validação: {filtered_rows} de {total_rows}.")
 
+            # Verifica se há linhas suficientes para validação
             if filtered_rows == 0:
                 logger.error("Fluxo de validação vazio. Verifique os dados de entrada ou os filtros.")
                 raise ValueError("Validation stream is empty.")
@@ -190,7 +201,6 @@ class ProblemBase:
         except Exception as e:
             logger.error(f"Erro ao gerar fluxo de validação: {e}")
             raise
-
 
 
 
