@@ -148,19 +148,18 @@ class ProblemBase:
         Gera o fluxo de dados de validação, garantindo que os filtros sejam aplicados corretamente.
         """
         logger.info("Iniciando geração do fluxo de validação.")
-        total_rows = 0
-        filtered_rows = 0
         try:
-            # Dados processados
             data = list(self.stream_processed())
             total_rows = len(data)
             logger.info(f"Total de linhas processadas: {total_rows}. Exemplo de dados: {data[:5]}")
 
-            # Aplica o filtro de validação
             filtered_data = []
             for row in data:
-                hash_val = hash_to_uniform_random(row[self.feature_set.identifier_field], 
-                                                self.ml_pipeline_params['splitting']['random_seed'])
+                hash_val = hash_to_uniform_random(
+                    row[self.feature_set.identifier_field],
+                    self.ml_pipeline_params['splitting']['random_seed']
+                )
+                logger.debug(f"Hash para linha {row}: {hash_val}")
                 if self.validation_filter(row):
                     filtered_data.append(row)
                     logger.debug(f"Linha aceita na validação: {row} com hash {hash_val}")
@@ -169,16 +168,13 @@ class ProblemBase:
             logger.info(f"Linhas após filtro de validação: {filtered_rows} de {total_rows}.")
 
             if filtered_rows == 0:
-                logger.error(f"Fluxo de validação vazio. Verifique os dados de entrada ou os filtros.")
+                logger.error("Fluxo de validação vazio. Verifique os dados de entrada ou os filtros.")
                 raise ValueError("Validation stream is empty.")
 
             return iter(filtered_data)
         except Exception as e:
             logger.error(f"Erro ao gerar fluxo de validação: {e}")
             raise
-
-
-
 
     def train(self):
         """
