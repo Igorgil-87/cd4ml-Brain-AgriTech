@@ -16,7 +16,7 @@ from cd4ml.utils.utils import hash_to_uniform_random
 import logging
 
 
-from download_script import download  # Importa a função download que você já criou
+from cd4ml.download_script import download  # Importa a função download que você já criou
 
 
 

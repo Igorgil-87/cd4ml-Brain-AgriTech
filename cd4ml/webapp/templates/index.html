@@ -1,111 +1,250 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
     {% set title = 'Agronegócio - Modelos Estatísticos' %}
     {% include "partials/_head.html" %}
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
     <style>
         body {
             background-image: url('/static/agriculture_background.jpg');
             background-size: cover;
             background-position: center;
-            color: #fff;
-            padding-top: 70px;
-            height: 100vh;
+            background-attachment: fixed;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
         }
-        .container {
+
+        .navbar {
+            background-color: #111;
+        }
+
+        .navbar-brand img {
+            margin-right: 8px;
+        }
+
+        .section {
             background-color: rgba(0, 0, 0, 0.7);
-            padding: 30px;
+            margin: 60px 20px;
+            padding: 30px 20px;
+            border-radius: 12px;
+        }
+
+        .section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            border-left: 6px solid #e60000;
+            padding-left: 15px;
+        }
+
+        .scrolling-wrapper {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 20px;
+            padding-bottom: 10px;
+        }
+
+        .scrolling-wrapper::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .scrolling-wrapper::-webkit-scrollbar-thumb {
+            background-color: #e60000;
             border-radius: 10px;
         }
-        .card {
-            margin-bottom: 20px;
-            background-color: rgba(255, 255, 255, 0.9);
-            border: none;
-            max-width: 280px;
+
+        .custom-card {
+            background-color: white;
+            color: black;
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 260px;
+            max-width: 260px;
+            flex: 0 0 auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
         }
-        .card img {
-            max-height: 140px;
+
+        .custom-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .custom-card img {
             width: 100%;
+            height: 140px;
             object-fit: cover;
-            border-bottom: 2px solid #e60000;
+            border-bottom: 4px solid #e60000;
         }
-        .card-title {
-            color: #000;
-            font-size: 1.2rem;
+
+        .custom-card-body {
+            padding: 15px;
         }
-        .btn-primary, .btn-secondary {
-            font-size: 0.9rem;
-            margin-top: 5px;
+
+        .custom-card-title {
+            font-size: 1rem;
+            font-weight: bold;
         }
-        .btn-primary {
-            background-color: #e60000;
-            border-color: #e60000;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
+
+        @media (max-width: 768px) {
+            .scrolling-wrapper {
+                padding-left: 10px;
+            }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-        <a class="navbar-brand" href="/">
-            <img src="/static/santander.gif" width="30" height="30" class="d-inline-block align-top" alt="">
-            Agronegócio - Modelos
-        </a>
-    </nav>
 
-    <div class="container text-center">
-        <div class="row justify-content-center">
-            <!-- Card 1: Previsão de Preço de Commodities -->
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img class="card-img-top" src="/static/commodities.jpg" alt="Previsão de Preço de Commodities">
-                    <div class="card-body">
-                        <h2 class="card-title">Previsão de Preço de Commodities</h2>
-                        <a class="btn btn-primary" href="/agro/commodities" role="button">Detalhes »</a>
-                    </div>
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <a class="navbar-brand" href="/">
+        <img src="/static/santander.gif" width="30" height="30" alt="Logo">
+        Agronegócio - Modelos
+    </a>
+</nav>
+
+<div class="container-fluid" style="padding-top: 80px;">
+
+    <!-- Clima -->
+    <div class="section">
+        <h2>Climática</h2>
+        <div class="scrolling-wrapper">
+            {% for item in [
+                ('/static/analise_clima.png', 'Análise de Clima para Lavouras'),
+                ('/static/safrahistorica.png', 'Histórico de Temperatura no campo'),
+                ('/static/clima_lavoura.png', 'Previsão do tempo para safra')
+            ] %}
+            <div class="custom-card">
+                <img src="{{ item[0] }}" alt="{{ item[1] }}">
+                <div class="custom-card-body">
+                    <div class="custom-card-title">{{ item[1] }}</div>
                 </div>
             </div>
+            {% endfor %}
+        </div>
+    </div>
 
-            <!-- Card 2: Análise de Saúde da Lavoura -->
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img class="card-img-top" src="/static/lavoura.jpg" alt="Análise de Saúde da Lavoura">
-                    <div class="card-body">
-                        <h2 class="card-title">Análise de Saúde da Lavoura</h2>
-                        <a class="btn btn-primary" href="/agro/clima" role="button">Detalhes »</a>
-                    </div>
+    <!-- Seguros -->
+    <div class="section">
+        <h2>Seguros</h2>
+        <div class="scrolling-wrapper">
+            {% for item in [
+                ('/static/incra.png','Consulta Base Fundiária do Incra'),
+                ('/static/car.png','Consulta Car'),
+                ('/static/quilombos.png','Consulta de Quilombola'),
+                ('/static/indigina.png','Consulta de Terra Indígena'),
+                ('/static/unidade_conservacao.png','Consulta de Unidade de Conservação'),
+                ('/static/divida_trabalho.png','Consulta Dívida Trabalhista'),
+                ('/static/risco.png','Consulta Grau de Risco (Pessoa Física)'),
+                ('/static/IBAMA.png','Embargos Ambientais (Ibama)'),
+                ('/static/penalizacao.png','Estimativa de Penalização de Produtividade'),
+                ('/static/geodesica.png','Geração de coordenadas Geodésicas'),
+                ('/static/incendio.png','Identificação de focos de incêndio'),
+                ('/static/score_gove.png','Score de Governança'),
+                ('/static/divida_trabalho.png','Trabalho Análogo ao Escravo')
+            ] %}
+            <div class="custom-card">
+                <img src="{{ item[0] }}" alt="{{ item[1] }}">
+                <div class="custom-card-body">
+                    <div class="custom-card-title">{{ item[1] }}</div>
                 </div>
             </div>
+            {% endfor %}
+        </div>
+    </div>
 
-            <!-- Card 3: Otimização de Insumos -->
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img class="card-img-top" src="/static/insumos.jpg" alt="Otimização de Insumos">
-                    <div class="card-body">
-                        <h2 class="card-title">Otimização de Insumos</h2>
-                        <a class="btn btn-primary" href="/agro/insumo" role="button">Detalhes »</a>
-                    </div>
+    <!-- Produtividade -->
+    <div class="section">
+        <h2>Produtividade</h2>
+        <div class="scrolling-wrapper">
+            {% for item in [
+                ('/static/solo.png','Composição do uso do solo'),
+                ('/static/penalizacao.png','Estimativa de Penalização de Produtividade'),
+                ('/static/ndvi.png','Indice de vegetação NDVI'),
+                ('/static/safrahistorica.png','Produtividade histórica da safra'),
+                ('/static/otimizacaoInsumo.png','Otimização de Insumos'),
+                ('/static/pred_rendimento.png','Predição de Rendimento')
+            ] %}
+            <div class="custom-card">
+                <img src="{{ item[0] }}" alt="{{ item[1] }}">
+                <div class="custom-card-body">
+                    <div class="custom-card-title">{{ item[1] }}</div>
                 </div>
             </div>
+            {% endfor %}
+        </div>
+    </div>
 
-            <!-- Card 4: Predição de Rendimento -->
-            <div class="col-md-4 mb-4">
-                <div class="card">
-                    <img class="card-img-top" src="/static/colheita.jpg" alt="Predição de Rendimento">
-                    <div class="card-body">
-                        <h2 class="card-title">Predição de Rendimento</h2>
-                        <a class="btn btn-primary" href="/agro/colheita" role="button">Detalhes »</a>
-                    </div>
+    <!-- Socioambiental -->
+    <div class="section">
+        <h2>Socioambiental</h2>
+        <div class="scrolling-wrapper">
+            {% for item in [
+                ('/static/solo.png','Identificação de Bioma'),
+                ('/static/incendio.png','Identificação de focos de incêndio'),
+                ('/static/unidade_conservacao.png','Consulta de Unidade de Conservação'),
+                ('/static/indigina.png','Consulta de Terra Indígena')
+            ] %}
+            <div class="custom-card">
+                <img src="{{ item[0] }}" alt="{{ item[1] }}">
+                <div class="custom-card-body">
+                    <div class="custom-card-title">{{ item[1] }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Logística -->
+    <div class="section">
+        <h2>Logística</h2>
+        <div class="scrolling-wrapper">
+            <div class="custom-card">
+                <img src="/static/lavoura.jpg" alt="Distância da proximidade de rios">
+                <div class="custom-card-body">
+                    <div class="custom-card-title">Distância da proximidade de rios</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <!-- Geográfico -->
+    <div class="section">
+        <h2>Geográfico</h2>
+        <div class="scrolling-wrapper">
+            {% for item in [
+                ('/static/car.png', 'Consulta Geográfica de Municípios'),
+                ('/static/colheita.jpg', 'Geração de coordenadas Geodésicas')
+            ] %}
+            <div class="custom-card">
+                <img src="{{ item[0] }}" alt="{{ item[1] }}">
+                <div class="custom-card-body">
+                    <div class="custom-card-title">{{ item[1] }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Imagens -->
+    <div class="section">
+        <h2>Imagens</h2>
+        <div class="scrolling-wrapper">
+            <div class="custom-card">
+                <img src="/static/agriculture_satellite.jpg" alt="Imagem de satélite Sentinel">
+                <div class="custom-card-body">
+                    <div class="custom-card-title">Imagem de satélite Sentinel</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
 </body>
 </html>
