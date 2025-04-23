@@ -121,5 +121,18 @@ pipeline {
                 sh 'python3 run_python_script.py register_model ${MLFLOW_TRACKING_URL} no'
            }
        }
+       stage('Deploy Model') {
+           steps {
+               script {
+                   def production_model_id = sh(script: 'python3 scripts/check_mlflow_production.py', returnStdout: true).trim()
+                   if (production_model_id) {
+                       echo "New production model found: ${production_model_id}. Restarting 'model' container..."
+                       sh 'docker restart model'
+                   } else {
+                       echo "No new production model found. Skipping deploy."
+                   }
+               }
+           }
+       }
     }
 }
