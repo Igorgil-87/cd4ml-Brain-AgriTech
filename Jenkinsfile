@@ -78,10 +78,12 @@ pipeline {
         }
 
         stage('Run ML pipeline') {
-            steps {
-                sh 'python3 run_python_script.py pipeline ${problem_name} ${ml_pipeline_params_name} ${feature_set_name} ${algorithm_name} ${algorithm_params_name}'
-            }
+           steps {
+               sh 'python3 run_python_script.py pipeline ${problem_name} ${ml_pipeline_params_name} ${feature_set_name} ${algorithm_name} ${algorithm_params_name} > pipeline.log 2>&1'
+               sh 'cat pipeline.log' // Exibe o conteúdo do log após a execução
+           }
        }
+       
        stage('Production - Register Model and Acceptance Test') {
            when {
               allOf {
