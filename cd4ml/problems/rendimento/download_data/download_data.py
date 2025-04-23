@@ -107,28 +107,35 @@ def validate_rendimento_raw(file_path):
         print(f"Erro ao validar rendimento_raw: {e}")
 #voltando
 def create_rendimento_raw():
-    """
-    Cria o arquivo `rendimento_raw.csv` combinando dados e processando os datasets em chunks,
-    utilizando arquivos temporários.
-    """
-    inicio = time.time()
+    inicio_create = time.time()
     temp_files = []
     output_path = "data/raw_data/rendimento/rendimento_raw.csv"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    first_chunk = True  # Para escrever o header apenas uma vez
+    first_chunk = True
 
     try:
-        log_memory_usage("Antes de carregar tabelas para rendimento_raw")
-        chunksize = 5000
+        log_memory_usage("CREATE_RAW - Antes de carregar tabelas")
+        chunksize = 1000  # Reduzindo o chunksize
 
+        log_tempo(inicio_create, "CREATE_RAW - Iniciando carregamento de milho")
         milho_chunks = pd.read_sql("SELECT * FROM milho_solo_transformado", con=engine, chunksize=chunksize)
+        log_tempo(inicio_create, "CREATE_RAW - Carregamento de milho iniciado")
+
+        log_tempo(inicio_create, "CREATE_RAW - Iniciando carregamento de arroz")
         arroz_chunks = pd.read_sql("SELECT * FROM arroz_solo_transformado", con=engine, chunksize=chunksize)
+        log_tempo(inicio_create, "CREATE_RAW - Carregamento de arroz iniciado")
+
+        log_tempo(inicio_create, "CREATE_RAW - Iniciando carregamento de ranking")
         ranking_valores = pd.read_sql("SELECT * FROM ranking_agricultura_valor", con=engine)
         ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
         ranking_valores["Valor da Produção Total"] = ranking_valores["Valor da Produção Total"].str.replace('.', '', regex=False).astype(float)
-        log_memory_usage("Antes de combinar dados")
+        log_tempo(inicio_create, "CREATE_RAW - Carregamento de ranking concluído")
+
+        log_memory_usage("CREATE_RAW - Antes de combinar dados")
 
         for i, (milho_chunk, arroz_chunk) in enumerate(zip(milho_chunks, arroz_chunks)):
+            inicio_chunk = time.time()
+            print(f"[DOWNLOAD] CREATE_RAW - Iniciando processamento do chunk {i}")
             milho_chunk["Cultura"] = "Milho"
             arroz_chunk["Cultura"] = "Arroz"
             dados_combinados = pd.concat([milho_chunk, arroz_chunk], ignore_index=True)
@@ -136,48 +143,48 @@ def create_rendimento_raw():
             if "Área colhida (ha)" not in dados_combinados.columns:
                 dados_combinados["Área colhida (ha)"] = 0.0
 
-            # Criar um arquivo temporário para cada chunk
             temp_file_path = f"temp_chunk_{i}.csv"
             dados_combinados.to_csv(temp_file_path, index=False, header=first_chunk)
             temp_files.append(temp_file_path)
             first_chunk = False
-            log_memory_usage(f"Depois de processar o chunk {i}")
+            log_memory_usage(f"CREATE_RAW - Depois de processar o chunk {i}")
+            log_tempo(inicio_chunk, f"CREATE_RAW - Chunk {i} processado")
+            del dados_combinados  # Liberar memória explicitamente
+            gc.collect()
 
-        # Concatenar todos os arquivos temporários no arquivo final
+        log_tempo(inicio_create, "CREATE_RAW - Processamento de chunks concluído")
+
+        inicio_concat = time.time()
+        print("[DOWNLOAD] CREATE_RAW - Iniciando concatenação dos arquivos temporários")
         with open(output_path, 'w') as outfile:
             for i, temp_file in enumerate(temp_files):
                 with open(temp_file, 'r') as infile:
                     if i != 0:
-                        infile.readline()  # Pular o header dos arquivos temporários subsequentes
+                        infile.readline()
                     for line in infile:
                         outfile.write(line)
-                os.remove(temp_file)  # Limpar os arquivos temporários
-
-        log_tempo(inicio, "Arquivo rendimento_raw.csv criado com sucesso usando arquivos temporários")
+                os.remove(temp_file)
+        log_tempo(inicio_concat, "CREATE_RAW - Concatenação concluída")
+        log_tempo(inicio_create, "CREATE_RAW - Arquivo rendimento_raw.csv criado com sucesso")
 
     except Exception as e:
-        print(f"Erro ao criar rendimento_raw: {e}")
-
+        print(f"[DOWNLOAD] Erro ao criar rendimento_raw: {e}")
 
 
 def download(problem_name=None):
-    """
-    Função para carregar e processar os dados diretamente do banco de dados,
-    combinando todas as tabelas em um único DataFrame.
-    """
-    print(f"Executando download para o problema: {problem_name}" if problem_name else "Executando download...")
-    log_memory_usage("Início do download")
+    inicio_download = time.time()
+    print(f"[DOWNLOAD] Executando download para o problema: {problem_name}" if problem_name else "[DOWNLOAD] Executando download...")
+    log_memory_usage("DOWNLOAD - Início")
 
     try:
-        # Carregar dados do IBGE
-        inicio = time.time()
-        dados_ibge = {
+        inicio_ibge = time.time()
+        dados_ibge_df = pd.DataFrame.from_dict({
             "Milho": {"Área colhida (ha)": 13767431, "Rendimento médio (kg/ha)": 3785, "Quantidade produzida (t)": 52112217},
             "Soja": {"Área colhida (ha)": 20565279, "Rendimento médio (kg/ha)": 2813, "Quantidade produzida (t)": 57857172},
             "Trigo": {"Área colhida (ha)": 1853224, "Rendimento médio (kg/ha)": 2219, "Quantidade produzida (t)": 4114057},
             "Arroz": {"Área colhida (ha)": 2890926, "Rendimento médio (kg/ha)": 3826, "Quantidade produzida (t)": 11060741},
-        }
-        dados_ibge_df = pd.DataFrame.from_dict(dados_ibge, orient="index").reset_index()
+        }, orient="index").reset_index().rename(columns={"index": "Cultura"})
+        log_tempo(inicio_ibge, "DOWNLOAD - Dados do IBGE carregados")
         dados_ibge_df.rename(columns={"index": "Cultura"}, inplace=True)
         log_tempo(inicio, "Dados do IBGE carregados")
         log_memory_usage("Depois de carregar dados do IBGE")
