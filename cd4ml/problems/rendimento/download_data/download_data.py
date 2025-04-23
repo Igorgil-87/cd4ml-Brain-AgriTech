@@ -108,52 +108,58 @@ def validate_rendimento_raw(file_path):
 #voltando
 def create_rendimento_raw():
     """
-    Cria o arquivo `rendimento_raw.csv` combinando dados e processando os datasets em chunks.
+    Cria o arquivo `rendimento_raw.csv` combinando dados e processando os datasets em chunks,
+    utilizando arquivos temporários.
     """
     inicio = time.time()
+    temp_files = []
+    output_path = "data/raw_data/rendimento/rendimento_raw.csv"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    first_chunk = True  # Para escrever o header apenas uma vez
+
     try:
         log_memory_usage("Antes de carregar tabelas para rendimento_raw")
+        chunksize = 5000
 
-        # Tamanhos de chunk
-        chunksize = 5000  # Ajuste conforme necessário
-
-        # Carregar datasets em chunks
         milho_chunks = pd.read_sql("SELECT * FROM milho_solo_transformado", con=engine, chunksize=chunksize)
         arroz_chunks = pd.read_sql("SELECT * FROM arroz_solo_transformado", con=engine, chunksize=chunksize)
         ranking_valores = pd.read_sql("SELECT * FROM ranking_agricultura_valor", con=engine)
-
-        # Garantir colunas consistentes para ranking_valores
         ranking_valores.rename(columns={"produto": "Cultura", "valor": "Valor da Produção Total"}, inplace=True)
         ranking_valores["Valor da Produção Total"] = ranking_valores["Valor da Produção Total"].str.replace('.', '', regex=False).astype(float)
-
         log_memory_usage("Antes de combinar dados")
 
-        # Processar milho e arroz em chunks
-        output_path = "data/raw_data/rendimento/rendimento_raw.csv"
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-        for milho_chunk, arroz_chunk in zip(milho_chunks, arroz_chunks):
+        for i, (milho_chunk, arroz_chunk) in enumerate(zip(milho_chunks, arroz_chunks)):
             milho_chunk["Cultura"] = "Milho"
             arroz_chunk["Cultura"] = "Arroz"
-
-            # Combinar os dados do chunk atual
             dados_combinados = pd.concat([milho_chunk, arroz_chunk], ignore_index=True)
             dados_combinados = dados_combinados.merge(ranking_valores, on="Cultura", how="left").fillna(0)
-
-            # Garantir colunas esperadas
             if "Área colhida (ha)" not in dados_combinados.columns:
-                dados_combinados["Área colhida (ha)"] = 0.0  # Valor padrão
+                dados_combinados["Área colhida (ha)"] = 0.0
 
-            # Salvar o chunk no arquivo de saída
-            dados_combinados.to_csv(output_path, mode='a', header=not os.path.exists(output_path), index=False)
+            # Criar um arquivo temporário para cada chunk
+            temp_file_path = f"temp_chunk_{i}.csv"
+            dados_combinados.to_csv(temp_file_path, index=False, header=first_chunk)
+            temp_files.append(temp_file_path)
+            first_chunk = False
+            log_memory_usage(f"Depois de processar o chunk {i}")
 
-            log_memory_usage("Depois de processar um chunk")
+        # Concatenar todos os arquivos temporários no arquivo final
+        with open(output_path, 'w') as outfile:
+            for i, temp_file in enumerate(temp_files):
+                with open(temp_file, 'r') as infile:
+                    if i != 0:
+                        infile.readline()  # Pular o header dos arquivos temporários subsequentes
+                    for line in infile:
+                        outfile.write(line)
+                os.remove(temp_file)  # Limpar os arquivos temporários
 
-        log_tempo(inicio, "Arquivo rendimento_raw.csv criado com sucesso")
+        log_tempo(inicio, "Arquivo rendimento_raw.csv criado com sucesso usando arquivos temporários")
 
     except Exception as e:
         print(f"Erro ao criar rendimento_raw: {e}")
-        
+
+
+
 def download(problem_name=None):
     """
     Função para carregar e processar os dados diretamente do banco de dados,
