@@ -3,6 +3,9 @@ from cd4ml.problems.rendimento.readers.stream_data import process_row, read_sche
 from unittest.mock import patch, mock_open
 import json
 from pathlib import Path
+from cd4ml.problems.rendimento.readers.stream_data import stream_raw, read_schema_file
+from unittest.mock import patch, mock_open, MagicMock  # Importe MagicMock aqui
+import json
 
 RAW_SCHEMA_PATH = Path(__file__).parent / "../readers/raw_schema.json"
 
