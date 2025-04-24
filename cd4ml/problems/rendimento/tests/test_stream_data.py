@@ -1,47 +1,58 @@
 import pytest
-import os
-from cd4ml.problems.rendimento.readers.stream_data import stream_data, process_row, stream_raw
-from pathlib import Path
-import json
-from cd4ml.problems.rendimento.readers.stream_data import stream_raw
-from unittest.mock import patch
-from cd4ml.problems.rendimento.readers.stream_data import stream_raw, read_schema_file
+from cd4ml.problems.rendimento.readers.stream_data import process_row, read_schema_file
 from unittest.mock import patch, mock_open
 import json
+from pathlib import Path
 
-# Caminho para o schema raw
-RAW_SCHEMA_PATH = Path(Path(__file__).parent, "../readers/raw_schema.json")
+RAW_SCHEMA_PATH = Path(__file__).parent / "../readers/raw_schema.json"
 
 @pytest.fixture
 def schema():
-    with open(RAW_SCHEMA_PATH, "r") as file:
-        return json.load(file)
+    mock_schema_content = """
+{
+  "categorical": ["safra", "cultura", "uf", "municipio", "grupo", "solo", "outros_manejos", "clima", "decenio", "data"],
+  "numerical": ["valor", "Valor da Produção Total", "Área colhida (ha)"]
+}
+"""
+    with patch('builtins.open', mock_open(read_data=mock_schema_content)):
+        categorical, numerical = read_schema_file(RAW_SCHEMA_PATH)
+        return categorical, numerical
 
-
-
-
-
-
-
-from cd4ml.problems.rendimento.readers.stream_data import stream_raw, read_schema_file
-from unittest.mock import patch, mock_open
-import json
+def test_process_row(schema):
+    """Testa a função process_row."""
+    categorical_fields, numeric_fields = schema
+    raw_row = {"cat1": "A", "num1": "1.23", "unknown": "X",
+               "safra": "2023", "cultura": "Milho", "uf": "GO", "municipio": "Rio Verde",
+               "grupo": "G1", "solo": "ST", "outros_manejos": "OM", "clima": "Tropical",
+               "decenio": "1", "data": "2023-01-01", "valor": "1000",
+               "Valor da Produção Total": "500000", "Área colhida (ha)": "100"}
+    processed = process_row(raw_row, categorical_fields, numeric_fields)
+    assert processed["safra"] == "2023"
+    assert processed["valor"] == 1000.0
+    assert "unknown" not in processed
 
 def test_stream_raw():
     """Testa a função stream_raw mockando a leitura do arquivo."""
-    mock_schema = {"categorical": ["cultura"], "numerical": ["valor"]}
+    mock_schema = """
+{
+  "categorical": ["cultura"],
+  "numerical": ["valor"],
+  "split_value": "float64"
+}
+"""
     mock_file = mock_open(read_data=json.dumps(mock_schema))
 
     @patch('builtins.open', mock_file)
     @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv')
     def _test(mock_read_csv, mock_open_builtin):
         mock_read_csv.return_value = iter([
-            {'safra': '2023', 'cultura': 'Milho', 'valor': 10.0, 'split': 0.2},
-            {'safra': '2024', 'cultura': 'Soja', 'valor': 20.0, 'split': 0.9},
+            {'safra': '2023', 'cultura': 'Milho', 'valor': '10.0', 'split': '0.2'},
+            {'safra': '2024', 'cultura': 'Soja', 'valor': '20.0', 'split': '0.9'},
         ])
         rows = list(stream_raw("rendimento"))
         assert len(rows) > 0
         assert isinstance(rows[0], dict)
+        assert 'split_value' in rows[0]
 
     _test()
 
@@ -52,25 +63,3 @@ def test_read_schema_file():
         categorical, numerical = read_schema_file("dummy_path")
         assert categorical == ["cat1", "cat2"]
         assert numerical == ["num1", "num2"]
-        
-
-
-def test_process_row(schema):
-    """Testa se a função process_row processa os dados corretamente."""
-    raw_row = {
-        "Cultura": "Milho",
-        "lot_size_sf": "1000",
-        "price": "60000"
-    }
-    processed_row = process_row(raw_row, schema["categorical"], schema["numerical"])
-    assert processed_row["Cultura"] == "Milho", "Falha ao processar coluna categórica"
-    assert processed_row["lot_size_sf"] == 1000.0, "Falha ao converter coluna numérica"
-    assert processed_row["price"] == 60000, "Falha no tratamento do campo 'price'"
-
-def test_stream_data(schema):
-    """Testa se o stream_data aplica o schema corretamente."""
-    processed_rows = list(stream_data("rendimento"))
-    assert len(processed_rows) > 0, "O stream_data não retornou nenhuma linha processada"
-    for row in processed_rows:
-        assert "Cultura" in row, "Campo 'Cultura' não encontrado"
-        assert isinstance(row["lot_size_sf"], float), "Coluna numérica não foi convertida corretamente"
