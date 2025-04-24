@@ -24,7 +24,7 @@ class TestModelCache:
         }
         assert ModelCache.is_latest_deployable_model(row)
 
-    @patch("mlflow.tracking.MlflowClient.search_runs")
+@patch("mlflow.tracking.MlflowClient.search_runs")
     @patch("mlflow.tracking.MlflowClient.get_experiment_by_name")
     def test_list_models_for_rendimento(self, mock_get_experiment_by_name, mock_search_runs):
         cache = ModelCache()
@@ -33,15 +33,23 @@ class TestModelCache:
         mock_experiment.experiment_id = "1"
         mock_get_experiment_by_name.return_value = mock_experiment
 
-        mock_search_runs.return_value = pd.DataFrame([{
-            'run_id': "789",
-            'tags.mlflow.runName': 'rendimento_run',
-            'params.MLPipelineParamsName': 'default',
-            'params.FeatureSetName': 'default',
-            'params.AlgorithmName': 'random_forest',
-            'tags.DidPassAcceptanceTest': 'yes',
-            'end_time': datetime(2024, 3, 25, 12, 0, 0)
-        }])
+        mock_run = MagicMock()
+        mock_run.info = MagicMock()
+        mock_run.info.run_id = "789"
+        mock_run.data = MagicMock()
+        mock_run.data.params = {
+            "MLPipelineParamsName": "default",
+            "FeatureSetName": "default",
+            "AlgorithmName": "random_forest",
+            "AlgorithmParamsName": "default",
+        }
+        mock_run.data.tags = {
+            "DidPassAcceptanceTest": "yes",
+            "mlflow.runName": "rendimento_run",
+        }
+        mock_run.info.end_time = datetime(2024, 3, 25, 12, 0, 0).timestamp() * 1000  # MLflow timestamps are in ms
+
+        mock_search_runs.return_value = [mock_run]
 
         available_models = cache.list_available_models_from_ml_flow()
         assert "rendimento" in available_models
