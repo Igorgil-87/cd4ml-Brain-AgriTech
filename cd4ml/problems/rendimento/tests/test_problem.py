@@ -2,10 +2,15 @@ import pytest
 from cd4ml.problems.rendimento.problem import Problem
 from cd4ml.utils.utils import get_uuid
 
+import pytest
+from cd4ml.problems.rendimento.problem import Problem
+from cd4ml.utils.utils import get_uuid
+from unittest.mock import MagicMock
+
 @pytest.fixture
 def problem_instance():
-    """Cria uma instância do problema 'rendimento'."""
-    return Problem(
+    """Cria uma instância do problema 'rendimento' com feature_set mockado."""
+    problem = Problem(
         problem_name="rendimento",
         data_downloader="default",
         ml_pipeline_params_name="default",
@@ -13,6 +18,10 @@ def problem_instance():
         algorithm_name="random_forest",
         algorithm_params_name="default"
     )
+    mock_feature_set = MagicMock()
+    mock_feature_set.info = {"date_lookup": {}}
+    problem.feature_set = mock_feature_set
+    return problem
 
 def test_problem_initialization(problem_instance):
     """Testa a inicialização da classe Problem."""
