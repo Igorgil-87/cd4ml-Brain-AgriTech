@@ -34,24 +34,27 @@ def test_process_row(schema):
     assert processed["valor"] == 1000.0
     assert "unknown" not in processed
 
+from cd4ml.problems.rendimento.readers.stream_data import stream_raw, read_schema_file
+from unittest.mock import patch, mock_open, MagicMock
+import json
+
 def test_stream_raw():
     """Testa a função stream_raw mockando a leitura do arquivo."""
     mock_schema = {"categorical": ["cultura"], "numerical": ["valor"], "split_value": "float64"}
     mock_file = mock_open(read_data=json.dumps(mock_schema))
-    mock_read = MagicMock(return_value=iter([
+
+    @patch('builtins.open', mock_file)
+    @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv', return_value=iter([
         {'safra': '2023', 'cultura': 'Milho', 'valor': '10.0', 'split': '0.2'},
         {'safra': '2024', 'cultura': 'Soja', 'valor': '20.0', 'split': '0.9'},
     ]))
-
-    @patch('builtins.open', mock_file)
-    @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv')
     def _test(mock_open_builtin, mock_read_csv):
         rows = list(stream_raw("rendimento"))
         assert len(rows) > 0
         assert isinstance(rows[0], dict)
         assert 'split_value' in rows[0]
 
-    _test(mock_file, mock_read)
+    _test()
 
 def test_read_schema_file():
     """Testa a função read_schema_file."""
