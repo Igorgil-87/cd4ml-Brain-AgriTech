@@ -6,7 +6,7 @@ import mlflow
 import pandas as pd
 import requests_mock
 from cd4ml.webapp.model_cache import ModelCache
-from mlflow.tracking.mock import mock_tracking_server
+from mlflow.testing.tracking_utils import mock_tracking_server
 
 
 class TestModelCache:
@@ -57,8 +57,6 @@ class TestModelCache:
         assert found
 
     def test_download_and_save_rendimento_model(self, tmp_path):
-        # Este teste pode precisar de uma adaptação se você realmente precisa simular o download.
-        # Por enquanto, vamos mantê-lo como estava, assumindo que a conexão MLflow está funcionando.
         saving_path = Path(tmp_path, "full_model.pkl")
         with requests_mock.Mocker() as mocked_req:
             mocked_req.get(f"{mlflow.get_tracking_uri()}/get-artifact?path=full_model.pkl&run_uuid=some_run_id",
