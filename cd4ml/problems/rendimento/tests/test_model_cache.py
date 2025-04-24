@@ -33,15 +33,9 @@ class TestModelCache:
         mock_experiment.experiment_id = "1"
         mock_get_experiment_by_name.return_value = mock_experiment
 
-        mock_search_runs.return_value = pd.DataFrame([{
-            'run_id': "789",
-            'tags.mlflow.runName': 'rendimento_run',
-            'params.MLPipelineParamsName': 'default',
-            'params.FeatureSetName': 'default',
-            'params.AlgorithmName': 'random_forest',
-            'tags.DidPassAcceptanceTest': 'yes',
-            'end_time': datetime(2024, 3, 25, 12, 0, 0)
-        }])
+        mock_search_runs.return_value = [
+            MagicMock(info=MagicMock(run_id="789"))
+        ]
 
         available_models = cache.list_available_models_from_ml_flow()
         assert "rendimento" in available_models
