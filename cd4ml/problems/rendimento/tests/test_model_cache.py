@@ -19,7 +19,7 @@ class TestModelCache:
         row = {
             "ml_pipeline_params_name": 'default',
             "feature_set_name": 'default',
-            "algorithm_name": 'random_forest',
+            "algorithm_name": 'default',
             "algorithm_params_name": 'default',
             "passed_acceptance_test": 'yes'
         }
