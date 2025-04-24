@@ -4,11 +4,14 @@ from unittest.mock import patch, mock_open, MagicMock
 import json
 from pathlib import Path
 import logging
+import sys  # Importe a biblioteca sys
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)  # Direciona o log para stdout
 logger = logging.getLogger(__name__)
 
 RAW_SCHEMA_PATH = Path(__file__).parent / "../readers/raw_schema.json"
+
+# ... (o restante do seu código) ...
 
 @pytest.fixture
 def schema():
