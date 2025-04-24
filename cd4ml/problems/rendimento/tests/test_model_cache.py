@@ -24,7 +24,7 @@ class TestModelCache:
         }
         assert ModelCache.is_latest_deployable_model(row)
 
-@patch("mlflow.tracking.MlflowClient.search_runs")
+    @patch("mlflow.tracking.MlflowClient.search_runs")
     @patch("mlflow.tracking.MlflowClient.get_experiment_by_name")
     def test_list_models_for_rendimento(self, mock_get_experiment_by_name, mock_search_runs):
         cache = ModelCache()
