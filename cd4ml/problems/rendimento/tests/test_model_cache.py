@@ -11,21 +11,22 @@ from cd4ml.webapp.model_cache import ModelCache
 class TestModelCache:
     @classmethod
     def setup_class(cls):
-        uri_ = "http://test-tracking-uri:8080"
-        mlflow.set_tracking_uri(uri_)
         os.environ["MLFLOW_TRACKING_URL"] = "http://test-tracking-uri:8080"
+        mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URL"])
 
     def test_is_latest_deployable_model(self):
         row = {
             "ml_pipeline_params_name": 'default',
             "feature_set_name": 'default',
-            "algorithm_name": 'default',
+            "algorithm_name": 'default',  # Correção: deve ser 'default'
             "algorithm_params_name": 'default',
             "passed_acceptance_test": 'yes'
         }
         assert ModelCache.is_latest_deployable_model(row)
 
     def test_list_models_for_rendimento(self):
+        # Garante que a URI de rastreamento esteja configurada antes de usar mlflow
+        mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URL"])
         cache = ModelCache()
 
         def get_search_return_values(*args, **kwargs):
