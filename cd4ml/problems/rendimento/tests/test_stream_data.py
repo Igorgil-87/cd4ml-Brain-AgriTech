@@ -36,8 +36,8 @@ def test_stream_raw():
     mock_schema = {"categorical": ["cultura"], "numerical": ["valor"], "split_value": "float64"}
     mock_file = mock_open(read_data=json.dumps(mock_schema))
 
-    @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv')
     @patch('builtins.open', mock_file)
+    @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv')
     def _test(mock_open_builtin, mock_read_csv):
         mock_read_csv.return_value = iter([
             {'safra': '2023', 'cultura': 'Milho', 'valor': '10.0', 'split': '0.2'},
