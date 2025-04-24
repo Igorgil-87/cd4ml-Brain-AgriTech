@@ -33,23 +33,11 @@ class TestModelCache:
         mock_experiment.experiment_id = "1"
         mock_get_experiment_by_name.return_value = mock_experiment
 
-        mock_run = MagicMock()
-        mock_run.info = MagicMock()
-        mock_run.info.run_id = "789"
-        mock_run.data = MagicMock()
-        mock_run.data.params = {
-            "MLPipelineParamsName": "default",
-            "FeatureSetName": "default",
-            "AlgorithmName": "random_forest",
-            "AlgorithmParamsName": "default",
-        }
-        mock_run.data.tags = {
-            "DidPassAcceptanceTest": "yes",
-            "mlflow.runName": "rendimento_run",
-        }
-        mock_run.info.end_time = datetime(2024, 3, 25, 12, 0, 0).timestamp() * 1000  # MLflow timestamps are in ms
-
-        mock_search_runs.return_value = [mock_run]
+        mock_search_runs.return_value = [
+            MagicMock(info=MagicMock(run_id="789", start_time=datetime(2024, 3, 25, 12, 0, 0).timestamp() * 1000),
+                      data=MagicMock(params={"MLPipelineParamsName": "default", "FeatureSetName": "default", "AlgorithmName": "random_forest", "AlgorithmParamsName": "default"},
+                                      tags={"DidPassAcceptanceTest": "yes", "mlflow.runName": "rendimento_run"}))
+        ]
 
         available_models = cache.list_available_models_from_ml_flow()
         assert "rendimento" in available_models

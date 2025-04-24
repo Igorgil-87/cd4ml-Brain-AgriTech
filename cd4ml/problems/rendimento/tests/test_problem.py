@@ -39,8 +39,12 @@ def test_prepare_feature_data(problem_instance):
     problem_instance.prepare_feature_data()
     assert problem_instance.feature_set.info["date_lookup"] is not None, "Falha ao preparar 'date_lookup'"
 
-def test_training_and_validation_stream(problem_instance):
+def test_training_and_validation_stream(problem_instance, mocker):
     """Testa os streams de treino e validação."""
+    mock_stream_processed = mocker.patch.object(problem_instance, "stream_processed", return_value=iter([
+        {"split": 0.1, "some_feature": 1},
+        {"split": 0.8, "some_feature": 2},
+    ]))
     training_data = list(problem_instance.training_stream())
     validation_data = list(problem_instance.validation_stream())
 
