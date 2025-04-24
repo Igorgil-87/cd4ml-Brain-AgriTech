@@ -34,5 +34,6 @@ def test_derived_features_numerical(base_features):
     feature_set = FeatureSet("Cultura", "Rendimento médio (kg/ha)", {}, feature_set_params)
     numerical_features = feature_set.derived_features_numerical(base_features)
     assert "valor_por_area" in numerical_features, "Feature 'valor_por_area' não foi criada corretamente"
-    assert numerical_features["valor_por_area"] == pytest.approx(693.0693069306931), "Falha no cálculo de 'valor_por_area'"    assert "rendimento_normalizado" in numerical_features, "Feature 'rendimento_normalizado' não foi criada corretamente"
+    assert numerical_features["valor_por_area"] == pytest.approx(693.0693069306931), "Falha no cálculo de 'valor_por_area'"
+    assert "rendimento_normalizado" in numerical_features, "Feature 'rendimento_normalizado' não foi criada corretamente"
     assert numerical_features["rendimento_normalizado"] == 5.0, "Falha na normalização de 'rendimento_normalizado'"
