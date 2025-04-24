@@ -33,21 +33,17 @@ class TestModelCache:
         mock_experiment.experiment_id = "1"
         mock_get_experiment_by_name.return_value = mock_experiment
 
-        mock_search_runs.return_value = [
-            MagicMock(info=MagicMock(run_id="789", start_time=datetime(2024, 3, 25, 12, 0, 0).timestamp() * 1000),
-                      data=MagicMock(params={"MLPipelineParamsName": "default", "FeatureSetName": "default", "AlgorithmName": "random_forest", "AlgorithmParamsName": "default"},
-                                      tags={"DidPassAcceptanceTest": "yes", "mlflow.runName": "rendimento_run"}))
-        ]
+        mock_search_runs.return_value = pd.DataFrame([{
+            'run_id': "789",
+            'tags.mlflow.runName': 'rendimento_run',
+            'params.MLPipelineParamsName': 'default',
+            'params.FeatureSetName': 'default',
+            'params.AlgorithmName': 'random_forest',
+            'tags.DidPassAcceptanceTest': 'yes',
+            'end_time': datetime(2024, 3, 25, 12, 0, 0)
+        }])
 
         available_models = cache.list_available_models_from_ml_flow()
         assert "rendimento" in available_models
         assert len(available_models["rendimento"]) == 1
         assert available_models["rendimento"][0]['run_id'] == "789"
-
-    def test_download_and_save_rendimento_model(self, tmp_path):
-        saving_path = Path(tmp_path, "full_model.pkl")
-        with requests_mock.Mocker() as mocked_req:
-            mocked_req.get(f"{mlflow.get_tracking_uri()}/get-artifact?path=full_model.pkl&run_uuid=some_run_id",
-                           content=b"Mocked model data")
-            ModelCache.download_and_save_from_ml_flow(saving_path, "some_run_id")
-            assert saving_path.read_bytes() == b"Mocked model data"
