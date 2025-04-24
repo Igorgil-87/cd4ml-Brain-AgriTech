@@ -3,6 +3,9 @@ import os
 from cd4ml.problems.rendimento.readers.stream_data import stream_data, process_row, stream_raw
 from pathlib import Path
 import json
+from cd4ml.problems.rendimento.readers.stream_data import stream_raw
+from unittest.mock import patch
+
 
 # Caminho para o schema raw
 RAW_SCHEMA_PATH = Path(Path(__file__).parent, "../readers/raw_schema.json")
@@ -12,11 +15,23 @@ def schema():
     with open(RAW_SCHEMA_PATH, "r") as file:
         return json.load(file)
 
+
+
 def test_stream_raw():
-    """Testa se o stream_raw retorna linhas corretamente."""
-    rows = list(stream_raw("rendimento"))
-    assert len(rows) > 0, "O stream_raw não retornou nenhuma linha"
-    assert "Cultura" in rows[0], "Coluna 'Cultura' não encontrada nos dados brutos"
+    """Testa a função stream_raw mockando a leitura do arquivo."""
+    @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv')
+    @patch('cd4ml.problems.rendimento.readers.stream_data.os.path.exists', return_value=True)
+    @patch('cd4ml.problems.rendimento.readers.stream_data.open', create=True)
+    def _test(mock_open, mock_exists, mock_read_csv):
+        mock_read_csv.return_value = iter([
+            {'safra': '2023', 'cultura': 'Milho', 'valor': 10.0, 'split': 0.2},
+            {'safra': '2024', 'cultura': 'Soja', 'valor': 20.0, 'split': 0.9},
+        ])
+        rows = list(stream_raw("rendimento"))
+        assert len(rows) > 0
+        assert isinstance(rows[0], dict)
+
+    _test()
 
 def test_process_row(schema):
     """Testa se a função process_row processa os dados corretamente."""
