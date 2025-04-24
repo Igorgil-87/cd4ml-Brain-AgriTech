@@ -32,10 +32,9 @@ def test_stream_raw():
     mock_schema = {"categorical": ["cultura"], "numerical": ["valor"]}
     mock_file = mock_open(read_data=json.dumps(mock_schema))
 
-    @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv')
-    @patch('cd4ml.problems.rendimento.readers.stream_data.os.path.exists', return_value=True)
     @patch('builtins.open', mock_file)
-    def _test(mock_open_builtin, mock_exists, mock_read_csv):
+    @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv')
+    def _test(mock_read_csv, mock_open_builtin):
         mock_read_csv.return_value = iter([
             {'safra': '2023', 'cultura': 'Milho', 'valor': 10.0, 'split': 0.2},
             {'safra': '2024', 'cultura': 'Soja', 'valor': 20.0, 'split': 0.9},
@@ -53,8 +52,9 @@ def test_read_schema_file():
         categorical, numerical = read_schema_file("dummy_path")
         assert categorical == ["cat1", "cat2"]
         assert numerical == ["num1", "num2"]
-
         
+
+
 def test_process_row(schema):
     """Testa se a função process_row processa os dados corretamente."""
     raw_row = {

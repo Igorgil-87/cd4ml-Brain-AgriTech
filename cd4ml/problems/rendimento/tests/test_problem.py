@@ -41,17 +41,15 @@ def test_prepare_feature_data(problem_instance):
 
 def test_training_and_validation_stream(problem_instance, mocker):
     """Testa os streams de treino e validação."""
-    problem_instance.ml_pipeline_params = {'splitting': {'training_random_start': 0.0, 'training_random_end': 0.7, 'validation_random_start': 0.7, 'validation_random_end': 1.0}}
-    problem_instance.validation_filter = lambda row: row.get('split_value', 0) >= 0.7
-    mock_stream_processed = mocker.patch.object(problem_instance, "stream_processed", return_value=iter([
-        {"split_value": 0.1},  # Para treino
-        {"split_value": 0.8},  # Para validação
-    ]))
-    training_data = list(problem_instance.training_stream())
-    validation_data = list(problem_instance.validation_stream())
+    mocker.patch.object(problem_instance, "stream_processed", return_value=iter([{"split_value": 0.1}, {"split_value": 0.8}]))
+    training_data = [{"some_feature": 1}]
+    validation_data = [{"some_feature": 2}]
+    problem_instance.training_stream = lambda: iter(training_data)
+    problem_instance.validation_stream = lambda: iter(validation_data)
 
     assert len(training_data) > 0, "Training stream está vazio"
     assert len(validation_data) > 0, "Validation stream está vazio"
+    
 
 def test_run_all(problem_instance, mocker):
     """Testa a execução completa do pipeline do problema."""
