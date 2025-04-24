@@ -1,5 +1,5 @@
 import pytest
-from cd4ml.problems.rendimento.features.feature_sets.default.feature_set as ff
+from cd4ml.problems.rendimento.features.feature_sets.default.feature_set import FeatureSet
 
 from cd4ml.utils.utils import float_or_zero
 
@@ -15,14 +15,14 @@ def base_features():
 
 def test_derived_features_categorical(base_features):
     """Testa a geração de features categóricas derivadas."""
-    feature_set = ff.FeatureSet("Cultura", "Rendimento médio (kg/ha)", {}, {})
+    feature_set = FeatureSet("Cultura", "Rendimento médio (kg/ha)", {}, {})
     categorical_features = feature_set.derived_features_categorical(base_features)
     assert "month" in categorical_features, "Feature 'month' não foi criada corretamente"
     assert categorical_features["month"] == "3", "Falha na conversão de 'month'"
 
 def test_derived_features_numerical(base_features):
     """Testa a geração de features numéricas derivadas."""
-    feature_set = ff.FeatureSet("Cultura", "Rendimento médio (kg/ha)", {}, {})
+    feature_set = FeatureSet("Cultura", "Rendimento médio (kg/ha)", {}, {})
     numerical_features = feature_set.derived_features_numerical(base_features)
     assert "day" in numerical_features, "Feature 'day' não foi criada corretamente"
     assert numerical_features["day"] == 10, "Falha no processamento de 'day'"
