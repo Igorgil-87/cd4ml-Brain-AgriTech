@@ -24,19 +24,16 @@ class TestModelCache:
         }
         assert ModelCache.is_latest_deployable_model(row)
 
-    @patch("mlflow.tracking.MlflowClient.search_runs")
-    @patch("mlflow.tracking.MlflowClient.get_experiment_by_name")
-    def test_list_models_for_rendimento(self, mock_get_experiment_by_name, mock_search_runs):
+    @patch.object(ModelCache, 'list_available_models_from_ml_flow')
+    def test_list_models_for_rendimento(self, mock_list_available_models):
         cache = ModelCache()
-
-        mock_experiment = MagicMock()
-        mock_experiment.experiment_id = "1"
-        mock_get_experiment_by_name.return_value = mock_experiment
-
-        mock_search_runs.return_value = [
-            MagicMock(info=MagicMock(run_id="789"))
-        ]
-
+        mock_list_available_models.return_value = {
+            "rendimento": [{"run_id": "789",
+                            "ml_pipeline_params_name": 'default',
+                            "feature_set_name": 'default',
+                            "algorithm_name": 'random_forest',
+                            "tags.DidPassAcceptanceTest": 'yes'}]
+        }
         available_models = cache.list_available_models_from_ml_flow()
         assert "rendimento" in available_models
         assert len(available_models["rendimento"]) == 1

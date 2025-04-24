@@ -42,9 +42,10 @@ def test_prepare_feature_data(problem_instance):
 def test_training_and_validation_stream(problem_instance, mocker):
     """Testa os streams de treino e validação."""
     mock_stream_processed = mocker.patch.object(problem_instance, "stream_processed", return_value=iter([
-        {"split_value": 0.1, "some_feature": 1},  # Para treino
-        {"split_value": 0.8, "some_feature": 2},  # Para validação
+        {"split_value": 0.1},  # Para treino
+        {"split_value": 0.8},  # Para validação
     ]))
+    problem_instance.ml_pipeline_params = {'splitting': {'training_random_start': 0.0, 'training_random_end': 0.7, 'validation_random_start': 0.7, 'validation_random_end': 1.0}}
     training_data = list(problem_instance.training_stream())
     validation_data = list(problem_instance.validation_stream())
 
