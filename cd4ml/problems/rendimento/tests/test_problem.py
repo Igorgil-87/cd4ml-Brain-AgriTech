@@ -42,15 +42,11 @@ def test_prepare_feature_data(problem_instance):
 def test_training_and_validation_stream(problem_instance, mocker):
     """Testa os streams de treino e validação."""
     problem_instance.ml_pipeline_params = {'splitting': {'training_random_start': 0.0, 'training_random_end': 0.7, 'validation_random_start': 0.7, 'validation_random_end': 1.0}}
-    mocker.patch('cd4ml.problems.rendimento.readers.stream_data.get_training_validation_filters',
-                 return_value=(lambda row: row.get('split_value', 0) < 0.7,
-                                 lambda row: row.get('split_value', 0) >= 0.7))
-    mocked_processed_data = [
+    problem_instance.validation_filter = lambda row: row.get('split_value', 0) >= 0.7
+    mock_stream_processed = mocker.patch.object(problem_instance, "stream_processed", return_value=iter([
         {"split_value": 0.1},  # Para treino
         {"split_value": 0.8},  # Para validação
-    ]
-    mock_stream_processed = mocker.patch.object(problem_instance, "stream_processed", return_value=iter(mocked_processed_data))
-
+    ]))
     training_data = list(problem_instance.training_stream())
     validation_data = list(problem_instance.validation_stream())
 

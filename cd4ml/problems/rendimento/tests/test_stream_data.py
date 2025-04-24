@@ -8,6 +8,7 @@ from unittest.mock import patch
 from cd4ml.problems.rendimento.readers.stream_data import stream_raw, read_schema_file
 from unittest.mock import patch, mock_open
 import json
+
 # Caminho para o schema raw
 RAW_SCHEMA_PATH = Path(Path(__file__).parent, "../readers/raw_schema.json")
 
@@ -22,15 +23,19 @@ def schema():
 
 
 
+from cd4ml.problems.rendimento.readers.stream_data import stream_raw, read_schema_file
+from unittest.mock import patch, mock_open
+import json
+
 def test_stream_raw():
     """Testa a função stream_raw mockando a leitura do arquivo."""
     mock_schema = {"categorical": ["cultura"], "numerical": ["valor"]}
     mock_file = mock_open(read_data=json.dumps(mock_schema))
 
-    @patch('cd4ml.problems.rendimento.readers.stream_data.open', mock_file)
-    @patch('cd4ml.problems.rendimento.readers.stream_data.os.path.exists', return_value=True)
     @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv')
-    def _test(mock_read_csv, mock_exists, mock_open):
+    @patch('cd4ml.problems.rendimento.readers.stream_data.os.path.exists', return_value=True)
+    @patch('builtins.open', mock_file)
+    def _test(mock_open_builtin, mock_exists, mock_read_csv):
         mock_read_csv.return_value = iter([
             {'safra': '2023', 'cultura': 'Milho', 'valor': 10.0, 'split': 0.2},
             {'safra': '2024', 'cultura': 'Soja', 'valor': 20.0, 'split': 0.9},
@@ -49,6 +54,7 @@ def test_read_schema_file():
         assert categorical == ["cat1", "cat2"]
         assert numerical == ["num1", "num2"]
 
+        
 def test_process_row(schema):
     """Testa se a função process_row processa os dados corretamente."""
     raw_row = {
