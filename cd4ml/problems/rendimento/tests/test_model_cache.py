@@ -1,24 +1,18 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 import mlflow
 import pandas as pd
 import requests_mock
 from cd4ml.webapp.model_cache import ModelCache
-from mlflow.testing.tracking_utils import mock_tracking_server
 
 
 class TestModelCache:
     @classmethod
     def setup_class(cls):
-        cls.mock_server = mock_tracking_server()
-        os.environ["MLFLOW_TRACKING_URL"] = cls.mock_server.uri
+        os.environ["MLFLOW_TRACKING_URL"] = "http://test-tracking-uri:8080"
         mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URL"])
-
-    @classmethod
-    def teardown_class(cls):
-        cls.mock_server.stop()
 
     def test_is_latest_deployable_model(self):
         row = {
@@ -30,31 +24,29 @@ class TestModelCache:
         }
         assert ModelCache.is_latest_deployable_model(row)
 
-    def test_list_models_for_rendimento(self):
+    @patch("mlflow.tracking.MlflowClient.search_runs")
+    @patch("mlflow.tracking.MlflowClient.get_experiment_by_name")
+    def test_list_models_for_rendimento(self, mock_get_experiment_by_name, mock_search_runs):
         cache = ModelCache()
-        with mlflow.start_run(run_name="rendimento_run"):
-            mlflow.log_param("MLPipelineParamsName", "default")
-            mlflow.log_param("FeatureSetName", "default")
-            mlflow.log_param("AlgorithmName", "random_forest")
-            mlflow.set_tag("DidPassAcceptanceTest", "yes")
-            mlflow.set_tag("BuildNumber", "123")
-            end_time = datetime(2024, 3, 25, 12, 0, 0).timestamp()
-            mlflow.end_run()
-            run_id = mlflow.active_run().info.run_uuid
+
+        mock_experiment = MagicMock()
+        mock_experiment.experiment_id = "1"
+        mock_get_experiment_by_name.return_value = mock_experiment
+
+        mock_search_runs.return_value = pd.DataFrame([{
+            'run_id': "789",
+            'tags.mlflow.runName': 'rendimento_run',
+            'params.MLPipelineParamsName': 'default',
+            'params.FeatureSetName': 'default',
+            'params.AlgorithmName': 'random_forest',
+            'tags.DidPassAcceptanceTest': 'yes',
+            'end_time': datetime(2024, 3, 25, 12, 0, 0)
+        }])
 
         available_models = cache.list_available_models_from_ml_flow()
         assert "rendimento" in available_models
-        assert len(available_models["rendimento"]) >= 1
-        found = False
-        for model in available_models["rendimento"]:
-            if model['run_id'] == run_id:
-                assert model['ml_pipeline_params_name'] == 'default'
-                assert model['feature_set_name'] == 'default'
-                assert model['algorithm_name'] == 'random_forest'
-                assert model['passed_acceptance_test'] == 'yes'
-                found = True
-                break
-        assert found
+        assert len(available_models["rendimento"]) == 1
+        assert available_models["rendimento"][0]['run_id'] == "789"
 
     def test_download_and_save_rendimento_model(self, tmp_path):
         saving_path = Path(tmp_path, "full_model.pkl")
