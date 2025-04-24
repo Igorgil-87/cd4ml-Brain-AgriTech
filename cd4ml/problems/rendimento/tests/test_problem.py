@@ -11,7 +11,8 @@ def problem_instance():
         ml_pipeline_params_name="default",
         feature_set_name="default",
         algorithm_name="random_forest",
-        algorithm_params_name="default"
+        algorithm_params_name="default",
+        info={'date_lookup': {}}  # Adicione um dicionário para 'date_lookup'
     )
 
 def test_problem_initialization(problem_instance):
