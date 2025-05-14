@@ -47,7 +47,7 @@ def test_stream_raw():
     assert isinstance(rows, list)
     if rows:
         assert isinstance(rows[0], dict)
-
+    #vamos ver
 
     @patch('builtins.open', mock_file)
     @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv', return_value=mock_read_return)
