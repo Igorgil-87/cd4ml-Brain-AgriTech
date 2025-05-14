@@ -1,6 +1,8 @@
-from cd4ml.problems.rendimento.readers.stream_data import stream_raw, read_schema_file
+import pytest
+from cd4ml.problems.rendimento.readers.stream_data import process_row, read_schema_file, stream_raw
 from unittest.mock import patch, mock_open, MagicMock
 import json
+from pathlib import Path
 import logging
 import sys
 
@@ -41,15 +43,21 @@ def test_process_row(schema):
 def test_stream_raw():
     """Testa a função stream_raw mockando a leitura do arquivo."""
     logger.info("Executando test_stream_raw")
-    mock_schema = {"categorical": ["cultura"], "numerical": ["valor"], "split_value": "float64"}
+    mock_schema = """
+{
+  "categorical": ["cultura"],
+  "numerical": ["valor"],
+  "split_value": "float64"
+}
+"""
     mock_file = mock_open(read_data=json.dumps(mock_schema))
-    mock_read = MagicMock(return_value=iter([
-        {'safra': '2023', 'cultura': 'Milho', 'valor': '10.0', 'split': '0.2'},
-        {'safra': '2024', 'cultura': 'Soja', 'valor': '20.0', 'split': '0.9'},
+    mock_read_return = MagicMock(return_value=iter([
+        {'safra': '2023', 'cultura': 'Milho', 'valor': '10.0', 'split_value': '0.2'},
+        {'safra': '2024', 'cultura': 'Soja', 'valor': '20.0', 'split_value': '0.9'},
     ]))
 
     @patch('builtins.open', mock_file)
-    @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv')
+    @patch('cd4ml.problems.rendimento.readers.stream_data.pd.read_csv', return_value=mock_read_return)
     def _test(mock_read_csv, mock_open_builtin):
         logger.info("Executando _test")
         logger.info(f"_test: mock_open_builtin={mock_open_builtin}, mock_read_csv={mock_read_csv}")
@@ -59,7 +67,7 @@ def test_stream_raw():
         assert isinstance(rows[0], dict)
         assert 'split_value' in rows[0]
 
-    _test(mock_read, mock_file)  # Chamada explícita com os mocks na ordem correta
+    _test()
 
 def test_read_schema_file():
     """Testa a função read_schema_file."""
