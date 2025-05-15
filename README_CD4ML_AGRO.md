@@ -91,4 +91,4 @@ python run_python_script.py register_model http://localhost:5000 yes <model_id>
 
 ## 🏆 Reconhecimentos
 
-Projeto finalista nos prêmios de inovação **FICO** e **AgTech Awards**.
+Projeto finalista nos prêmios de inovação  **AgTech Awards**.
