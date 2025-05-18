@@ -9,6 +9,7 @@ import sys
 
 
 
+
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
@@ -44,20 +45,17 @@ def test_process_row(schema):
     assert "unknown" not in processed
 
 
+
+
 def test_stream_raw(mocker):
-    """Testa a função stream_raw mockando o seu comportamento."""
-    mock_stream = mocker.patch(
-        "cd4ml.problems.rendimento.readers.stream_data.stream_raw",
-        return_value=iter([
-            {"safra": "2023", "cultura": "Milho", "valor": 10.0, "split_value": 0.2},
-            {"safra": "2024", "cultura": "Soja", "valor": 20.0, "split_value": 0.9},
-        ])
-    )
+    """Testa a função stream_raw mockando a leitura do arquivo."""
+    mock_open = mocker.patch('builtins.open', mocker.mock_open(read_data="safra,cultura,valor,split\n2023,Milho,10.0,0.2\n2024,Soja,20.0,0.9\n"))
+    mocker.patch('cd4ml.problems.rendimento.readers.stream_data.os.path.exists', return_value=True)
+
     rows = list(stream_raw("rendimento"))
     assert len(rows) > 0
     assert isinstance(rows[0], dict)
-    assert "split_value" in rows[0]
-    mock_stream.assert_called_once_with("rendimento")
+    assert "split" in rows[0]
 
 
 
