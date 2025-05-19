@@ -99,3 +99,42 @@ O projeto tem como objetivo facilitar o desenvolvimento e a entrega contínua de
     fluentd/conf/: Configurações para o Fluentd.
     jenkins/: Configurações e scripts específicos para Jenkins.
     cd4ml/: Diretório contendo o código-fonte principal do projeto, incluindo a aplicação Flask e outras funcionalidades de machine learning.
+
+
+# 🧠 cd4ml-Brain-AgriTech
+
+Este projeto implementa um pipeline completo de **Continuous Delivery for Machine Learning (CD4ML)** voltado ao setor agro, utilizando Jenkins, MLflow, MinIO, Docker e testes automatizados para garantir previsibilidade e reprodutibilidade no ciclo de vida de modelos.
+
+---
+
+## 🚀 Estrutura Principal
+
+| Componente       | Função                                                                 |
+|------------------|------------------------------------------------------------------------|
+| `Jenkinsfile`    | Pipeline completo com stages para testes, treino, avaliação e deploy   |
+| `run_python_script.py` | Orquestrador de execução das etapas de ML via linha de comando        |
+| `cd4ml/problems/`| Contém definições dos problemas de negócio e scripts específicos        |
+| `requirements.txt` | Dependências Python usadas no projeto                                  |
+| `.env.template`  | Template com variáveis sensíveis e URLs de serviços                     |
+| `Makefile`       | Comandos simplificados para execução local do pipeline                  |
+
+---
+
+## 🛠️ Executando Localmente com `Make`
+
+```bash
+# Instale dependências
+make install
+
+# Execute testes para um problema específico
+make test PROBLEM=rendimento
+
+# Rode o pipeline completo para o problema
+make run PROBLEM=saude_lavoura
+
+# Teste de aceitação + registro do modelo
+make acceptance
+make register-model
+
+# Deploy do modelo via Docker
+make deploy

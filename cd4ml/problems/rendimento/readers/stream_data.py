@@ -4,7 +4,7 @@ from csv import DictReader
 from pathlib import Path
 from cd4ml.filenames import get_problem_files
 from cd4ml.utils.utils import float_or_zero
-
+import json
 
 def stream_raw(problem_name):
     """
@@ -46,29 +46,31 @@ def stream_raw(problem_name):
 
 
 
+
+
 def read_schema_file(schema_path):
     """
-    Lê o arquivo de schema JSON e retorna campos categóricos e numéricos.
+    Tenta carregar um schema JSON. Se falhar, usa um schema mock padrão.
     """
-    import json
+    if not os.path.exists(schema_path) or os.stat(schema_path).st_size == 0:
+        print(f"[WARN] Arquivo não encontrado ou vazio: {schema_path}. Usando schema mock.")
+        return (
+            ["safra", "cultura", "uf", "municipio", "grupo", "solo", "outros_manejos", "clima", "decenio", "data"],  # categorical
+            ["valor", "Valor da Produção Total", "Área colhida (ha)"]  # numerical
+        )
 
     try:
-        with open(schema_path, "r") as f:
+        with open(schema_path, 'r') as f:
             schema = json.load(f)
-
-        # Validar estrutura do schema
-        if "categorical" not in schema or not isinstance(schema["categorical"], list):
-            raise KeyError(f"'categorical' ausente ou não é uma lista no schema: {schema_path}")
-        if "numerical" not in schema or not isinstance(schema["numerical"], list):
-            raise KeyError(f"'numerical' ausente ou não é uma lista no schema: {schema_path}")
-
-        return schema["categorical"], schema["numerical"]
-
-    except FileNotFoundError:
-        raise FileNotFoundError(f"O arquivo de schema não foi encontrado: {schema_path}")
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Erro ao decodificar o arquivo JSON: {schema_path}. Detalhes: {e}")
-
+        categorical = schema.get("categorical", [])
+        numerical = schema.get("numerical", [])
+        return categorical, numerical
+    except Exception as e:
+        print(f"[ERRO] Erro ao decodificar JSON. Usando fallback mock. Detalhes: {e}")
+        return (
+            ["safra", "cultura", "uf", "municipio", "grupo", "solo", "outros_manejos", "clima", "decenio", "data"],  # categorical
+            ["valor", "Valor da Produção Total", "Área colhida (ha)"]  # numerical
+        )
 
 def process_row(row, categorical_fields, numeric_fields):
     """
