@@ -1,32 +1,28 @@
-# ========== VARIÁVEIS ==========
-PYTHON := python3
-PROBLEM ?= rendimento
-PIPELINE_PARAMS ?= default
-FEATURE_SET ?= default
-ALGORITHM ?= default
-ALGORITHM_PARAMS ?= default
-MLFLOW_TRACKING_URL ?= http://mlflow:5000
+TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
+LOG_DIR := logs
 
-# ========== ALVOS ==========
+.PHONY: logs
 
-install:
-	$(PYTHON) -m pip install --upgrade pip
-	$(PYTHON) -m pip install -r requirements.txt
-
-test:
-	pytest cd4ml/problems/$(PROBLEM)/tests --maxfail=2 --disable-warnings --tb=short
+logs:
+	mkdir -p $(LOG_DIR)
 
 run:
-	$(PYTHON) run_python_script.py pipeline $(PROBLEM) $(PIPELINE_PARAMS) $(FEATURE_SET) $(ALGORITHM) $(ALGORITHM_PARAMS)
+	make logs
+	@echo ">>> Executando pipeline..."
+	python3 run_python_script.py pipeline $(PROBLEM) $(PIPELINE_PARAMS) $(FEATURE_SET) $(ALGORITHM) $(ALGORITHM_PARAMS) \
+		2>&1 | tee $(LOG_DIR)/run_$(TIMESTAMP).log
 
-acceptance:
-	$(PYTHON) run_python_script.py acceptance
+test:
+	make logs
+	@echo ">>> Executando testes..."
+	pytest cd4ml/problems/$(PROBLEM)/tests --maxfail=2 --disable-warnings --tb=short \
+		2>&1 | tee $(LOG_DIR)/test_$(TIMESTAMP).log
 
-register-model:
-	$(PYTHON) run_python_script.py register_model $(MLFLOW_TRACKING_URL) yes
-
-deploy:
-	@echo "Reiniciando container 'model' se estiver presente..."
-	docker ps -a --format '{{.Names}}' | grep -q '^model$$' && docker restart model || echo "Container 'model' não encontrado."
-
-all: install test run acceptance register-model deploy
+summary:
+	make logs
+	@echo ">>> Gerando resumo da execução..."
+	@echo "PIPELINE SUMMARY - $(TIMESTAMP)" > $(LOG_DIR)/pipeline_summary_$(TIMESTAMP).txt
+	@echo "Problem: $(PROBLEM)" >> $(LOG_DIR)/pipeline_summary_$(TIMESTAMP).txt
+	@echo "Feature Set: $(FEATURE_SET)" >> $(LOG_DIR)/pipeline_summary_$(TIMESTAMP).txt
+	@echo "Algorithm: $(ALGORITHM)" >> $(LOG_DIR)/pipeline_summary_$(TIMESTAMP).txt
+	@echo "MLflow Tracking: $(MLFLOW_TRACKING_URL)" >> $(LOG_DIR)/pipeline_summary_$(TIMESTAMP).txt
