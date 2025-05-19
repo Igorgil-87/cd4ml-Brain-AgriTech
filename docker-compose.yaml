@@ -173,7 +173,7 @@ services:
       - ./airflow/dags:/opt/airflow/dags
       - ./scripts:/opt/airflow/scripts
     ports:
-      - "8082:8080"
+      - "8083:8080"
     command: >
       bash -c "
         airflow db upgrade &&

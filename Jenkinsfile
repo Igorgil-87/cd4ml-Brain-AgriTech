@@ -1,27 +1,27 @@
 pipeline {
     agent any
     parameters {
-        choice(name: 'problem_name', choices: ['rendimento', 'insumo',  'saude_lavoura','commodities'], 
-               description: 'Choose the problem name')
+        choice(name: 'problem_name', choices: ['rendimento', 'insumo', 'saude_lavoura', 'commodities'], description: 'Choose the problem name')
         string(name: 'ml_pipeline_params_name', defaultValue: 'default', description: 'Specify the ml_pipeline_params file')
         string(name: 'feature_set_name', defaultValue: 'default', description: 'Specify the feature_set name/file')
         string(name: 'algorithm_name', defaultValue: 'default', description: 'Specify the algorithm (overrides problem_params)')
         string(name: 'algorithm_params_name', defaultValue: 'default', description: 'Specify the algorithm params')
     }
     triggers {
-        pollSCM('* * * * *') // Poll SCM every minute for new changes
+        pollSCM('H/5 * * * *') // Check every 5 minutes
     }
     options {
-        timestamps() // Add timestamps to output
+        timestamps()
     }
-    environment { 
+    environment {
         MLFLOW_TRACKING_URL = 'http://mlflow:5000'
         MLFLOW_S3_ENDPOINT_URL = 'http://minio:9000'
         AWS_ACCESS_KEY_ID = "${env.ACCESS_KEY}"
         AWS_SECRET_ACCESS_KEY = "${env.SECRET_KEY}"
-        PYTHONPATH = "${WORKSPACE}" 
+        PYTHONPATH = "${WORKSPACE}"
     }
     stages {
+
         stage('Install dependencies') {
             steps {
                 sh 'pip3 install -r requirements.txt'
@@ -34,107 +34,97 @@ pipeline {
             }
         }
 
-      stage('Run tests') {
+        stage('Run tests') {
             steps {
                 script {
-                    sh '''
-                    set -e  # Encerra o script em caso de erro
-
-                    echo "=== Configuração Inicial ==="
-                    CACHE_DIR="/tmp/pip-cache"
-                    LOG_FILE="test_execution.log"
-                    TEST_DIR="cd4ml/problems/rendimento/tests"
-                    RETRY_COUNT=3
-
-                    echo "=== Configurando cache de pacotes ==="
-                    mkdir -p ${CACHE_DIR}
-
-                    echo "=== Instalando dependências com retry ==="
-                    for i in $(seq 1 ${RETRY_COUNT}); do
-                        pip3 install --cache-dir=${CACHE_DIR} --upgrade pip > ${LOG_FILE} 2>&1
-                        pip3 install --cache-dir=${CACHE_DIR} 'numpy>=1.22.0,<1.26.0' 'pandas>=1.5.0,<1.6.0' 'mlflow==2.1.1' 'scipy>=1.9.0,<1.11.0' 'pytest==7.2.1' 'requests-mock==1.10.0' >> ${LOG_FILE} 2>&1
-                        if [ $? -eq 0 ]; then
-                            echo "Instalação concluída com sucesso!"
-                            break
-                        fi
-                        echo "Tentativa ${i} falhou. Retentando..."
-                        if [ $i -eq ${RETRY_COUNT} ]; then
-                            echo "Falha na instalação após ${RETRY_COUNT} tentativas."
-                            cat ${LOG_FILE}
-                            exit 1
-                        fi
-                    done
-
-                    echo "=== Listando pacotes instalados ==="
-                    pip3 freeze | tee -a ${LOG_FILE}
-
-                    echo "=== Executando pytest nos testes em ${TEST_DIR} ==="
-                    pytest ${TEST_DIR} --maxfail=2 --disable-warnings --tb=short | tee -a ${LOG_FILE}
-
-                    echo "=== Testes concluídos com sucesso! ==="
-                    '''
+                    def TEST_DIR = "cd4ml/problems/${params.problem_name}/tests"
+                    sh """
+                        set -e
+                        echo "=== Rodando testes em: ${TEST_DIR} ==="
+                        pytest ${TEST_DIR} --maxfail=2 --disable-warnings --tb=short | tee test_execution.log
+                    """
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'test_execution.log', allowEmptyArchive: true
                 }
             }
         }
 
         stage('Run ML pipeline') {
-           steps {
-               sh 'python3 run_python_script.py pipeline ${problem_name} ${ml_pipeline_params_name} ${feature_set_name} ${algorithm_name} ${algorithm_params_name} > pipeline.log 2>&1'
-               sh 'cat pipeline.log' // Exibe o conteúdo do log após a execução
-           }
-       }
-       
-       stage('Production - Register Model and Acceptance Test') {
-           when {
-              allOf {
+            steps {
+                sh """
+                    python3 run_python_script.py pipeline ${params.problem_name} ${params.ml_pipeline_params_name} ${params.feature_set_name} ${params.algorithm_name} ${params.algorithm_params_name} > pipeline.log 2>&1
+                    cat pipeline.log
+                """
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'pipeline.log', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('Production - Register Model and Acceptance Test') {
+            when {
+                allOf {
                     equals expected: 'default', actual: "${params.ml_pipeline_params_name}"
                     equals expected: 'default', actual: "${params.feature_set_name}"
                     equals expected: 'default', actual: "${params.algorithm_name}"
                     equals expected: 'default', actual: "${params.algorithm_params_name}"
-               }
-           }
-           steps {
+                }
+            }
+            steps {
                 sh 'python3 run_python_script.py acceptance'
-           }
-           post {
+            }
+            post {
                 success {
                     sh 'python3 run_python_script.py register_model ${MLFLOW_TRACKING_URL} yes'
                 }
                 failure {
                     sh 'python3 run_python_script.py register_model ${MLFLOW_TRACKING_URL} no'
                 }
-           }
-       }
-       stage('Experiment - Register Model and Acceptance Test') {
+            }
+        }
+
+        stage('Experiment - Register Model and Acceptance Test') {
             when {
-               anyOf {
+                anyOf {
                     not { equals expected: 'default', actual: "${params.ml_pipeline_params_name}" }
-                    not { equals expected: 'default', actual: "${params.feature_set_name}"}
-                    not { equals expected: 'default', actual: "${params.algorithm_name}"}
-                    not { equals expected: 'default', actual: "${params.algorithm_params_name}"}
-               }
-           }
-           steps {
-                sh '''
-                set +e
-                python3 run_python_script.py acceptance
-                set -e
-                '''
-                sh 'python3 run_python_script.py register_model ${MLFLOW_TRACKING_URL} no'
-           }
-       }
-       stage('Deploy Model') {
-           steps {
-               script {
-                   def production_model_id = sh(script: 'python3 scripts/check_mlflow_production.py', returnStdout: true).trim()
-                   if (production_model_id) {
-                       echo "New production model found: ${production_model_id}. Restarting 'model' container..."
-                       sh 'docker restart model'
-                   } else {
-                       echo "No new production model found. Skipping deploy."
-                   }
-               }
-           }
-       }
+                    not { equals expected: 'default', actual: "${params.feature_set_name}" }
+                    not { equals expected: 'default', actual: "${params.algorithm_name}" }
+                    not { equals expected: 'default', actual: "${params.algorithm_params_name}" }
+                }
+            }
+            steps {
+                sh """
+                    set +e
+                    python3 run_python_script.py acceptance
+                    set -e
+                    python3 run_python_script.py register_model ${MLFLOW_TRACKING_URL} no
+                """
+            }
+        }
+
+        stage('Deploy Model') {
+            steps {
+                script {
+                    def production_model_id = sh(script: 'python3 scripts/check_mlflow_production.py', returnStdout: true).trim()
+                    if (production_model_id) {
+                        echo "New production model found: ${production_model_id}. Restarting 'model' container..."
+                        sh '''
+                            if docker ps -a --format '{{.Names}}' | grep -q "^model$"; then
+                                docker restart model
+                            else
+                                echo "Container 'model' not found. Skipping restart."
+                            fi
+                        '''
+                    } else {
+                        echo "No new production model found. Skipping deploy."
+                    }
+                }
+            }
+        }
     }
 }
