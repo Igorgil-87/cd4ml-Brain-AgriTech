@@ -49,15 +49,21 @@ def test_process_row(schema):
 
 
 
+from io import StringIO
+import pandas as pd
+import pytest
+from cd4ml.problems.rendimento.readers.stream_data import stream_raw
+
 def test_stream_raw(monkeypatch):
-    # Mock de CSV com todas as colunas esperadas pelo fallback schema
+    # Simula o conteúdo do CSV como string
     mock_csv = StringIO("""safra,cultura,valor,split,grupo,municipio,data,Valor da Produção Total,Área colhida (ha),clima,solo,uf,decenio,outros_manejos
 2023,Milho,123.4,train,Agrícola,São Paulo,2023-05-01,456.7,789.1,Seco,Arenoso,SP,1,Manejo X
 """)
 
-    # Sobrescreve pandas.read_csv dentro do stream_raw
+    # Monkeypatch para substituir pandas.read_csv sempre que chamado dentro do stream_raw
     monkeypatch.setattr("pandas.read_csv", lambda *args, **kwargs: pd.read_csv(mock_csv))
-    
+
+    # Executa o código testado sem depender do arquivo físico
     rows = list(stream_raw("rendimento"))
     assert len(rows) > 0
 
