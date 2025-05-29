@@ -1,15 +1,23 @@
-from dagster import op
-from cd4ml_pipeline.ops.shared.mlflow_utils import init_mlflow
-from cd4ml_pipeline.ops.shared.pre_process import preprocess_data
-from cd4ml_pipeline.ops.shared.validate import validate_schema
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from cd4ml_pipeline.ops.shared.mlflow_utils import init_mlflow, assess_model_performance
+import mlflow.sklearn
 
-@op
 def train_commodities():
-    print("📦 Preparando dados de commodities...")
-    preprocess_data("commodities")
-    validate_schema("commodities")
+    init_mlflow(experiment_name="commodities")
 
-    mlflow = init_mlflow()
-    with mlflow.start_run(run_name="treino_commodities"):
-        mlflow.log_param("modelo", "LSTM")
-        mlflow.log_metric("rmse", 0.15)
+    df = pd.read_csv("data/commodities.csv")
+    df = df.dropna()
+
+    X = df[['ano', 'mes']]
+    y = df['media_nacional']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+
+    with mlflow.start_run():
+        mlflow.sklearn.log_model(model, "model")
+        assess_model_performance(model, X_test, y_test)

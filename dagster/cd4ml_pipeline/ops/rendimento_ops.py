@@ -1,14 +1,37 @@
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+import joblib
 from dagster import op
-import mlflow
-import os
+from cd4ml_pipeline.ops.shared.mlflow_utils import start_run
 
 @op
 def train_rendimento_model():
-    os.environ["MLFLOW_TRACKING_URI"] = "http://mlflow:5000"
-    os.environ["MLFLOW_S3_ENDPOINT_URL"] = "http://minio:9000"
+    # Simulação de dados temporários
+    np.random.seed(42)
+    df = pd.DataFrame({
+        "ano": np.random.randint(2010, 2023, 100),
+        "mes": np.random.randint(1, 13, 100),
+        "uf": np.random.choice(["SP", "MG", "PR"], 100),
+        "mediaEst": np.random.rand(100) * 100,
+        "mediaNac": np.random.rand(100) * 100,
+        "produtividade": np.random.rand(100) * 50
+    })
 
-    # simula seu script `cd4ml/problems/rendimento/...`
-    print("Treinando modelo de rendimento...")
-    with mlflow.start_run(run_name="rendimento_treino"):
-        mlflow.log_param("modelo", "xgboost")
-        mlflow.log_metric("mae", 0.12)
+    X = df[["ano", "mes", "mediaEst", "mediaNac"]]
+    y = df["produtividade"]
+
+    model = LinearRegression()
+    model.fit(X, y)
+    predictions = model.predict(X)
+    rmse = np.sqrt(mean_squared_error(y, predictions))
+
+    with start_run("rendimento_model") as run:
+        mlflow.log_param("model_type", "LinearRegression")
+        mlflow.log_metric("rmse", rmse)
+        model_path = "model_rendimento.pkl"
+        joblib.dump(model, model_path)
+        mlflow.log_artifact(model_path)
+
+    return rmse
