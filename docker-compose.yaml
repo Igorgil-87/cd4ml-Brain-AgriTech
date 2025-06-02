@@ -1,5 +1,6 @@
-version: '3.8'
-
+############################
+# GRUPO 1: Jenkins e Welcome
+############################
 services:
   welcome:
     container_name: welcome_server
@@ -26,8 +27,8 @@ services:
       SECRET_KEY: ${JENKINS_SECRET_KEY}
     volumes:
       - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock # Permitir que Jenkins crie containers no host
-      - /usr/bin/docker:/usr/bin/docker # Necessário para o Jenkins usar o Docker CLI
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
     secrets:
       - jenkins-admin-password
     networks:
@@ -41,65 +42,52 @@ services:
       resources:
         limits:
           memory: 8g
-          cpus: "2" # Limitar o uso de CPU
+          cpus: "2"
         reservations:
-          memory: 4g # Garantir um mínimo de memória
-          cpus: "1" # Garantir um mínimo de CPU
-    restart: unless-stopped # Reiniciar o container caso falhe
+          memory: 4g
+          cpus: "1"
+    restart: unless-stopped
 
-  es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
-    container_name: es01
-    environment:
-      - node.name=es01
-      - cluster.name=es-docker-cluster
-      - bootstrap.memory_lock=true
-      - http.port=9200
-      - http.host=0.0.0.0
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - discovery.type=single-node
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
+##########################
+# GRUPO 2: Dagster stack
+##########################
+  dagster-webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile-dagster
+    image: dagster-webserver:local
+    container_name: dagster-webserver
     volumes:
-      - data01:/usr/share/elasticsearch/data
-    ports:
-      - 9200:9200
-    networks:
-      - jenkins_nw
-    healthcheck:
-      test: curl -s http://localhost:9200 >/dev/null || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    depends_on:
-      - jenkins
-
-  kib01:
-    image: docker.elastic.co/kibana/kibana:7.6.0
-    container_name: kib01
-    ports:
-      - 5601:5601
+      - ./dagster:/opt/dagster/app
+      - ./dagster/dagster_home:/opt/dagster/dagster_home
     environment:
-      ELASTICSEARCH_URL: http://es01:9200
-      ELASTICSEARCH_HOSTS: http://es01:9200
-    networks:
-      - jenkins_nw
-    depends_on:
-      - es01
-
-  fluentd:
-    image: ericnaglertw/cd4ml-fluentd:1
-    container_name: fluentd
-    volumes:
-      - ./fluentd/conf:/fluentd/etc
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      PYTHONPATH: /opt/dagster/app
+      SLACK_API_TOKEN: ${SLACK_API_TOKEN}
+      SLACK_CHANNEL: "#alertas-dagster"
     ports:
-      - "24224:24224"
+      - "3010:3000"
+    command: "dagster-webserver"
     networks:
       - jenkins_nw
-    depends_on:
-      - es01
+      - default  # <- saida 
+
+  dagster-daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile-dagster
+    container_name: dagster-daemon
+    command: "dagster-daemon run"
+    restart: always
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+    working_dir: /opt/dagster/app
+    volumes:
+      - ./dagster:/opt/dagster/app
+      - ./dagster/dagster_home:/opt/dagster/dagster_home
+    networks:
+      - jenkins_nw
+
 
   model:
     build:
@@ -120,24 +108,9 @@ services:
       - fluentd
       - minio
 
-  dagster:
-    build:
-      context: .
-      dockerfile: Dockerfile-dagster
-    container_name: dagster
-    volumes:
-      - ./dagster:/opt/dagster/app
-      - ./dagster/dagster_home:/opt/dagster/dagster_home
-    environment:
-      DAGSTER_HOME: /opt/dagster/dagster_home
-      PYTHONPATH: /opt/dagster/app
-      SLACK_API_TOKEN: ${SLACK_API_TOKEN}
-      SLACK_CHANNEL: "#alertas-dagster"
-    ports:
-      - "3001:3000"
-    networks:
-      - jenkins_nw
-
+############################
+# GRUPO 3: MinIO e MLflow
+############################
   minio:
     image: minio/minio:RELEASE.2020-08-08T04-50-06Z
     container_name: minio
@@ -176,7 +149,28 @@ services:
     depends_on:
       - minio
 
-
+#########################
+# GRUPO 4: Airflow stack
+#########################
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./postgres-init-scripts:/docker-entrypoint-initdb.d:ro
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jenkins_nw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   airflow-webserver:
     image: apache/airflow:2.6.1
@@ -201,7 +195,6 @@ services:
     networks:
       - jenkins_nw
 
-
   airflow-scheduler:
     image: apache/airflow:2.6.1
     restart: always
@@ -216,50 +209,6 @@ services:
     command: scheduler
     networks:
       - jenkins_nw
-
-
-
-
-  dev:
-    container_name: dev
-    image: jupyter/minimal-notebook:54462805efcb
-    environment:
-      - JUPYTER_ENABLE_LAB=yes
-    ports:
-      - "8888:8888"
-    entrypoint: "start.sh"
-    command: "jupyter lab --LabApp.token=''"
-    volumes:
-      - .:/home/jovyan/
-    networks:
-      - jenkins_nw
-    depends_on:
-      - jenkins
-
-  postgres:
-    image: postgres:13
-    container_name: postgres
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    ports:
-      - "5433:5432"
-    volumes:
-      - ./postgres-init-scripts:/docker-entrypoint-initdb.d:ro
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - jenkins_nw
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   pgadmin:
     image: dpage/pgadmin4
@@ -279,16 +228,61 @@ services:
       timeout: 10s
       retries: 3
 
+#########################
+# GRUPO 5: Logging e Dados
+#########################
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
+    container_name: es01
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - bootstrap.memory_lock=true
+      - http.port=9200
+      - http.host=0.0.0.0
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - jenkins_nw
+
+  kib01:
+    image: docker.elastic.co/kibana/kibana:7.6.0
+    container_name: kib01
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://es01:9200
+      ELASTICSEARCH_HOSTS: http://es01:9200
+    networks:
+      - jenkins_nw
+    depends_on:
+      - es01
+
+  fluentd:
+    image: ericnaglertw/cd4ml-fluentd:1
+    container_name: fluentd
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+    ports:
+      - "24224:24224"
+    networks:
+      - jenkins_nw
+    depends_on:
+      - es01
+
   load_data:
     build:
       context: .
       dockerfile: load_data/Dockerfile
     container_name: load_data
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
     volumes:
       - ./data:/app/data
       - ./scripts:/app/scripts
@@ -301,9 +295,28 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g  # Ajuste o limite de memória
+          memory: 4g
 
+#########################
+# GRUPO 6: Dev tools
+#########################
+  dev:
+    container_name: dev
+    image: jupyter/minimal-notebook:54462805efcb
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    ports:
+      - "8888:8888"
+    entrypoint: "start.sh"
+    command: "jupyter lab --LabApp.token=''"
+    volumes:
+      - .:/home/jovyan/
+    networks:
+      - jenkins_nw
 
+#########################
+# Volumes, Redes e Segredos
+#########################
 volumes:
   jenkins_home:
   data01:

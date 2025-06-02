@@ -1,6 +1,6 @@
 # cd4ml_pipeline/sensors/slack_sensors.py
 
-from dagster import RunStatus, SensorEvaluationContext, run_status_sensor
+from dagster import DagsterRunStatus, SensorEvaluationContext, run_status_sensor
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 import os
@@ -9,7 +9,7 @@ SLACK_TOKEN = os.getenv("SLACK_API_TOKEN")
 SLACK_CHANNEL = os.getenv("SLACK_CHANNEL", "#alertas-dagster")
 
 @run_status_sensor(
-    run_status=RunStatus.FAILURE,
+    run_status=DagsterRunStatus.FAILURE,
     name="notify_on_failure",
 )
 def notify_on_failure(context: SensorEvaluationContext):

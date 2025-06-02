@@ -1,5 +1,2 @@
 load_from:
-  - python_file: cd4ml_pipeline/jobs/rendimento_job.py
-  - python_file: cd4ml_pipeline/jobs/insumo_job.py
-  - python_file: cd4ml_pipeline/jobs/saude_lavoura_job.py
-  - python_file: cd4ml_pipeline/jobs/commodities_job.py
+  - python_package: cd4ml_pipeline.repository

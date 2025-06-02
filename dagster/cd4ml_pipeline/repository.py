@@ -1,35 +1,22 @@
-from dagster import Definitions
-from cd4ml_pipeline.assets import rendimento_asset, commodities_asset, insumo_asset, saude_lavoura_asset
-from cd4ml_pipeline.jobs import rendimento_job, commodities_job, insumo_job, saude_lavoura_job
+# cd4ml_pipeline/repository.py
+
+from dagster import repository
+from cd4ml_pipeline.assets.rendimento_asset import rendimento_data
+from cd4ml_pipeline.assets.commodities_asset import commodities_data
+from cd4ml_pipeline.assets.insumo_asset import insumo_data
+from cd4ml_pipeline.assets.saude_lavoura_asset import saude_lavoura_data
+
+from cd4ml_pipeline.jobs.rendimento_job import rendimento_job
+from cd4ml_pipeline.jobs.commodities_job import commodities_job
+from cd4ml_pipeline.jobs.insumo_job import insumo_job
+from cd4ml_pipeline.jobs.saude_lavoura_job import saude_lavoura_job
+
 from cd4ml_pipeline.sensors.asset_sensors import (
     rendimento_sensor,
     commodities_sensor,
     insumo_sensor,
     saude_lavoura_sensor
 )
-
-defs = Definitions(
-    assets=[
-        rendimento_asset.rendimento_data,
-        commodities_asset.commodities_data,
-        insumo_asset.insumo_data,
-        saude_lavoura_asset.saude_lavoura_data
-    ],
-    jobs=[
-        rendimento_job.rendimento_job,
-        commodities_job.commodities_job,
-        insumo_job.insumo_job,
-        saude_lavoura_job.saude_lavoura_job
-    ],
-    sensors=[
-        rendimento_sensor,
-        commodities_sensor,
-        insumo_sensor,
-        saude_lavoura_sensor
-    ]
-)
-
-# cd4ml_pipeline/repository.py
 
 from cd4ml_pipeline.sensors.slack_sensors import notify_on_failure
 
@@ -40,9 +27,13 @@ def cd4ml_repository():
         commodities_job,
         insumo_job,
         saude_lavoura_job,
-        notify_on_failure,
         rendimento_data,
         commodities_data,
         insumo_data,
         saude_lavoura_data,
+        rendimento_sensor,
+        commodities_sensor,
+        insumo_sensor,
+        saude_lavoura_sensor,
+        notify_on_failure,
     ]
