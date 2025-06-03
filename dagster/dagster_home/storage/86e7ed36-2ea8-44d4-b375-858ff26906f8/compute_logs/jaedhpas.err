@@ -1,0 +1,6 @@
+2025-06-03 14:00:27 +0000 - dagster - DEBUG - saude_lavoura_job - 86e7ed36-2ea8-44d4-b375-858ff26906f8 - 23545 - LOGS_CAPTURED - Started capturing logs in process (pid: 23545).
+2025-06-03 14:00:27 +0000 - dagster - DEBUG - saude_lavoura_job - 86e7ed36-2ea8-44d4-b375-858ff26906f8 - 23545 - saude_lavoura_data - STEP_START - Started execution of step "saude_lavoura_data".
+2025-06-03 14:00:27 +0000 - dagster - DEBUG - saude_lavoura_job - 86e7ed36-2ea8-44d4-b375-858ff26906f8 - 23545 - saude_lavoura_data - STEP_OUTPUT - Yielded output "result" of type "DataFrame". (Type check passed).
+2025-06-03 14:00:27 +0000 - dagster - DEBUG - saude_lavoura_job - 86e7ed36-2ea8-44d4-b375-858ff26906f8 - saude_lavoura_data - Writing file at: /opt/dagster/dagster_home/storage/86e7ed36-2ea8-44d4-b375-858ff26906f8/saude_lavoura_data/result using PickledObjectFilesystemIOManager...
+2025-06-03 14:00:27 +0000 - dagster - DEBUG - saude_lavoura_job - 86e7ed36-2ea8-44d4-b375-858ff26906f8 - 23545 - saude_lavoura_data - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2025-06-03 14:00:27 +0000 - dagster - DEBUG - saude_lavoura_job - 86e7ed36-2ea8-44d4-b375-858ff26906f8 - 23545 - saude_lavoura_data - STEP_SUCCESS - Finished execution of step "saude_lavoura_data" in 17ms.

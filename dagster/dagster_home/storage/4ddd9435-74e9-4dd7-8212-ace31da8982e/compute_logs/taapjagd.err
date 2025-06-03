@@ -1,0 +1,6 @@
+2025-06-03 16:35:41 +0000 - dagster - DEBUG - insumo_job - 4ddd9435-74e9-4dd7-8212-ace31da8982e - 3197 - LOGS_CAPTURED - Started capturing logs in process (pid: 3197).
+2025-06-03 16:35:41 +0000 - dagster - DEBUG - insumo_job - 4ddd9435-74e9-4dd7-8212-ace31da8982e - 3197 - insumo_data - STEP_START - Started execution of step "insumo_data".
+2025-06-03 16:35:41 +0000 - dagster - DEBUG - insumo_job - 4ddd9435-74e9-4dd7-8212-ace31da8982e - 3197 - insumo_data - STEP_OUTPUT - Yielded output "result" of type "DataFrame". (Type check passed).
+2025-06-03 16:35:41 +0000 - dagster - DEBUG - insumo_job - 4ddd9435-74e9-4dd7-8212-ace31da8982e - insumo_data - Writing file at: /opt/dagster/dagster_home/storage/4ddd9435-74e9-4dd7-8212-ace31da8982e/insumo_data/result using PickledObjectFilesystemIOManager...
+2025-06-03 16:35:41 +0000 - dagster - DEBUG - insumo_job - 4ddd9435-74e9-4dd7-8212-ace31da8982e - 3197 - insumo_data - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2025-06-03 16:35:41 +0000 - dagster - DEBUG - insumo_job - 4ddd9435-74e9-4dd7-8212-ace31da8982e - 3197 - insumo_data - STEP_SUCCESS - Finished execution of step "insumo_data" in 36ms.

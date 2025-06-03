@@ -1,0 +1,80 @@
+2025-06-03 12:07:13 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - 1091 - LOGS_CAPTURED - Started capturing logs in process (pid: 1091).
+2025-06-03 12:07:13 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - 1091 - train_commodities - STEP_START - Started execution of step "train_commodities".
+2025-06-03 12:07:13 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - train_commodities - Loading file from: /opt/dagster/dagster_home/storage/e0bad485-e0a1-43d4-967b-c832be594bf4/commodities_data/result using PickledObjectFilesystemIOManager...
+2025-06-03 12:07:13 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - 1091 - train_commodities - LOADED_INPUT - Loaded input "df" using input manager "io_manager", from output "result" of step "commodities_data"
+2025-06-03 12:07:13 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - 1091 - train_commodities - STEP_INPUT - Got input "df" of type "DataFrame". (Type check passed).
+2025-06-03 12:07:13 +0000 - dagster - INFO - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - train_commodities - MLflow Tracking URI: http://mlflow:5000
+2025-06-03 12:07:13 +0000 - dagster - INFO - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - train_commodities - MLflow S3 Endpoint: http://minio:9000
+2025/06/03 12:07:13 INFO mlflow.tracking.fluent: Experiment with name 'commodities' does not exist. Creating a new experiment.
+/usr/local/lib/python3.10/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+2025-06-03 12:07:17 +0000 - dagster - ERROR - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - 1091 - train_commodities - STEP_FAILURE - Execution of step "train_commodities" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "train_commodities"::
+
+botocore.exceptions.NoCredentialsError: Unable to locate credentials
+
+Stack Trace:
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/utils.py", line 54, in op_execution_error_boundary
+    yield
+  File "/usr/local/lib/python3.10/site-packages/dagster/_utils/__init__.py", line 467, in iterate_with_context
+    next_output = next(iterator)
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 131, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 125, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+  File "/opt/dagster/app/cd4ml_pipeline/ops/commodities_ops.py", line 29, in train_commodities
+    mlflow.sklearn.log_model(model, "model")
+  File "/usr/local/lib/python3.10/site-packages/mlflow/sklearn/__init__.py", line 417, in log_model
+    return Model.log(
+  File "/usr/local/lib/python3.10/site-packages/mlflow/models/model.py", line 487, in log
+    mlflow.tracking.fluent.log_artifacts(local_path, mlflow_model.artifact_path)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/tracking/fluent.py", line 810, in log_artifacts
+    MlflowClient().log_artifacts(run_id, local_dir, artifact_path)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/tracking/client.py", line 1048, in log_artifacts
+    self._tracking_client.log_artifacts(run_id, local_dir, artifact_path)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/tracking/_tracking_service/client.py", line 448, in log_artifacts
+    self._get_artifact_repo(run_id).log_artifacts(local_dir, artifact_path)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/store/artifact/s3_artifact_repo.py", line 142, in log_artifacts
+    self._upload_file(
+  File "/usr/local/lib/python3.10/site-packages/mlflow/store/artifact/s3_artifact_repo.py", line 118, in _upload_file
+    s3_client.upload_file(Filename=local_file, Bucket=bucket, Key=key, ExtraArgs=extra_args)
+  File "/usr/local/lib/python3.10/site-packages/boto3/s3/inject.py", line 143, in upload_file
+    return transfer.upload_file(
+  File "/usr/local/lib/python3.10/site-packages/boto3/s3/transfer.py", line 288, in upload_file
+    future.result()
+  File "/usr/local/lib/python3.10/site-packages/s3transfer/futures.py", line 103, in result
+    return self._coordinator.result()
+  File "/usr/local/lib/python3.10/site-packages/s3transfer/futures.py", line 266, in result
+    raise self._exception
+  File "/usr/local/lib/python3.10/site-packages/s3transfer/tasks.py", line 139, in __call__
+    return self._execute_main(kwargs)
+  File "/usr/local/lib/python3.10/site-packages/s3transfer/tasks.py", line 162, in _execute_main
+    return_value = self._main(**kwargs)
+  File "/usr/local/lib/python3.10/site-packages/s3transfer/upload.py", line 758, in _main
+    client.put_object(Bucket=bucket, Key=key, Body=body, **extra_args)
+  File "/usr/local/lib/python3.10/site-packages/botocore/client.py", line 508, in _api_call
+    return self._make_api_call(operation_name, kwargs)
+  File "/usr/local/lib/python3.10/site-packages/botocore/client.py", line 894, in _make_api_call
+    http, parsed_response = self._make_request(
+  File "/usr/local/lib/python3.10/site-packages/botocore/client.py", line 917, in _make_request
+    return self._endpoint.make_request(operation_model, request_dict)
+  File "/usr/local/lib/python3.10/site-packages/botocore/endpoint.py", line 116, in make_request
+    return self._send_request(request_dict, operation_model)
+  File "/usr/local/lib/python3.10/site-packages/botocore/endpoint.py", line 195, in _send_request
+    request = self.create_request(request_dict, operation_model)
+  File "/usr/local/lib/python3.10/site-packages/botocore/endpoint.py", line 131, in create_request
+    self._event_emitter.emit(
+  File "/usr/local/lib/python3.10/site-packages/botocore/hooks.py", line 412, in emit
+    return self._emitter.emit(aliased_event_name, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/botocore/hooks.py", line 256, in emit
+    return self._emit(event_name, kwargs)
+  File "/usr/local/lib/python3.10/site-packages/botocore/hooks.py", line 239, in _emit
+    response = handler(**kwargs)
+  File "/usr/local/lib/python3.10/site-packages/botocore/signers.py", line 103, in handler
+    return self.sign(operation_name, request)
+  File "/usr/local/lib/python3.10/site-packages/botocore/signers.py", line 187, in sign
+    auth.add_auth(request)
+  File "/usr/local/lib/python3.10/site-packages/botocore/auth.py", line 407, in add_auth
+    raise NoCredentialsError()
+

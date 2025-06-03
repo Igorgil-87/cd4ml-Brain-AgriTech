@@ -1,0 +1,16 @@
+2025-06-03 20:03:06 +0000 - dagster - DEBUG - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - 2069 - LOGS_CAPTURED - Started capturing logs in process (pid: 2069).
+2025-06-03 20:03:06 +0000 - dagster - DEBUG - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - 2069 - train_insumo - STEP_START - Started execution of step "train_insumo".
+2025-06-03 20:03:06 +0000 - dagster - DEBUG - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - train_insumo - Loading file from: /opt/dagster/dagster_home/storage/3f69560e-7802-48ea-a140-7563325df129/insumo_data/result using PickledObjectFilesystemIOManager...
+2025-06-03 20:03:06 +0000 - dagster - DEBUG - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - 2069 - train_insumo - LOADED_INPUT - Loaded input "insumo_data" using input manager "io_manager", from output "result" of step "insumo_data"
+2025-06-03 20:03:06 +0000 - dagster - DEBUG - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - 2069 - train_insumo - STEP_INPUT - Got input "insumo_data" of type "DataFrame". (Type check passed).
+2025-06-03 20:03:06 +0000 - dagster - INFO - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - train_insumo - MLflow Tracking URI: http://mlflow:5000
+2025-06-03 20:03:06 +0000 - dagster - INFO - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - train_insumo - MLflow S3 Endpoint: http://minio:9000
+2025/06/03 20:03:06 INFO mlflow.tracking.fluent: Experiment with name 'insumo' does not exist. Creating a new experiment.
+2025-06-03 20:03:06 +0000 - dagster - INFO - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - train_insumo - Colunas disponíveis: ['ano', 'mes', 'uf', 'cultura', 'tipo_insumo', 'media_estadual', 'unidade']
+/usr/local/lib/python3.10/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+2025-06-03 20:03:09 +0000 - dagster - INFO - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - train_insumo - Model evaluation - RMSE: 159.87943478590154, R²: -0.10758621985806571
+2025-06-03 20:03:09 +0000 - dagster - DEBUG - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - 2069 - train_insumo - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+2025-06-03 20:03:09 +0000 - dagster - DEBUG - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - train_insumo - Writing file at: /opt/dagster/dagster_home/storage/3f69560e-7802-48ea-a140-7563325df129/train_insumo/result using PickledObjectFilesystemIOManager...
+2025-06-03 20:03:10 +0000 - dagster - DEBUG - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - 2069 - train_insumo - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2025-06-03 20:03:10 +0000 - dagster - DEBUG - insumo_job - 3f69560e-7802-48ea-a140-7563325df129 - 2069 - train_insumo - STEP_SUCCESS - Finished execution of step "train_insumo" in 3.55s.

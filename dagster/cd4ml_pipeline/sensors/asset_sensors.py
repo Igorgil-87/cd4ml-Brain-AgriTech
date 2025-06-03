@@ -2,10 +2,10 @@
 
 from dagster import asset_sensor, AssetKey, RunRequest, SensorEvaluationContext, AssetExecutionContext
 
-from cd4ml_pipeline.jobs.rendimento_job import rendimento_job
-from cd4ml_pipeline.jobs.commodities_job import commodities_job
-from cd4ml_pipeline.jobs.insumo_job import insumo_job
-from cd4ml_pipeline.jobs.saude_lavoura_job import saude_lavoura_job
+from cd4ml_pipeline.jobs.model_jobs import rendimento_job
+from cd4ml_pipeline.jobs.model_jobs import commodities_job
+from cd4ml_pipeline.jobs.model_jobs import insumo_job
+from cd4ml_pipeline.jobs.model_jobs import saude_lavoura_job
 
 @asset_sensor(asset_key=AssetKey("rendimento_data"), name="sensor_rendimento_data", job=rendimento_job)
 def rendimento_sensor(context: SensorEvaluationContext, asset_event: AssetExecutionContext):

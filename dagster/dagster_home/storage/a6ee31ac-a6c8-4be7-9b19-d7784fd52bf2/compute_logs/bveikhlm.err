@@ -1,0 +1,26 @@
+2025-06-03 19:26:55 +0000 - dagster - DEBUG - insumo_job - a6ee31ac-a6c8-4be7-9b19-d7784fd52bf2 - 1841 - LOGS_CAPTURED - Started capturing logs in process (pid: 1841).
+2025-06-03 19:26:55 +0000 - dagster - DEBUG - insumo_job - a6ee31ac-a6c8-4be7-9b19-d7784fd52bf2 - 1841 - train_insumo - STEP_START - Started execution of step "train_insumo".
+2025-06-03 19:26:55 +0000 - dagster - DEBUG - insumo_job - a6ee31ac-a6c8-4be7-9b19-d7784fd52bf2 - train_insumo - Loading file from: /opt/dagster/dagster_home/storage/a6ee31ac-a6c8-4be7-9b19-d7784fd52bf2/insumo_data/result using PickledObjectFilesystemIOManager...
+2025-06-03 19:26:55 +0000 - dagster - DEBUG - insumo_job - a6ee31ac-a6c8-4be7-9b19-d7784fd52bf2 - 1841 - train_insumo - LOADED_INPUT - Loaded input "insumo_data" using input manager "io_manager", from output "result" of step "insumo_data"
+2025-06-03 19:26:55 +0000 - dagster - DEBUG - insumo_job - a6ee31ac-a6c8-4be7-9b19-d7784fd52bf2 - 1841 - train_insumo - STEP_INPUT - Got input "insumo_data" of type "DataFrame". (Type check passed).
+2025-06-03 19:26:55 +0000 - dagster - INFO - insumo_job - a6ee31ac-a6c8-4be7-9b19-d7784fd52bf2 - train_insumo - MLflow Tracking URI: http://mlflow:5000
+2025-06-03 19:26:55 +0000 - dagster - INFO - insumo_job - a6ee31ac-a6c8-4be7-9b19-d7784fd52bf2 - train_insumo - MLflow S3 Endpoint: http://minio:9000
+2025/06/03 19:26:55 INFO mlflow.tracking.fluent: Experiment with name 'insumo' does not exist. Creating a new experiment.
+2025-06-03 19:26:55 +0000 - dagster - ERROR - insumo_job - a6ee31ac-a6c8-4be7-9b19-d7784fd52bf2 - 1841 - train_insumo - STEP_FAILURE - Execution of step "train_insumo" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "train_insumo"::
+
+NameError: name 'context' is not defined
+
+Stack Trace:
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/utils.py", line 54, in op_execution_error_boundary
+    yield
+  File "/usr/local/lib/python3.10/site-packages/dagster/_utils/__init__.py", line 467, in iterate_with_context
+    next_output = next(iterator)
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 131, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 125, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+  File "/opt/dagster/app/cd4ml_pipeline/ops/insumo_ops.py", line 15, in train_insumo
+    context.log.info(f"Colunas disponíveis: {insumo_data.columns.tolist()}")
+

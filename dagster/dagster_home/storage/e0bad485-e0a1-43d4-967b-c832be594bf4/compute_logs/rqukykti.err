@@ -1,0 +1,6 @@
+2025-06-03 12:07:11 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - 1041 - LOGS_CAPTURED - Started capturing logs in process (pid: 1041).
+2025-06-03 12:07:11 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - 1041 - commodities_data - STEP_START - Started execution of step "commodities_data".
+2025-06-03 12:07:11 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - 1041 - commodities_data - STEP_OUTPUT - Yielded output "result" of type "DataFrame". (Type check passed).
+2025-06-03 12:07:11 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - commodities_data - Writing file at: /opt/dagster/dagster_home/storage/e0bad485-e0a1-43d4-967b-c832be594bf4/commodities_data/result using PickledObjectFilesystemIOManager...
+2025-06-03 12:07:11 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - 1041 - commodities_data - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2025-06-03 12:07:11 +0000 - dagster - DEBUG - commodities_job - e0bad485-e0a1-43d4-967b-c832be594bf4 - 1041 - commodities_data - STEP_SUCCESS - Finished execution of step "commodities_data" in 44ms.

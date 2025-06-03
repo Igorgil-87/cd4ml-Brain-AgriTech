@@ -1,0 +1,23 @@
+2025-06-03 16:46:33 +0000 - dagster - DEBUG - saude_lavoura_job - d59ba468-87dd-48ca-972e-1be6ba1a2c2a - 6333 - LOGS_CAPTURED - Started capturing logs in process (pid: 6333).
+2025-06-03 16:46:33 +0000 - dagster - DEBUG - saude_lavoura_job - d59ba468-87dd-48ca-972e-1be6ba1a2c2a - 6333 - train_saude_lavoura - STEP_START - Started execution of step "train_saude_lavoura".
+2025-06-03 16:46:33 +0000 - dagster - DEBUG - saude_lavoura_job - d59ba468-87dd-48ca-972e-1be6ba1a2c2a - train_saude_lavoura - Loading file from: /opt/dagster/dagster_home/storage/d59ba468-87dd-48ca-972e-1be6ba1a2c2a/saude_lavoura_data/result using PickledObjectFilesystemIOManager...
+2025-06-03 16:46:33 +0000 - dagster - DEBUG - saude_lavoura_job - d59ba468-87dd-48ca-972e-1be6ba1a2c2a - 6333 - train_saude_lavoura - LOADED_INPUT - Loaded input "df" using input manager "io_manager", from output "result" of step "saude_lavoura_data"
+2025-06-03 16:46:33 +0000 - dagster - DEBUG - saude_lavoura_job - d59ba468-87dd-48ca-972e-1be6ba1a2c2a - 6333 - train_saude_lavoura - STEP_INPUT - Got input "df" of type "DataFrame". (Type check passed).
+2025-06-03 16:46:33 +0000 - dagster - ERROR - saude_lavoura_job - d59ba468-87dd-48ca-972e-1be6ba1a2c2a - 6333 - train_saude_lavoura - STEP_FAILURE - Execution of step "train_saude_lavoura" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "train_saude_lavoura"::
+
+TypeError: init_mlflow() takes 0 positional arguments but 1 was given
+
+Stack Trace:
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/utils.py", line 54, in op_execution_error_boundary
+    yield
+  File "/usr/local/lib/python3.10/site-packages/dagster/_utils/__init__.py", line 467, in iterate_with_context
+    next_output = next(iterator)
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 131, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 125, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+  File "/opt/dagster/app/cd4ml_pipeline/ops/saude_lavoura_ops.py", line 10, in train_saude_lavoura
+    init_mlflow("saude_lavoura")
+

@@ -1,17 +1,18 @@
+# cd4ml_pipeline/ops/rendimento_ops.py
+
+from dagster import op
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 import joblib
 import mlflow
-from dagster import op
+
 from cd4ml_pipeline.shared.mlflow_utils import start_run
+
 
 @op
 def preprocess_rendimento() -> pd.DataFrame:
-    """
-    Gera um dataframe simulado de rendimento com as features necessárias.
-    """
     np.random.seed(42)
     df = pd.DataFrame({
         "ano": np.random.randint(2010, 2023, 100),
@@ -26,10 +27,6 @@ def preprocess_rendimento() -> pd.DataFrame:
 
 @op
 def train_rendimento_model(df: pd.DataFrame) -> float:
-    """
-    Treina um modelo de regressão linear com o dataframe pré-processado
-    e registra no MLflow.
-    """
     X = df[["ano", "mes", "mediaEst", "mediaNac"]]
     y = df["produtividade"]
 

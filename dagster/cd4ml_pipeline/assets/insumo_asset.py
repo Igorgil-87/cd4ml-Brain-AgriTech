@@ -11,7 +11,7 @@ def insumo_data() -> pd.DataFrame:
         "uf": np.random.choice(["SP", "PR", "MG", "MT"], size=100),
         "cultura": np.random.choice(["Soja", "Milho", "Café"], size=100),
         "tipo_insumo": np.random.choice(["Fertilizante", "Semente", "Defensivo"], size=100),
-        "gasto_medio": np.random.uniform(100.0, 1000.0, size=100),
+        "media_estadual": np.random.uniform(200.0, 800.0, size=100),
         "unidade": "R$/ha"
     })
     return data

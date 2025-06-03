@@ -1,0 +1,74 @@
+2025-06-03 12:07:22 +0000 - dagster - DEBUG - rendimento_job - 3a54e18f-b2bc-435f-9659-053bad4d375a - 1324 - LOGS_CAPTURED - Started capturing logs in process (pid: 1324).
+2025-06-03 12:07:22 +0000 - dagster - DEBUG - rendimento_job - 3a54e18f-b2bc-435f-9659-053bad4d375a - 1324 - train_rendimento_model - STEP_START - Started execution of step "train_rendimento_model".
+2025-06-03 12:07:22 +0000 - dagster - DEBUG - rendimento_job - 3a54e18f-b2bc-435f-9659-053bad4d375a - train_rendimento_model - Loading file from: /opt/dagster/dagster_home/storage/3a54e18f-b2bc-435f-9659-053bad4d375a/preprocess_rendimento/result using PickledObjectFilesystemIOManager...
+2025-06-03 12:07:22 +0000 - dagster - DEBUG - rendimento_job - 3a54e18f-b2bc-435f-9659-053bad4d375a - 1324 - train_rendimento_model - LOADED_INPUT - Loaded input "df" using input manager "io_manager", from output "result" of step "preprocess_rendimento"
+2025-06-03 12:07:22 +0000 - dagster - DEBUG - rendimento_job - 3a54e18f-b2bc-435f-9659-053bad4d375a - 1324 - train_rendimento_model - STEP_INPUT - Got input "df" of type "DataFrame". (Type check passed).
+2025-06-03 12:07:22 +0000 - dagster - INFO - rendimento_job - 3a54e18f-b2bc-435f-9659-053bad4d375a - train_rendimento_model - MLflow Tracking URI: http://mlflow:5000
+2025-06-03 12:07:22 +0000 - dagster - INFO - rendimento_job - 3a54e18f-b2bc-435f-9659-053bad4d375a - train_rendimento_model - MLflow S3 Endpoint: http://minio:9000
+2025/06/03 12:07:22 INFO mlflow.tracking.fluent: Experiment with name 'rendimento_model' does not exist. Creating a new experiment.
+2025-06-03 12:07:22 +0000 - dagster - ERROR - rendimento_job - 3a54e18f-b2bc-435f-9659-053bad4d375a - 1324 - train_rendimento_model - STEP_FAILURE - Execution of step "train_rendimento_model" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "train_rendimento_model"::
+
+botocore.exceptions.NoCredentialsError: Unable to locate credentials
+
+Stack Trace:
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/utils.py", line 54, in op_execution_error_boundary
+    yield
+  File "/usr/local/lib/python3.10/site-packages/dagster/_utils/__init__.py", line 467, in iterate_with_context
+    next_output = next(iterator)
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 131, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 125, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+  File "/opt/dagster/app/cd4ml_pipeline/ops/rendimento_ops.py", line 43, in train_rendimento_model
+    mlflow.log_artifact(model_path)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/tracking/fluent.py", line 776, in log_artifact
+    MlflowClient().log_artifact(run_id, local_path, artifact_path)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/tracking/client.py", line 1002, in log_artifact
+    self._tracking_client.log_artifact(run_id, local_path, artifact_path)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/tracking/_tracking_service/client.py", line 439, in log_artifact
+    artifact_repo.log_artifact(local_path, artifact_path)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/store/artifact/s3_artifact_repo.py", line 125, in log_artifact
+    self._upload_file(
+  File "/usr/local/lib/python3.10/site-packages/mlflow/store/artifact/s3_artifact_repo.py", line 118, in _upload_file
+    s3_client.upload_file(Filename=local_file, Bucket=bucket, Key=key, ExtraArgs=extra_args)
+  File "/usr/local/lib/python3.10/site-packages/boto3/s3/inject.py", line 143, in upload_file
+    return transfer.upload_file(
+  File "/usr/local/lib/python3.10/site-packages/boto3/s3/transfer.py", line 288, in upload_file
+    future.result()
+  File "/usr/local/lib/python3.10/site-packages/s3transfer/futures.py", line 103, in result
+    return self._coordinator.result()
+  File "/usr/local/lib/python3.10/site-packages/s3transfer/futures.py", line 266, in result
+    raise self._exception
+  File "/usr/local/lib/python3.10/site-packages/s3transfer/tasks.py", line 139, in __call__
+    return self._execute_main(kwargs)
+  File "/usr/local/lib/python3.10/site-packages/s3transfer/tasks.py", line 162, in _execute_main
+    return_value = self._main(**kwargs)
+  File "/usr/local/lib/python3.10/site-packages/s3transfer/upload.py", line 758, in _main
+    client.put_object(Bucket=bucket, Key=key, Body=body, **extra_args)
+  File "/usr/local/lib/python3.10/site-packages/botocore/client.py", line 508, in _api_call
+    return self._make_api_call(operation_name, kwargs)
+  File "/usr/local/lib/python3.10/site-packages/botocore/client.py", line 894, in _make_api_call
+    http, parsed_response = self._make_request(
+  File "/usr/local/lib/python3.10/site-packages/botocore/client.py", line 917, in _make_request
+    return self._endpoint.make_request(operation_model, request_dict)
+  File "/usr/local/lib/python3.10/site-packages/botocore/endpoint.py", line 116, in make_request
+    return self._send_request(request_dict, operation_model)
+  File "/usr/local/lib/python3.10/site-packages/botocore/endpoint.py", line 195, in _send_request
+    request = self.create_request(request_dict, operation_model)
+  File "/usr/local/lib/python3.10/site-packages/botocore/endpoint.py", line 131, in create_request
+    self._event_emitter.emit(
+  File "/usr/local/lib/python3.10/site-packages/botocore/hooks.py", line 412, in emit
+    return self._emitter.emit(aliased_event_name, **kwargs)
+  File "/usr/local/lib/python3.10/site-packages/botocore/hooks.py", line 256, in emit
+    return self._emit(event_name, kwargs)
+  File "/usr/local/lib/python3.10/site-packages/botocore/hooks.py", line 239, in _emit
+    response = handler(**kwargs)
+  File "/usr/local/lib/python3.10/site-packages/botocore/signers.py", line 103, in handler
+    return self.sign(operation_name, request)
+  File "/usr/local/lib/python3.10/site-packages/botocore/signers.py", line 187, in sign
+    auth.add_auth(request)
+  File "/usr/local/lib/python3.10/site-packages/botocore/auth.py", line 407, in add_auth
+    raise NoCredentialsError()
+

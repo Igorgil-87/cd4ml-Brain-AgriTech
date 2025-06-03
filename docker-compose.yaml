@@ -57,6 +57,8 @@ services:
       dockerfile: Dockerfile-dagster
     image: dagster-webserver:local
     container_name: dagster-webserver
+    ports:
+      - "3005:3000"
     volumes:
       - ./dagster:/opt/dagster/app
       - ./dagster/dagster_home:/opt/dagster/dagster_home
@@ -65,28 +67,35 @@ services:
       PYTHONPATH: /opt/dagster/app
       SLACK_API_TOKEN: ${SLACK_API_TOKEN}
       SLACK_CHANNEL: "#alertas-dagster"
-    ports:
-      - "3010:3000"
-    command: "dagster-webserver"
+      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    depends_on:
+      - dagster-daemon
     networks:
       - jenkins_nw
-      - default  # <- saida 
+    command: dagster-webserver -h 0.0.0.0 -p 3000
 
   dagster-daemon:
     build:
       context: .
       dockerfile: Dockerfile-dagster
+    image: dagster-webserver:local
     container_name: dagster-daemon
-    command: "dagster-daemon run"
-    restart: always
-    environment:
-      DAGSTER_HOME: /opt/dagster/dagster_home
-    working_dir: /opt/dagster/app
     volumes:
       - ./dagster:/opt/dagster/app
       - ./dagster/dagster_home:/opt/dagster/dagster_home
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      PYTHONPATH: /opt/dagster/app
+      SLACK_API_TOKEN: ${SLACK_API_TOKEN}
+      SLACK_CHANNEL: "#alertas-dagster"
+      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}          # <--- Adicione isso
+      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}      # <--- E isso
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000   
     networks:
       - jenkins_nw
+    command: dagster-daemon run
 
 
   model:
@@ -311,6 +320,19 @@ services:
     command: "jupyter lab --LabApp.token=''"
     volumes:
       - .:/home/jovyan/
+    networks:
+      - jenkins_nw
+
+  cd4ml-api:
+    build:
+      context: ./cd4ml-api
+    container_name: cd4ml-api
+    ports:
+      - "8000:8000"
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    depends_on:
+      - mlflow
     networks:
       - jenkins_nw
 

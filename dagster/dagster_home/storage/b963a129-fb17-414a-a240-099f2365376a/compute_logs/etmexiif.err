@@ -1,0 +1,15 @@
+2025-06-03 13:34:09 +0000 - dagster - DEBUG - commodities_job - b963a129-fb17-414a-a240-099f2365376a - 2278 - LOGS_CAPTURED - Started capturing logs in process (pid: 2278).
+2025-06-03 13:34:09 +0000 - dagster - DEBUG - commodities_job - b963a129-fb17-414a-a240-099f2365376a - 2278 - train_commodities - STEP_START - Started execution of step "train_commodities".
+2025-06-03 13:34:09 +0000 - dagster - DEBUG - commodities_job - b963a129-fb17-414a-a240-099f2365376a - train_commodities - Loading file from: /opt/dagster/dagster_home/storage/b963a129-fb17-414a-a240-099f2365376a/commodities_data/result using PickledObjectFilesystemIOManager...
+2025-06-03 13:34:09 +0000 - dagster - DEBUG - commodities_job - b963a129-fb17-414a-a240-099f2365376a - 2278 - train_commodities - LOADED_INPUT - Loaded input "df" using input manager "io_manager", from output "result" of step "commodities_data"
+2025-06-03 13:34:09 +0000 - dagster - DEBUG - commodities_job - b963a129-fb17-414a-a240-099f2365376a - 2278 - train_commodities - STEP_INPUT - Got input "df" of type "DataFrame". (Type check passed).
+2025-06-03 13:34:09 +0000 - dagster - INFO - commodities_job - b963a129-fb17-414a-a240-099f2365376a - train_commodities - MLflow Tracking URI: http://mlflow:5000
+2025-06-03 13:34:09 +0000 - dagster - INFO - commodities_job - b963a129-fb17-414a-a240-099f2365376a - train_commodities - MLflow S3 Endpoint: http://minio:9000
+2025/06/03 13:34:09 INFO mlflow.tracking.fluent: Experiment with name 'commodities' does not exist. Creating a new experiment.
+/usr/local/lib/python3.10/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+2025-06-03 13:34:12 +0000 - dagster - INFO - commodities_job - b963a129-fb17-414a-a240-099f2365376a - train_commodities - Model evaluation - RMSE: 52.726766138558894, R²: 0.10111063949498567
+2025-06-03 13:34:12 +0000 - dagster - DEBUG - commodities_job - b963a129-fb17-414a-a240-099f2365376a - 2278 - train_commodities - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+2025-06-03 13:34:12 +0000 - dagster - DEBUG - commodities_job - b963a129-fb17-414a-a240-099f2365376a - train_commodities - Writing file at: /opt/dagster/dagster_home/storage/b963a129-fb17-414a-a240-099f2365376a/train_commodities/result using PickledObjectFilesystemIOManager...
+2025-06-03 13:34:12 +0000 - dagster - DEBUG - commodities_job - b963a129-fb17-414a-a240-099f2365376a - 2278 - train_commodities - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2025-06-03 13:34:12 +0000 - dagster - DEBUG - commodities_job - b963a129-fb17-414a-a240-099f2365376a - 2278 - train_commodities - STEP_SUCCESS - Finished execution of step "train_commodities" in 3.03s.

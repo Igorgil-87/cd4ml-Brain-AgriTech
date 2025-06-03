@@ -1,0 +1,23 @@
+2025-06-03 16:26:17 +0000 - dagster - DEBUG - insumo_job - 634b7608-8f48-4231-8134-121746df6abf - 6393 - LOGS_CAPTURED - Started capturing logs in process (pid: 6393).
+2025-06-03 16:26:17 +0000 - dagster - DEBUG - insumo_job - 634b7608-8f48-4231-8134-121746df6abf - 6393 - train_insumo - STEP_START - Started execution of step "train_insumo".
+2025-06-03 16:26:17 +0000 - dagster - DEBUG - insumo_job - 634b7608-8f48-4231-8134-121746df6abf - train_insumo - Loading file from: /opt/dagster/dagster_home/storage/634b7608-8f48-4231-8134-121746df6abf/insumo_data/result using PickledObjectFilesystemIOManager...
+2025-06-03 16:26:17 +0000 - dagster - DEBUG - insumo_job - 634b7608-8f48-4231-8134-121746df6abf - 6393 - train_insumo - LOADED_INPUT - Loaded input "insumo_data" using input manager "io_manager", from output "result" of step "insumo_data"
+2025-06-03 16:26:17 +0000 - dagster - DEBUG - insumo_job - 634b7608-8f48-4231-8134-121746df6abf - 6393 - train_insumo - STEP_INPUT - Got input "insumo_data" of type "DataFrame". (Type check passed).
+2025-06-03 16:26:17 +0000 - dagster - ERROR - insumo_job - 634b7608-8f48-4231-8134-121746df6abf - 6393 - train_insumo - STEP_FAILURE - Execution of step "train_insumo" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "train_insumo"::
+
+TypeError: init_mlflow() takes 0 positional arguments but 1 was given
+
+Stack Trace:
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/utils.py", line 54, in op_execution_error_boundary
+    yield
+  File "/usr/local/lib/python3.10/site-packages/dagster/_utils/__init__.py", line 467, in iterate_with_context
+    next_output = next(iterator)
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 131, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 125, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+  File "/opt/dagster/app/cd4ml_pipeline/ops/insumo_ops.py", line 12, in train_insumo
+    init_mlflow("insumo")  # <- correção aqui
+

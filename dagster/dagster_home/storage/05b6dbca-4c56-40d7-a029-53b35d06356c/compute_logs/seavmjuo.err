@@ -1,0 +1,15 @@
+2025-06-03 20:32:14 +0000 - dagster - DEBUG - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - 3610 - LOGS_CAPTURED - Started capturing logs in process (pid: 3610).
+2025-06-03 20:32:14 +0000 - dagster - DEBUG - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - 3610 - train_saude_lavoura - STEP_START - Started execution of step "train_saude_lavoura".
+2025-06-03 20:32:14 +0000 - dagster - DEBUG - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - train_saude_lavoura - Loading file from: /opt/dagster/dagster_home/storage/05b6dbca-4c56-40d7-a029-53b35d06356c/saude_lavoura_data/result using PickledObjectFilesystemIOManager...
+2025-06-03 20:32:14 +0000 - dagster - DEBUG - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - 3610 - train_saude_lavoura - LOADED_INPUT - Loaded input "df" using input manager "io_manager", from output "result" of step "saude_lavoura_data"
+2025-06-03 20:32:14 +0000 - dagster - DEBUG - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - 3610 - train_saude_lavoura - STEP_INPUT - Got input "df" of type "DataFrame". (Type check passed).
+2025-06-03 20:32:14 +0000 - dagster - INFO - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - train_saude_lavoura - MLflow Tracking URI: http://mlflow:5000
+2025-06-03 20:32:14 +0000 - dagster - INFO - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - train_saude_lavoura - MLflow S3 Endpoint: http://minio:9000
+2025/06/03 20:32:14 INFO mlflow.tracking.fluent: Experiment with name 'saude_lavoura' does not exist. Creating a new experiment.
+/usr/local/lib/python3.10/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+2025-06-03 20:32:18 +0000 - dagster - INFO - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - train_saude_lavoura - Model evaluation - RMSE: 0.3666475937463656, R²: -0.5506182092917962
+2025-06-03 20:32:18 +0000 - dagster - DEBUG - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - 3610 - train_saude_lavoura - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+2025-06-03 20:32:18 +0000 - dagster - DEBUG - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - train_saude_lavoura - Writing file at: /opt/dagster/dagster_home/storage/05b6dbca-4c56-40d7-a029-53b35d06356c/train_saude_lavoura/result using PickledObjectFilesystemIOManager...
+2025-06-03 20:32:18 +0000 - dagster - DEBUG - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - 3610 - train_saude_lavoura - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2025-06-03 20:32:18 +0000 - dagster - DEBUG - saude_lavoura_job - 05b6dbca-4c56-40d7-a029-53b35d06356c - 3610 - train_saude_lavoura - STEP_SUCCESS - Finished execution of step "train_saude_lavoura" in 3.38s.
