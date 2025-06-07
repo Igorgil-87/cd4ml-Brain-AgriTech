@@ -1,0 +1,124 @@
+{
+  "info": {
+    "name": "CD4ML Model Predictions - MLOps API",
+    "_postman_id": "cd4ml-model-api-id",
+    "description": "Cole\u00e7\u00e3o para testar previs\u00f5es dos modelos servidos via FastAPI com MLflow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Predict rendimento",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ano\": 2025,\n  \"mes\": 6\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/predict/rendimento",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "predict",
+            "rendimento"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Predict commodities",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ano\": 2025,\n  \"mes\": 6\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/predict/commodities",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "predict",
+            "commodities"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Predict insumo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ano\": 2025,\n  \"mes\": 6\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/predict/insumo",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "predict",
+            "insumo"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Predict saude_lavoura",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ano\": 2025,\n  \"mes\": 6\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/predict/saude_lavoura",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "predict",
+            "saude_lavoura"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5005"
+    }
+  ]
+}

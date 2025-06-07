@@ -1,0 +1,6 @@
+2025-06-05 20:19:38 +0000 - dagster - DEBUG - rendimento_job - 0a0b7208-046c-410a-874c-d8bfc32f3d9c - 9783 - LOGS_CAPTURED - Started capturing logs in process (pid: 9783).
+2025-06-05 20:19:38 +0000 - dagster - DEBUG - rendimento_job - 0a0b7208-046c-410a-874c-d8bfc32f3d9c - 9783 - preprocess_rendimento - STEP_START - Started execution of step "preprocess_rendimento".
+2025-06-05 20:19:38 +0000 - dagster - DEBUG - rendimento_job - 0a0b7208-046c-410a-874c-d8bfc32f3d9c - 9783 - preprocess_rendimento - STEP_OUTPUT - Yielded output "result" of type "DataFrame". (Type check passed).
+2025-06-05 20:19:38 +0000 - dagster - DEBUG - rendimento_job - 0a0b7208-046c-410a-874c-d8bfc32f3d9c - preprocess_rendimento - Writing file at: /opt/dagster/dagster_home/storage/0a0b7208-046c-410a-874c-d8bfc32f3d9c/preprocess_rendimento/result using PickledObjectFilesystemIOManager...
+2025-06-05 20:19:38 +0000 - dagster - DEBUG - rendimento_job - 0a0b7208-046c-410a-874c-d8bfc32f3d9c - 9783 - preprocess_rendimento - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2025-06-05 20:19:38 +0000 - dagster - DEBUG - rendimento_job - 0a0b7208-046c-410a-874c-d8bfc32f3d9c - 9783 - preprocess_rendimento - STEP_SUCCESS - Finished execution of step "preprocess_rendimento" in 45ms.

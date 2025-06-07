@@ -1,10 +1,20 @@
-from fastapi import APIRouter
-from app.mlflow_client import load_model, predict
+from fastapi import APIRouter, HTTPException
+from app.mlflow_client import ModelClient
+from pydantic import BaseModel
 
 router = APIRouter()
+client = ModelClient()
 
-@router.post("/commodities/predict")
-def predict_commodities(input_data: dict):
-    model = load_model("commodities")
-    result = predict(model, input_data)
-    return {"media_prevista": result}
+class CommodityInput(BaseModel):
+    ano: int
+    uf: str
+    unidade: str
+    cultura: str
+
+@router.post("/predict/commodities")
+def predict_commodities(data: CommodityInput):
+    try:
+        result = client.predict("commodities", data.dict())
+        return {"resultado": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

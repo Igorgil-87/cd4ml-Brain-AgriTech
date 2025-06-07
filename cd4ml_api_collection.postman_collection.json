@@ -1,0 +1,233 @@
+{
+  "info": {
+    "_postman_id": "cd4ml-api-collection-id",
+    "name": "CD4ML API - Brain AgriTech",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "RENDIMENTO Prediction 1",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ano\": 2023, \"mes\": 5, \"uf\": \"SP\", \"cultura\": \"Soja\", \"unidade\": \"kg/ha\"}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/predict/rendimento",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "predict",
+            "rendimento"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "RENDIMENTO Prediction 2",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ano\": 2022, \"mes\": 8, \"uf\": \"MT\", \"cultura\": \"Milho\", \"unidade\": \"kg/ha\"}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/predict/rendimento",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "predict",
+            "rendimento"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "COMMODITIES Prediction 1",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ano\": 2023, \"mes\": 3, \"cultura\": \"Caf\\u00e9\", \"unidade\": \"sc\"}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/predict/commodities",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "predict",
+            "commodities"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "COMMODITIES Prediction 2",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ano\": 2021, \"mes\": 10, \"cultura\": \"Soja\", \"unidade\": \"tonelada\"}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/predict/commodities",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "predict",
+            "commodities"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "INSUMO Prediction 1",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ano\": 2022, \"mes\": 7, \"uf\": \"PR\", \"cultura\": \"Milho\", \"tipo_insumo\": \"Fertilizante\", \"unidade\": \"R$/ha\"}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/predict/insumo",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "predict",
+            "insumo"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "INSUMO Prediction 2",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ano\": 2023, \"mes\": 11, \"uf\": \"MG\", \"cultura\": \"Soja\", \"tipo_insumo\": \"Defensivo\", \"unidade\": \"R$/ha\"}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/predict/insumo",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "predict",
+            "insumo"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "SAUDE_LAVOURA Prediction 1",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ano\": 2023, \"mes\": 2, \"uf\": \"MT\", \"cultura\": \"Caf\\u00e9\", \"indicador_umidade\": 60.2, \"pragas_detectadas\": 2}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/predict/saude_lavoura",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "predict",
+            "saude_lavoura"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "SAUDE_LAVOURA Prediction 2",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ano\": 2021, \"mes\": 6, \"uf\": \"PR\", \"cultura\": \"Milho\", \"indicador_umidade\": 45.9, \"pragas_detectadas\": 1}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/predict/saude_lavoura",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "predict",
+            "saude_lavoura"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

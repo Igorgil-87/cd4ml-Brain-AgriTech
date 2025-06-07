@@ -1,0 +1,120 @@
+{
+  "info": {
+    "name": "CD4ML Model Predictions",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Predict rendimento",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ano\": 2023,\n  \"mes\": 6,\n  \"uf\": \"SP\",\n  \"cultura\": \"Soja\",\n  \"unidade\": \"tonelada\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5005/predict/rendimento",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5005",
+          "path": [
+            "predict",
+            "rendimento"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Predict commodities",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ano\": 2023,\n  \"mes\": 6\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5005/predict/commodities",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5005",
+          "path": [
+            "predict",
+            "commodities"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Predict insumo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ano\": 2023,\n  \"mes\": 6\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5005/predict/insumo",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5005",
+          "path": [
+            "predict",
+            "insumo"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Predict saude_lavoura",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ano\": 2023,\n  \"mes\": 6\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5005/predict/saude_lavoura",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5005",
+          "path": [
+            "predict",
+            "saude_lavoura"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,4 +1,7 @@
 fastapi
 uvicorn
+pydantic
 mlflow
+boto3
 pandas
+scikit-learn
