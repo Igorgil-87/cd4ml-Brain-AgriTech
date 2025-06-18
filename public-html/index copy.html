@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>BRAIN AGRITECH - CD4ML</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;500;600;700;800;900;1000&family=Roboto:wght@300;400;500;700&display=swap");
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            font-family: "Nunito", sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: url('fundo.webp') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 13% 87%;
+            width: 90%;
+            margin: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 0.5px 0 1px rgba(0, 0, 0, 0.23) inset, 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .main-menu {
+            background: #ff0000;
+            border-radius: 15px 0 0 15px;
+            padding-top: 20px;
+            font-family: "Roboto", sans-serif;
+        }
+
+        .main-menu h1 {
+            text-align: center;
+            margin: 10px 0;
+            color: #fff;
+        }
+
+        .main-menu img {
+            display: block;
+            width: 50px;
+            margin: 20px auto;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            padding: 15px 10px;
+            text-decoration: none;
+            color: white;
+            border-radius: 0 20px 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item a:hover,
+        .nav-item.active a {
+            background: #e60000;
+            color: #fff;
+        }
+
+        .nav-icon {
+            margin-right: 10px;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 75% 25%;
+            padding: 20px;
+        }
+
+        .activities h1 {
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .activity-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+        }
+
+        .image-container {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: rgba(0, 0, 0, 0.2) 0px 4px 6px;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .overlay {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            bottom: 0;
+            width: 100%;
+            height: 40%;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 0 0 10px 10px;
+        }
+
+        .overlay button {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-family: "Nunito", sans-serif;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .overlay button i {
+            margin-right: 10px;
+        }
+
+        .overlay button:hover {
+            background-color: #cc0000;
+            transform: scale(1.05);
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-info {
+            background: #ff0000;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .user-info img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 20px;
+        }
+
+        .active-calories {
+            background: #ffe6e6;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px;
+        }
+
+        .circle {
+            background: conic-gradient(from 0deg, #ff0000 0%, #ff0000 85%, #d3d3d3 85%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .circle h2 {
+            font-size: 1.5rem;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <nav class="main-menu">
+            <h1>Santander</h1>
+            <img class="logo" src="santander.gif" alt="Santander" />
+            <ul>
+                <li class="nav-item active"><a href="#"><i class="fas fa-home nav-icon"></i> Home</a></li>
+                <li class="nav-item"><a href="#"><i class="fas fa-user nav-icon"></i> Perfil</a></li>
+                <li class="nav-item"><a href="#"><i class="fas fa-calendar-alt nav-icon"></i> Agenda</a></li>
+                <li class="nav-item"><a href="#"><i class="fas fa-tasks nav-icon"></i> Atividades</a></li>
+                <li class="nav-item"><a href="#"><i class="fas fa-cogs nav-icon"></i> Configurações</a></li>
+            </ul>
+        </nav>
+
+        <section class="content">
+
+            <div class="activities">
+                <h1>Principais Atividades</h1>
+                <div class="activity-container">
+                    <div class="image-container">
+                        <img src="git_hub.png" alt="GIT">
+                        <div class="overlay">
+                            <a href="https://github.com/Igorgil-87/cd4ml-Brain-AgriTech" target="_blank">
+                                <button><i class="fas fa-code-branch"></i> GIT</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="database.png" alt="Database">
+                        <div class="overlay">
+                            <a href="http://localhost:8081/browser/" target="_blank">
+                                <button><i class="fas fa-database"></i> Lake</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="monitor.png" alt="Monitor">
+                        <div class="overlay">
+                            <a href="http://localhost:5601" target="_blank">
+                                <button><i class="fas fa-chart-line"></i> Monitor</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="mlflow.png" alt="Modelo">
+                        <div class="overlay">
+                            <a href="http://localhost:12000" target="_blank">
+                                <button><i class="fas fa-robot"></i> Modelo</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="storage.jpeg" alt="Storage">
+                        <div class="overlay">
+                            <a href="http://localhost:9000" target="_blank">
+                                <button><i class="fas fa-box"></i> Storage</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="cicd.jpeg" alt="CI/CD">
+                        <div class="overlay">
+                            <a href="http://localhost:10000/blu" target="_blank">
+                                <button><i class="fas fa-sync"></i> CICD</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="jupyter.png" alt="Notebook">
+                        <div class="overlay">
+                            <a href="http://localhost:8888" target="_blank">
+                                <button><i class="fas fa-book"></i> Notebook</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="data-science-solid-svgrepo-com.svg" alt="ML Model">
+                        <div class="overlay">
+                            <a href="http://localhost:11000" target="_blank">
+                                <button><i class="fas fa-brain"></i> ML Model</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="alerta.png" alt="Alertas">
+                        <div class="overlay">
+                            <a href="http://localhost:11000" target="_blank">
+                                <button><i class="fas fa-bell"></i> Alertas</button>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="image-container">
+                        <img src="airflow.png" alt="Pipeline">
+                        <div class="overlay">
+                            <a href="http://localhost:8083/dags/pipeline_carregamento_agro_por_tabela/grid?root=" target="_blank">
+                                <button><i class="fas fa-microchip"></i> Flow Data</button>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+            <div class="right-content">
+                <div class="user-info">
+                    <img src="linkedin.jpeg" alt="user" />
+                    <h4>Igor Gil</h4>
+                </div>
+
+                <div class="active-calories">
+                    <h1 style="align-self: flex-start">Data Drift</h1>
+                    <div class="active-calories-container">
+                        <div class="box" style="--i: 85%">
+                            <div class="circle">
+                                <h2>85<small>%</small></h2>
+                            </div>
+                        </div>
+                        <div class="calories-content">
+                            <p><span>Volume Total:</span> 4000</p>
+                            <p><span>Treino:</span> 3500</p>
+                            <p><span>Teste:</span> 14000</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="active-calories">
+                    <h1 style="align-self: flex-start">Drift de Performance</h1>
+                    <div class="active-calories-container">
+                        <div class="box" style="--i: 85%">
+                            <div class="circle">
+                                <h2>85<small>%</small></h2>
+                            </div>
+                        </div>
+                        <div class="calories-content">
+                            <p><span>Volume Total:</span> 4000</p>
+                            <p><span>Treino:</span> 3500</p>
+                            <p><span>Teste:</span> 14000</p>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const navItems = document.querySelectorAll(".nav-item");
+
+        navItems.forEach((navItem, i) => {
+            navItem.addEventListener("click", () => {
+                navItems.forEach((item, j) => {
+                    item.className = "nav-item";
+                });
+                navItem.className = "nav-item active";
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,18 +1,12 @@
-# cd4ml_pipeline/ops/commodities_ops.py
-
 from dagster import op
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-import mlflow.sklearn
-
-from cd4ml_pipeline.shared.mlflow_utils import init_mlflow, assess_model_performance
+from cd4ml_pipeline.shared.mlflow_utils import start_run, assess_model_performance
+import mlflow
 
 @op
 def train_commodities(df: pd.DataFrame):
-    init_mlflow()
-    mlflow.set_experiment("commodities")
-
     df = df.dropna()
 
     X = df[['ano', 'mes']]
@@ -25,6 +19,11 @@ def train_commodities(df: pd.DataFrame):
     model = LinearRegression()
     model.fit(X_train, y_train)
 
-    with mlflow.start_run():
-        mlflow.sklearn.log_model(model, "model")
+    with start_run("commodities") as run:
+        mlflow.log_param("model_type", "LinearRegression")
         assess_model_performance(model, X_test, y_test)
+        mlflow.sklearn.log_model(
+            sk_model=model,
+            artifact_path="model",
+            registered_model_name="commodities"
+        )

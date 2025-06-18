@@ -1,0 +1,12 @@
+2025-06-13 15:07:37 +0000 - dagster - DEBUG - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - 1189 - LOGS_CAPTURED - Started capturing logs in process (pid: 1189).
+2025-06-13 15:07:37 +0000 - dagster - DEBUG - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - 1189 - train_rendimento_model - STEP_START - Started execution of step "train_rendimento_model".
+2025-06-13 15:07:38 +0000 - dagster - DEBUG - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - train_rendimento_model - Loading file from: /opt/dagster/dagster_home/storage/7ed58da6-1a67-4ded-8abc-47dd0130d52d/preprocess_rendimento/result using PickledObjectFilesystemIOManager...
+2025-06-13 15:07:39 +0000 - dagster - DEBUG - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - 1189 - train_rendimento_model - LOADED_INPUT - Loaded input "df" using input manager "io_manager", from output "result" of step "preprocess_rendimento"
+2025-06-13 15:07:39 +0000 - dagster - DEBUG - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - 1189 - train_rendimento_model - STEP_INPUT - Got input "df" of type "DataFrame". (Type check passed).
+2025-06-13 15:07:42 +0000 - dagster - INFO - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - train_rendimento_model - MLflow Tracking URI: http://mlflow:5000
+2025-06-13 15:07:43 +0000 - dagster - INFO - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - train_rendimento_model - MLflow S3 Endpoint: http://minio:9000
+2025/06/13 15:07:47 INFO mlflow.tracking.fluent: Experiment with name 'rendimento_model' does not exist. Creating a new experiment.
+2025-06-13 15:08:01 +0000 - dagster - DEBUG - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - 1189 - train_rendimento_model - STEP_OUTPUT - Yielded output "result" of type "Float". (Type check passed).
+2025-06-13 15:08:01 +0000 - dagster - DEBUG - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - train_rendimento_model - Writing file at: /opt/dagster/dagster_home/storage/7ed58da6-1a67-4ded-8abc-47dd0130d52d/train_rendimento_model/result using PickledObjectFilesystemIOManager...
+2025-06-13 15:08:01 +0000 - dagster - DEBUG - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - 1189 - train_rendimento_model - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2025-06-13 15:08:01 +0000 - dagster - DEBUG - rendimento_job - 7ed58da6-1a67-4ded-8abc-47dd0130d52d - 1189 - train_rendimento_model - STEP_SUCCESS - Finished execution of step "train_rendimento_model" in 21.64s.

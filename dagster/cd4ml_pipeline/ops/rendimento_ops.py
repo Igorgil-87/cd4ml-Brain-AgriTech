@@ -1,15 +1,11 @@
-# cd4ml_pipeline/ops/rendimento_ops.py
-
 from dagster import op
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
-import joblib
 import mlflow
 
-from cd4ml_pipeline.shared.mlflow_utils import start_run
-
+from cd4ml_pipeline.shared.mlflow_utils import start_run, assess_model_performance
 
 @op
 def preprocess_rendimento() -> pd.DataFrame:
@@ -24,7 +20,6 @@ def preprocess_rendimento() -> pd.DataFrame:
     })
     return df
 
-
 @op
 def train_rendimento_model(df: pd.DataFrame) -> float:
     X = df[["ano", "mes", "mediaEst", "mediaNac"]]
@@ -32,14 +27,16 @@ def train_rendimento_model(df: pd.DataFrame) -> float:
 
     model = LinearRegression()
     model.fit(X, y)
-    predictions = model.predict(X)
-    rmse = np.sqrt(mean_squared_error(y, predictions))
 
     with start_run("rendimento_model") as run:
         mlflow.log_param("model_type", "LinearRegression")
-        mlflow.log_metric("rmse", rmse)
-        model_path = "model_rendimento.pkl"
-        joblib.dump(model, model_path)
-        mlflow.log_artifact(model_path)
 
-    return rmse
+        assess_model_performance(model, X, y)  # logs rmse e r2
+
+        mlflow.sklearn.log_model(
+            sk_model=model,
+            artifact_path="model",
+            registered_model_name="rendimento"
+        )
+
+    return float(mean_squared_error(y, model.predict(X), squared=False))

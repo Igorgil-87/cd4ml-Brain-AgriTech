@@ -1,0 +1,49 @@
+2025-06-15 16:27:19 +0000 - dagster - DEBUG - rendimento_job - 6656b7d6-84c4-4b54-baeb-46b4eb0a6bbe - 1045 - LOGS_CAPTURED - Started capturing logs in process (pid: 1045).
+2025-06-15 16:27:20 +0000 - dagster - DEBUG - rendimento_job - 6656b7d6-84c4-4b54-baeb-46b4eb0a6bbe - 1045 - train_rendimento_model - STEP_START - Started execution of step "train_rendimento_model".
+2025-06-15 16:27:20 +0000 - dagster - DEBUG - rendimento_job - 6656b7d6-84c4-4b54-baeb-46b4eb0a6bbe - train_rendimento_model - Loading file from: /opt/dagster/dagster_home/storage/6656b7d6-84c4-4b54-baeb-46b4eb0a6bbe/preprocess_rendimento/result using PickledObjectFilesystemIOManager...
+2025-06-15 16:27:20 +0000 - dagster - DEBUG - rendimento_job - 6656b7d6-84c4-4b54-baeb-46b4eb0a6bbe - 1045 - train_rendimento_model - LOADED_INPUT - Loaded input "df" using input manager "io_manager", from output "result" of step "preprocess_rendimento"
+2025-06-15 16:27:20 +0000 - dagster - DEBUG - rendimento_job - 6656b7d6-84c4-4b54-baeb-46b4eb0a6bbe - 1045 - train_rendimento_model - STEP_INPUT - Got input "df" of type "DataFrame". (Type check passed).
+2025-06-15 16:27:22 +0000 - dagster - INFO - rendimento_job - 6656b7d6-84c4-4b54-baeb-46b4eb0a6bbe - train_rendimento_model - 🔗 MLflow Tracking URI: http://mlflow:5000
+2025-06-15 16:27:22 +0000 - dagster - INFO - rendimento_job - 6656b7d6-84c4-4b54-baeb-46b4eb0a6bbe - train_rendimento_model - 🪣 MLflow S3 Endpoint: http://minio:9000
+2025-06-15 16:27:22 +0000 - dagster - INFO - rendimento_job - 6656b7d6-84c4-4b54-baeb-46b4eb0a6bbe - train_rendimento_model - 🗃️ MLflow Backend Store URI: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+2025/06/15 16:27:23 INFO mlflow.tracking.fluent: Experiment with name 'rendimento_model' does not exist. Creating a new experiment.
+/usr/local/lib/python3.10/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+2025-06-15 16:28:17 +0000 - dagster - ERROR - rendimento_job - 6656b7d6-84c4-4b54-baeb-46b4eb0a6bbe - 1045 - train_rendimento_model - STEP_FAILURE - Execution of step "train_rendimento_model" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "train_rendimento_model"::
+
+mlflow.exceptions.RestException: INVALID_PARAMETER_VALUE:  Model registry functionality is unavailable; got unsupported URI '/mnt/mlflowcd4ml-brain-agritech-airflow-webserver-1' for model registry data storage. Supported URI schemes are: ['postgresql', 'mysql', 'sqlite', 'mssql']. See https://www.mlflow.org/docs/latest/tracking.html#storage for how to run an MLflow server against one of the supported backend storage locations.
+
+Stack Trace:
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/utils.py", line 54, in op_execution_error_boundary
+    yield
+  File "/usr/local/lib/python3.10/site-packages/dagster/_utils/__init__.py", line 467, in iterate_with_context
+    next_output = next(iterator)
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 131, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+  File "/usr/local/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 125, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+  File "/opt/dagster/app/cd4ml_pipeline/ops/rendimento_ops.py", line 42, in train_rendimento_model
+    mlflow.sklearn.log_model(
+  File "/usr/local/lib/python3.10/site-packages/mlflow/sklearn/__init__.py", line 417, in log_model
+    return Model.log(
+  File "/usr/local/lib/python3.10/site-packages/mlflow/models/model.py", line 497, in log
+    mlflow.register_model(
+  File "/usr/local/lib/python3.10/site-packages/mlflow/tracking/_model_registry/fluent.py", line 77, in register_model
+    raise e
+  File "/usr/local/lib/python3.10/site-packages/mlflow/tracking/_model_registry/fluent.py", line 68, in register_model
+    create_model_response = client.create_registered_model(name)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/tracking/client.py", line 1713, in create_registered_model
+    return self._get_registry_client().create_registered_model(name, tags, description)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/tracking/_model_registry/client.py", line 60, in create_registered_model
+    return self.store.create_registered_model(name, tags, description)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/store/model_registry/rest_store.py", line 82, in create_registered_model
+    response_proto = self._call_endpoint(CreateRegisteredModel, req_body)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/store/model_registry/rest_store.py", line 63, in _call_endpoint
+    return call_endpoint(self.get_host_creds(), endpoint, method, json_body, response_proto)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/utils/rest_utils.py", line 281, in call_endpoint
+    response = verify_rest_response(response, endpoint)
+  File "/usr/local/lib/python3.10/site-packages/mlflow/utils/rest_utils.py", line 207, in verify_rest_response
+    raise RestException(json.loads(response.text))
+

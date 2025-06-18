@@ -1,19 +1,13 @@
-# cd4ml_pipeline/ops/insumo_ops.py
-
 from dagster import op
 import pandas as pd
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
-import mlflow.sklearn
-
-from cd4ml_pipeline.shared.mlflow_utils import init_mlflow, assess_model_performance
+from cd4ml_pipeline.shared.mlflow_utils import start_run, assess_model_performance
+import mlflow
 
 @op
 def train_insumo(context, insumo_data: pd.DataFrame):
-    init_mlflow()  # inicializa MLflow
-    mlflow.set_experiment("insumo")  # define o experimento
     context.log.info(f"Colunas disponíveis: {insumo_data.columns.tolist()}")
-
     df = insumo_data.dropna()
 
     X = df[['ano', 'mes']]
@@ -26,6 +20,11 @@ def train_insumo(context, insumo_data: pd.DataFrame):
     model = Ridge()
     model.fit(X_train, y_train)
 
-    with mlflow.start_run():
-        mlflow.sklearn.log_model(model, "model")
+    with start_run("insumo") as run:
+        mlflow.log_param("model_type", "Ridge")
         assess_model_performance(model, X_test, y_test)
+        mlflow.sklearn.log_model(
+            sk_model=model,
+            artifact_path="model",
+            registered_model_name="insumo"
+        )

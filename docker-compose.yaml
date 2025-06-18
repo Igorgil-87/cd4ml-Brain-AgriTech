@@ -28,7 +28,6 @@ services:
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-      - /usr/bin/docker:/usr/bin/docker
     secrets:
       - jenkins-admin-password
     networks:
@@ -70,8 +69,12 @@ services:
       AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
       AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
     depends_on:
       - dagster-daemon
+      - mlflow
+      - minio
+      - postgres
     networks:
       - jenkins_nw
     command: dagster-webserver -h 0.0.0.0 -p 3000
@@ -90,9 +93,14 @@ services:
       PYTHONPATH: /opt/dagster/app
       SLACK_API_TOKEN: ${SLACK_API_TOKEN}
       SLACK_CHANNEL: "#alertas-dagster"
-      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}          # <--- Adicione isso
-      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}      # <--- E isso
-      MLFLOW_S3_ENDPOINT_URL: http://minio:9000   
+      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    depends_on:
+      - mlflow
+      - minio
+      - postgres
     networks:
       - jenkins_nw
     command: dagster-daemon run
@@ -149,6 +157,9 @@ services:
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
       AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
       AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      BACKEND_STORE_URI: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+      GUNICORN_CMD_ARGS: "--timeout 300 --workers 4 --bind 0.0.0.0:5000 --log-level debug"
     ports:
       - "12000:5000"
     networks:
@@ -157,7 +168,15 @@ services:
       - mlflow-storage:/mnt/mlflow
     depends_on:
       - minio
-
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/2.0/mlflow/experiments/list"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+    command: >
+      mlflow server --backend-store-uri postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro --default-artifact-root s3://cd4ml-ml-flow-bucket/ --host 0.0.0.0 --port 5000
+ 
 #########################
 # GRUPO 4: Airflow stack
 #########################
@@ -331,6 +350,9 @@ services:
       - "8000:8000"
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
+      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
     depends_on:
       - mlflow
     networks:
