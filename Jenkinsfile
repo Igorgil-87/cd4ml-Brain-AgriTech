@@ -30,8 +30,21 @@ pipeline {
 
         stage('Instalar dependências') {
             steps {
-                echo "📦 Instalando dependências do projeto..."
-                sh 'pip3 install --break-system-packages -r requirements.txt || echo "pip3 falhou, mas continuando..."'
+
+                sh '''
+                echo "🔍 Verificando pip3 e Python:"
+                which pip3 || echo "pip3 não encontrado"
+                pip3 --version || echo "pip3 versão não disponível"
+                python3 --version || echo "Python3 versão não disponível"
+
+                echo "📁 Verificando localização do requirements.txt:"
+                ls -lah .
+
+                echo "📦 Instalando dependências:"
+                pip3 install -r requirements.txt || echo "pip3 falhou, mas continuando..."
+                '''
+
+
             }
         }
 
