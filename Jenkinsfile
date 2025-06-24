@@ -34,12 +34,12 @@ pipeline {
         stage('Verificar acesso ao Docker') {
             steps {
                 sh '''
-                echo "👤 Usuário atual:"
+                echo "\uD83D\uDC64 Usu\u00e1rio atual:"
                 whoami
-                echo "👥 Grupos:"
+                echo "\uD83D\uDC65 Grupos:"
                 groups
-                echo "🐳 Teste docker ps:"
-                docker ps || echo "❌ Sem acesso ao Docker"
+                echo "\uD83D\uDC33 Teste docker ps:"
+                docker ps || echo "\u274C Sem acesso ao Docker"
                 '''
             }
         }
