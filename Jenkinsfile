@@ -30,6 +30,21 @@ pipeline {
 
     }
     stages {
+
+        stage('Verificar acesso ao Docker') {
+            steps {
+                sh '''
+                echo "👤 Usuário atual:"
+                whoami
+                echo "👥 Grupos:"
+                groups
+                echo "🐳 Teste docker ps:"
+                docker ps || echo "❌ Sem acesso ao Docker"
+                '''
+            }
+        }
+
+
         stage('Install dependencies') {
             steps {
                 sh 'pip3 install -r requirements.txt'
