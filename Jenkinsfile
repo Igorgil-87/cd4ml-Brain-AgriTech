@@ -21,16 +21,13 @@ pipeline {
         MLFLOW_PROMOTION_THRESHOLD = '0.8'
     }
 
-    options {
-        timestamps()
-        ansiColor('xterm')
-    }
+    // options removidas por serem inválidas em declarative pipeline
 
     stages {
 
         stage('Instalar libs') {
             steps {
-                echo "📦 Instalando dependências do projeto..."
+                echo "🚀 Início da etapa: Instalar libs"
                 sh '''
                 echo "🔍 Verificando pip3 e Python:"
                 which pip3 || echo "pip3 não encontrado"
@@ -41,7 +38,9 @@ pipeline {
                 ls -lah .
 
                 echo "📦 Instalando dependências:"
-                pip3 install -r requirements.txt || echo "pip3 falhou, mas continuando..."
+                pip3 install -r requirements.txt || echo "⚠️ pip3 falhou, mas continuando..."
+
+                echo "✅ Finalizou instalação do requirements.txt"
                 '''
             }
         }
