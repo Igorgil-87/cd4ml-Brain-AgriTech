@@ -3,12 +3,11 @@ pipeline {
 
 
     parameters {
-        choice(name: 'problem_name', choices: ['commodities', 'insumo', 'rendimento', 'saude_lavoura'], 
-               description: 'Choose the problem name')
-        string(name: 'ml_pipeline_params_name', defaultValue: 'default', description: 'Specify the ml_pipeline_params file')
-        string(name: 'feature_set_name', defaultValue: 'default', description: 'Specify the feature_set name/file')
-        string(name: 'algorithm_name', defaultValue: 'default', description: 'Specify the algorithm (overrides problem_params)')
-        string(name: 'algorithm_params_name', defaultValue: 'default', description: 'Specify the algorithm params')
+        choice(
+            name: 'problem_name',
+            choices: ['rendimento', 'insumo', 'saude_lavoura', 'commodities'],
+            description: 'Escolha o job Dagster a ser executado'
+        )
     }
     triggers {
         // Poll SCM every minute for new changes
@@ -19,8 +18,12 @@ pipeline {
        timestamps()
     }
     environment { 
+
         MLFLOW_TRACKING_URL = 'http://mlflow:5000'
         MLFLOW_S3_ENDPOINT_URL = 'http://minio:9000'
+        DAGSTER_CONTAINER_NAME = 'dagster-webserver'
+        MLFLOW_EXPERIMENT_NAME = 'cd4ml_experiments'
+        MLFLOW_PROMOTION_THRESHOLD = '0.8'
         AWS_ACCESS_KEY_ID = "${env.ACCESS_KEY}"
         AWS_SECRET_ACCESS_KEY = "${env.SECRET_KEY}"
         PYTHONPATH = "${WORKSPACE}" 
@@ -32,5 +35,25 @@ pipeline {
                 sh 'pip3 install -r requirements.txt'
             }
         }
+
+
+        stage('Executar job no Dagster') {
+            steps {
+                script {
+                    def job_name = "${params.problem_name}_job"
+                    echo "🚀 Disparando o job: ${job_name}"
+
+                    sh """
+                        docker exec ${DAGSTER_CONTAINER_NAME} \
+                        dagster job launch \
+                        --workspace /opt/dagster/app/workspace.yaml \
+                        --job ${job_name}
+                    """
+                }
+            }
+        }
+
+
+
     }
 }
