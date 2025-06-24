@@ -1,24 +1,24 @@
-FROM jenkins/jenkins:2.457-jdk11
+FROM jenkins/jenkins:2.440.3-jdk11
 
 USER root
 
-# Instalar dependências do sistema e Docker CLI
+# Instalar dependências de sistema e Docker CLI
+#RUN apt-get update && \
+#    apt-get install -y python3 python3-pip python3-venv python3-dev build-essential git curl docker.io
+# 1. Instala dependências essenciais + Docker CLI
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv python3-dev build-essential \
     git curl docker.io && \
     rm -rf /var/lib/apt/lists/*
 
-# Criar ambiente virtual
+
+# Criar ambiente virtual para evitar erro PEP 668
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copiar requirements e validar versão do scikit-learn
+# Instalar pacotes Python da aplicação no venv
 COPY requirements.txt /tmp/requirements.txt
-RUN echo "🔍 Versão scikit-learn no requirements:" && \
-    grep scikit-learn /tmp/requirements.txt
-
-# Instalar dependências Python
 RUN pip install --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r /tmp/requirements.txt
 

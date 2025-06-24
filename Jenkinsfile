@@ -28,9 +28,9 @@ pipeline {
 
     stages {
 
-        stage('Instalar dependências') {
+        stage('Instalar libs') {
             steps {
-
+                echo "📦 Instalando dependências do projeto..."
                 sh '''
                 echo "🔍 Verificando pip3 e Python:"
                 which pip3 || echo "pip3 não encontrado"
@@ -43,8 +43,6 @@ pipeline {
                 echo "📦 Instalando dependências:"
                 pip3 install -r requirements.txt || echo "pip3 falhou, mas continuando..."
                 '''
-
-
             }
         }
 
