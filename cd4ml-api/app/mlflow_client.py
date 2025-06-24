@@ -12,20 +12,23 @@ class ModelClient:
 
     def load_model(self, model_name: str, stage: str = "Production") -> mlflow.pyfunc.PyFuncModel:
         model_uri = f"models:/{model_name}/{stage}"
-        if model_name not in self.models:
+        model_key = f"{model_name}_{stage}"
+
+        if model_key not in self.models:
             try:
                 print(f"[INFO] Carregando modelo: {model_uri}")
                 model = mlflow.pyfunc.load_model(model_uri)
-                self.models[model_name] = model
+                self.models[model_key] = model
             except Exception as e:
-                print(f"[ERRO] Falha ao carregar modelo '{model_name}': {e}")
+                print(f"[ERRO] Falha ao carregar modelo '{model_name}' no estágio '{stage}': {e}")
                 raise
-        return self.models[model_name]
+        return self.models[model_key]
 
-    def predict(self, model_name: str, data: Dict[str, Any]) -> Any:
-        if model_name not in self.models:
-            self.load_model(model_name)
-        model = self.models[model_name]
+    def predict(self, model_name: str, data: Dict[str, Any], stage: str = "Production") -> Any:
+        model_key = f"{model_name}_{stage}"
+        if model_key not in self.models:
+            self.load_model(model_name, stage)
+        model = self.models[model_key]
         df = pd.DataFrame([data])
         try:
             prediction = model.predict(df)

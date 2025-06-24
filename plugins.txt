@@ -5,3 +5,7 @@ github
 credentials
 matrix-project
 docker-plugin
+pipeline-stage-view
+docker-workflow
+pipeline-utility-steps
+configuration-as-code

@@ -54,3 +54,46 @@ def assess_model_performance(model, X_test, y_test):
     mlflow.log_metric("rmse", rmse)
     mlflow.log_metric("r2_score", r2)
     logger.info(f"📊 Avaliação - RMSE: {rmse}, R²: {r2}")
+
+
+
+def promote_model_if_good_score(model_name: str, threshold: float = 0.8):
+    init_mlflow()
+    client = mlflow.tracking.MlflowClient()
+
+    experiment = client.get_experiment_by_name(model_name)
+    if not experiment:
+        logger.warning(f"❌ Experimento '{model_name}' não encontrado.")
+        return
+
+    runs = client.search_runs(
+        experiment_ids=[experiment.experiment_id],
+        filter_string=f"metrics.r2_score >= {threshold}",
+        order_by=["metrics.r2_score DESC"],
+        max_results=1,
+    )
+
+    if not runs:
+        logger.info(f"⚠️ Nenhum modelo com R² >= {threshold} para {model_name}")
+        return
+
+    best_run = runs[0]
+    model_uri = f"runs:/{best_run.info.run_id}/model"
+
+    # Verifica se já está em Production
+    try:
+        mv = client.get_latest_versions(name=model_name, stages=["Production"])
+        if any(m.run_id == best_run.info.run_id for m in mv):
+            logger.info(f"✅ Modelo '{model_name}' já está em Production")
+            return
+    except:
+        pass
+
+    # Promove o modelo
+    client.transition_model_version_stage(
+        name=model_name,
+        version=best_run.info.run_id,
+        stage="Production",
+        archive_existing_versions=True,
+    )
+    logger.info(f"🚀 Modelo '{model_name}' promovido para 'Production' com R²={best_run.data.metrics['r2_score']}")

@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    triggers {
+        // Executa pipeline a cada push na branch main (via webhook ou polling)
+        githubPush()
+    }
+
     parameters {
         choice(
             name: 'problem_name',
@@ -13,6 +18,7 @@ pipeline {
         DAGSTER_CONTAINER_NAME = 'dagster-webserver'
         MLFLOW_TRACKING_URL = 'http://mlflow:5000'
         MLFLOW_EXPERIMENT_NAME = 'cd4ml_experiments'
+        MLFLOW_PROMOTION_THRESHOLD = '0.8'
     }
 
     options {
@@ -57,21 +63,38 @@ pipeline {
             }
         }
 
-        stage('Verificar modelo no MLflow') {
+        stage('Verificar R2 e promover modelo') {
             steps {
-                echo "🔎 Verificando se há novo modelo em produção no MLflow"
+                echo "🧠 Avaliando performance do modelo e promovendo se adequado..."
                 script {
-                    def model_id = sh(
+                    def scriptPath = "scripts/promote_model_if_good.py"
+                    def result = sh(
+                        script: "python3 ${scriptPath} --model ${params.problem_name} --threshold ${MLFLOW_PROMOTION_THRESHOLD}",
+                        returnStatus: true
+                    )
+                    if (result == 0) {
+                        echo "✅ Modelo promovido com sucesso para Production."
+                    } else {
+                        echo "🔒 Modelo não atingiu o threshold de R2."
+                    }
+                }
+            }
+        }
+
+        stage('Reiniciar API se houver modelo novo') {
+            steps {
+                echo "🔁 Verificando e reiniciando container de API se houver modelo novo"
+                script {
+                    def check_result = sh(
                         script: 'python3 scripts/check_mlflow_production.py',
                         returnStdout: true
                     ).trim()
 
-                    if (model_id) {
-                        echo "✅ Novo modelo encontrado com ID: ${model_id}"
-                        echo "🔁 Reiniciando container model para servir novo modelo"
+                    if (check_result) {
+                        echo "🚀 Novo modelo detectado. Reiniciando container 'model'"
                         sh 'docker restart model || echo "⚠️ Container model não encontrado."'
                     } else {
-                        echo "📭 Nenhum novo modelo promovido para produção."
+                        echo "📭 Nenhuma alteração no stage Production."
                     }
                 }
             }
