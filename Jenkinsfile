@@ -68,7 +68,67 @@ pipeline {
             }
         }
 
+        stage('Capturar logs Dagster') {
+            steps {
+                echo "📜 Capturando logs do container ${DAGSTER_CONTAINER_NAME}"
+                sh "docker logs ${DAGSTER_CONTAINER_NAME} > dagster_job.log || echo 'Log indisponível'"
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'dagster_job.log', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('Verificar R2 e promover modelo') {
+            steps {
+                echo "🧠 Avaliando performance do modelo e promovendo se adequado..."
+                script {
+                    def scriptPath = "scripts/promote_model_if_good.py"
+                    def result = sh(
+                        script: "python3 ${scriptPath} --model ${params.problem_name} --threshold ${MLFLOW_PROMOTION_THRESHOLD}",
+                        returnStatus: true
+                    )
+                    if (result == 0) {
+                        echo "✅ Modelo promovido com sucesso para Production."
+                    } else {
+                        echo "🔒 Modelo não atingiu o threshold de R2."
+                    }
+                }
+            }
+        }
+
+        stage('Reiniciar API se houver modelo novo') {
+            steps {
+                echo "🔁 Verificando e reiniciando container de API se houver modelo novo"
+                script {
+                    def check_result = sh(
+                        script: 'python3 scripts/check_mlflow_production.py',
+                        returnStdout: true
+                    ).trim()
+
+                    if (check_result) {
+                        echo "🚀 Novo modelo detectado. Reiniciando container 'model'"
+                        sh 'docker restart model || echo "⚠️ Container model não encontrado."'
+                    } else {
+                        echo "📭 Nenhuma alteração no stage Production."
+                    }
+                }
+            }
+        }
+
 
 
     }
+
+    post {
+        success {
+            echo "🎉 Pipeline concluída com sucesso!"
+        }
+        failure {
+            echo "❌ Algo falhou. Verifique os logs e o estado do Dagster e MLflow."
+        }
+    }
+
+
 }
