@@ -9,10 +9,11 @@ pipeline {
             description: 'Escolha o job Dagster a ser executado'
         )
     }
-    triggers {
+    //triggers {
         // Poll SCM every minute for new changes
-        pollSCM('* * * * *')
-    }
+    //    pollSCM('* * * * *')
+    //}
+    
     options {
        // add timestamps to output
        timestamps()
