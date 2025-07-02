@@ -101,18 +101,21 @@ pipeline {
 
         stage('Reiniciar API se houver modelo novo') {
             steps {
-                echo "🔁 Verificando e reiniciando container de API se houver modelo novo"
                 script {
-                    def check_result = sh(
-                        script: 'python3 scripts/check_mlflow_production.py',
-                        returnStdout: true
-                    ).trim()
-
-                    if (check_result) {
-                        echo "🚀 Novo modelo detectado. Reiniciando container 'model'"
-                        sh 'docker restart model || echo "⚠️ Container model não encontrado."'
+                    def path = "scripts/check_mlflow_production.py"
+                    if (fileExists(path)) {
+                        def check_result = sh(
+                            script: "python3 ${path}",
+                            returnStdout: true
+                        ).trim()
+                        if (check_result) {
+                            echo "🚀 Novo modelo detectado. Reiniciando container 'model'"
+                            sh 'docker restart model || echo "⚠️ Container model não encontrado."'
+                        } else {
+                            echo "📭 Nenhuma alteração no stage Production."
+                        }
                     } else {
-                        echo "📭 Nenhuma alteração no stage Production."
+                        echo "⚠️ Script ${path} não encontrado."
                     }
                 }
             }
