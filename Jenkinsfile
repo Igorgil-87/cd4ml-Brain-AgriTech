@@ -121,7 +121,19 @@ pipeline {
             }
         }
 
-
+        stage('Promover todas as boas versões') {
+            steps {
+                script {
+                    def result = sh(
+                        script: "python3 scripts/promote_all_good_versions.py --model ${params.problem_name} --threshold ${MLFLOW_PROMOTION_THRESHOLD}",
+                        returnStatus: true
+                    )
+                    if (result != 0) {
+                        echo "⚠️ Nenhuma versão com bom score foi promovida."
+                    }
+                }
+            }
+        }
 
     }
 

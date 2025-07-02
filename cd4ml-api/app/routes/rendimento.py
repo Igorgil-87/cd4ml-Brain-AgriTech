@@ -35,6 +35,29 @@ def predict_rendimento(data: RendimentoInput, stage: str = Query("Production")):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/best_model/rendimento")
+def get_best_model(stage: str = "None"):
+    from mlflow import MlflowClient
+
+    client = MlflowClient()
+    versions = client.search_model_versions("name='rendimento'")
+    best = None
+
+    for v in versions:
+        r2_score = float(v.metadata.get("r2_score", -1))
+        if not best or r2_score > best["r2"]:
+            best = {
+                "version": v.version,
+                "stage": v.current_stage,
+                "r2": r2_score,
+                "run_id": v.run_id,
+                "registered_at": v.creation_timestamp
+            }
+
+    if best:
+        return best
+    raise HTTPException(status_code=404, detail="Nenhuma versão encontrada")
+
 
 
 @router.post("/promote_model")
