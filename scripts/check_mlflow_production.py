@@ -1,18 +1,12 @@
 import mlflow
-import os
 
-model_name = os.getenv("MODEL_NAME", "rendimento")
-stage_name = "Production"
+mlflow.set_tracking_uri("http://mlflow:5000")  # ou o endpoint do MLflow no Jenkins
+client = mlflow.MlflowClient()
 
+model_name = "rendimento"
 try:
-    client = mlflow.tracking.MlflowClient()
-    versions = client.get_latest_versions(name=model_name, stages=[stage_name])
-
-    if versions:
-        print("new_model_found")
-    else:
-        print("")  # Nada encontrado
-
+    latest_versions = client.get_latest_versions(name=model_name, stages=["Production"])
+    print("✔️ Modelo encontrado:", latest_versions)
 except Exception as e:
     print(f"Erro ao consultar modelo: {e}")
     exit(1)
