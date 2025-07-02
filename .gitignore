@@ -5,4 +5,4 @@ data/agrofitprodutosformulados.csv
 # Excluir arquivos específicos (opcional)
 /data/*.csv
 
-dagster_home/
+dagster/dagster_home/
