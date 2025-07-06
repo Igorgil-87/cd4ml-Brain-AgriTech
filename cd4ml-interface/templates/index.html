@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Splash Screen -->
+<div id="splash">
+  <img src="{{ url_for('static', filename='img/santander.gif') }}" alt="Santander">
+  <h1>Projeto Cezargina</h1>
+  <p>Engenharia de ML para o Agronegócio</p>
+</div>
+
+<!-- Conteúdo Principal do Dashboard -->
+<div class="dashboard-grid">
+  <div class="dashboard-card">
+    <h3>Volume no Bucket (MinIO)</h3>
+    <canvas id="bucketChart"></canvas>
+  </div>
+  <div class="dashboard-card">
+    <h3>Data Drift</h3>
+    <canvas id="driftChart"></canvas>
+  </div>
+  <div class="dashboard-card">
+    <h3>Acurácia dos Modelos</h3>
+    <canvas id="accuracyChart"></canvas>
+  </div>
+  <div class="dashboard-card">
+    <h3>Saúde da Lavoura</h3>
+    <p>NDVI Médio: <strong>0.79</strong> (Bom)</p>
+  </div>
+  <div class="dashboard-card">
+    <h3>Logs de Pipeline</h3>
+    <p>Última execução: <strong>03/06 - 18h12</strong> (sucesso)</p>
+  </div>
+</div>
+
+<!-- JS para os gráficos -->
+<script>
+  // Chart 1 - Bucket
+  new Chart(document.getElementById('bucketChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Usado', 'Livre'],
+      datasets: [{
+        data: [40, 60],
+        backgroundColor: ['#e60000', '#ccc']
+      }]
+    }
+  });
+
+  // Chart 2 - Drift
+  new Chart(document.getElementById('driftChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Mai', 'Jun'],
+      datasets: [{
+        label: 'Data Drift (%)',
+        data: [12, 15],
+        backgroundColor: '#e60000'
+      }]
+    }
+  });
+
+  // Chart 3 - Acurácia
+  new Chart(document.getElementById('accuracyChart'), {
+    type: 'line',
+    data: {
+      labels: ['Modelo 1', 'Modelo 2', 'Rendimento'],
+      datasets: [{
+        label: 'Acurácia (%)',
+        data: [88, 91, 93],
+        borderColor: '#e60000',
+        backgroundColor: 'transparent',
+        tension: 0.3
+      }]
+    }
+  });
+</script>
+{% endblock %}

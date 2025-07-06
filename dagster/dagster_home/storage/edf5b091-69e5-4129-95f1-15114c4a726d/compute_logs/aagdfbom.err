@@ -1,0 +1,18 @@
+2025-07-02 21:08:23 +0000 - dagster - DEBUG - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - 16873 - LOGS_CAPTURED - Started capturing logs in process (pid: 16873).
+2025-07-02 21:08:23 +0000 - dagster - DEBUG - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - 16873 - train_rendimento_model - STEP_START - Started execution of step "train_rendimento_model".
+2025-07-02 21:08:23 +0000 - dagster - DEBUG - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - train_rendimento_model - Loading file from: /opt/dagster/dagster_home/storage/edf5b091-69e5-4129-95f1-15114c4a726d/preprocess_rendimento/result using PickledObjectFilesystemIOManager...
+2025-07-02 21:08:23 +0000 - dagster - DEBUG - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - 16873 - train_rendimento_model - LOADED_INPUT - Loaded input "df" using input manager "io_manager", from output "result" of step "preprocess_rendimento"
+2025-07-02 21:08:24 +0000 - dagster - DEBUG - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - 16873 - train_rendimento_model - STEP_INPUT - Got input "df" of type "DataFrame". (Type check passed).
+2025-07-02 21:08:24 +0000 - dagster - INFO - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - train_rendimento_model - 🔗 MLflow Tracking URI: http://mlflow:5000
+2025-07-02 21:08:24 +0000 - dagster - INFO - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - train_rendimento_model - 🪣 MLflow S3 Endpoint: http://minio:9000
+2025-07-02 21:08:24 +0000 - dagster - INFO - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - train_rendimento_model - 🗃️ MLflow Backend Store URI: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+2025-07-02 21:08:26 +0000 - dagster - INFO - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - train_rendimento_model - 📊 Avaliação - RMSE: 15.395418049413292, R²: 0.031213104738132214
+/usr/local/lib/python3.10/site-packages/_distutils_hack/__init__.py:33: UserWarning: Setuptools is replacing distutils.
+  warnings.warn("Setuptools is replacing distutils.")
+Registered model 'rendimento' already exists. Creating a new version of this model...
+2025/07/02 21:08:40 INFO mlflow.tracking._model_registry.client: Waiting up to 300 seconds for model version to finish creation.                     Model name: rendimento, version 5
+Created version '5' of model 'rendimento'.
+2025-07-02 21:08:41 +0000 - dagster - DEBUG - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - 16873 - train_rendimento_model - STEP_OUTPUT - Yielded output "result" of type "Float". (Type check passed).
+2025-07-02 21:08:41 +0000 - dagster - DEBUG - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - train_rendimento_model - Writing file at: /opt/dagster/dagster_home/storage/edf5b091-69e5-4129-95f1-15114c4a726d/train_rendimento_model/result using PickledObjectFilesystemIOManager...
+2025-07-02 21:08:41 +0000 - dagster - DEBUG - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - 16873 - train_rendimento_model - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+2025-07-02 21:08:41 +0000 - dagster - DEBUG - rendimento_job - edf5b091-69e5-4129-95f1-15114c4a726d - 16873 - train_rendimento_model - STEP_SUCCESS - Finished execution of step "train_rendimento_model" in 17.27s.

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- Layout principal -->
+<div class="dashboard-layout">
+  <!-- Sidebar existente do layout -->
+  <aside class="sidebar">
+    <ul>
+      <li><a href="#" onclick="loadDashboard()"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+      <li><a href="#" onclick="loadIframe('http://localhost:5601')"><i class="fas fa-chart-line"></i> Monitor</a></li>
+      <li><a href="#" onclick="loadIframe('http://localhost:12000')"><i class="fas fa-robot"></i> MLflow</a></li>
+      <li><a href="#" onclick="loadIframe('http://localhost:9000')"><i class="fas fa-box"></i> Storage</a></li>
+      <li><a href="#" onclick="loadIframe('http://localhost:11000')"><i class="fas fa-brain"></i> Modelos ML</a></li>
+      <li><a href="#" onclick="loadIframe('http://localhost:8083/dags/pipeline_carregamento_agro_por_tabela/grid?root=')"><i class="fas fa-network-wired"></i> DAGs</a></li>
+      <li class="active"><a href="#"><i class="fas fa-seedling"></i> Visão Agro</a></li>
+    </ul>
+  </aside>
+
+  <!-- Conteúdo Visão Agro -->
+  <main class="agro-main">
+
+
+    {% for categoria, cards in secoes.items() %}
+    <section class="agro-section">
+      <h3>{{ categoria }}</h3>
+      <div class="agro-cards">
+        {% for card in cards %}
+        <div class="agro-card">
+          <img src="{{ url_for('static', filename=card[0]) }}" alt="{{ card[1] }}">
+          <div class="agro-card-title">{{ card[1] }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </main>
+</div>
+
+{% endblock %}

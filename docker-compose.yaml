@@ -2,15 +2,6 @@
 # GRUPO 1: Jenkins e Welcome
 ############################
 services:
-  welcome:
-    container_name: welcome_server
-    image: httpd:2.4-alpine
-    ports:
-      - "3000:80"
-    volumes:
-      - ./public-html:/usr/local/apache2/htdocs/
-    networks:
-      - jenkins_nw
 
   jenkins:
     container_name: jenkins
@@ -357,6 +348,34 @@ services:
       - mlflow
     networks:
       - jenkins_nw
+
+  interface:
+    build:
+      context: ./cd4ml-interface
+    container_name: interface
+    ports:
+      - "11001:8000"
+    restart: always
+    depends_on:
+      - mlflow
+      - dagster-webserver
+      - minio
+      - jenkins
+    volumes:
+      - ./cd4ml-interface:/app
+    working_dir: /app
+    environment:
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
+      - TZ=America/Sao_Paulo
+    command: python app.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
 
 #########################
 # Volumes, Redes e Segredos

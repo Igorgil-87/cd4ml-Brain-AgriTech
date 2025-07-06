@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Projeto Cezargina - Engenharia de ML Agro</title>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body style="background-image: url('{{ url_for('static', filename='img/fundo.webp') }}'); background-size: cover; background-attachment: fixed;">
+
+  <!-- Cabeçalho global -->
+  <header class="header">
+    <div class="header-left">
+      <img src="{{ url_for('static', filename='img/santander.gif') }}" alt="Santander">
+      <div>
+        <h1 class="title">Projeto Cezargina</h1>
+        <p class="subtitle">Engenharia de ML para o Agronegócio</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="https://github.com/Igorgil-87/cd4ml-Brain-AgriTech" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
+      <a href="http://localhost:8081/browser/" target="_blank" title="Lake"><i class="fas fa-database"></i></a>
+      <a href="http://localhost:10000/blue" target="_blank" title="Jenkins"><i class="fas fa-sync"></i></a>
+      <a href="http://localhost:8888/lab" target="_blank" title="Jupyter"><i class="fas fa-book"></i></a>
+      <button class="alert-button" onclick="toggleAlerts()" title="Alertas">
+        <i class="fas fa-bell"></i>
+        <span class="alert-count" id="alert-count">3</span>
+      </button>
+      <div class="alert-popup" id="alert-popup">
+        <h4>Alertas</h4>
+        <ul>
+          <li>Pipeline de insumos falhou às 06:45</li>
+          <li>Drift no modelo de rendimento (+12%)</li>
+          <li>Erro de autenticação no Lake</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <!-- Layout principal -->
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <ul>
+        <li><a href="#" onclick="loadDashboard()"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+        <li><a href="#" onclick="loadIframe('http://localhost:5601')"><i class="fas fa-chart-line"></i> Monitor</a></li>
+        <li><a href="#" onclick="loadIframe('http://localhost:12000')"><i class="fas fa-robot"></i> MLflow</a></li>
+        <li><a href="#" onclick="loadIframe('http://localhost:9000')"><i class="fas fa-box"></i> Storage</a></li>
+        <li><a href="#" onclick="loadIframe('http://localhost:11000')"><i class="fas fa-brain"></i> Modelos ML</a></li>
+        <li><a href="#" onclick="loadIframe('http://localhost:8083/dags/pipeline_carregamento_agro_por_tabela/grid?root=')"><i class="fas fa-network-wired"></i> DAGs</a></li>
+        <li><a href="{{ url_for('visao_agro') }}"><i class="fas fa-seedling"></i> Visão Agro</a></li>
+      </ul>
+    </aside>
+
+    <main id="main-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
