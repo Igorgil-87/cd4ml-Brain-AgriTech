@@ -97,25 +97,6 @@ services:
     command: dagster-daemon run
 
 
-  model:
-    build:
-      context: .
-      dockerfile: Dockerfile-model
-    container_name: model
-    ports:
-      - "11000:5005"
-    environment:
-      FLUENTD_HOST: fluentd
-      FLUENTD_PORT: 24224
-      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
-      ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      SECRET_KEY: ${MINIO_SECRET_KEY}
-    networks:
-      - jenkins_nw
-    depends_on:
-      - fluentd
-      - minio
-
 ############################
 # GRUPO 3: MinIO e MLflow
 ############################
@@ -368,7 +349,8 @@ services:
       - FLASK_ENV=development
       - PYTHONUNBUFFERED=1
       - TZ=America/Sao_Paulo
-    command: python app.py
+      - FLASK_APP=main.py
+    command: python main.py
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000 || exit 1"]
       interval: 30s

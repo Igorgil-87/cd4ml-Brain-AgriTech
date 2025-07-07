@@ -1,4 +1,7 @@
 from flask import Flask, render_template
+from flask import Blueprint, render_template, request, jsonify
+
+
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
@@ -55,6 +58,10 @@ def visao_agro():
         ]
     }
     return render_template("visao_agro.html", secoes=secoes)
+
+
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)

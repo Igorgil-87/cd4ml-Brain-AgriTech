@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="playground-container">
+  <h2>API de Insumos Agrícolas</h2>
+
+  <section class="model-scores">
+    <h3>Scores dos Modelos</h3>
+    <ul>
+      {% for nome, score in scores.items() %}
+        <li><strong>{{ nome }}</strong>: {{ score }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="api-test">
+    <h3>Rodar API</h3>
+    <form method="post">
+      <label>Tipo de Insumo: <input type="text" name="insumo" required></label>
+      <label>UF: <input type="text" name="uf" required></label>
+      <label>Safra: <input type="text" name="safra" required></label>
+      <button type="submit">Testar</button>
+    </form>
+
+    {% if prediction %}
+    <div class="result-box">
+      <strong>Resultado:</strong>
+      <pre>{{ prediction }}</pre>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="integration-info">
+    <h3>Integração</h3>
+    <p><strong>Path:</strong> <code>/api/v1/insumos/predict</code></p>
+    <p><strong>Método:</strong> POST</p>
+    <p><strong>Headers:</strong></p>
+    <pre>
+Content-Type: application/json
+x-api-key: SUA_CHAVE_AQUI
+    </pre>
+    <p><strong>Exemplo de corpo JSON:</strong></p>
+    <pre>{
+  "insumo": "Fertilizante NPK",
+  "uf": "PR",
+  "safra": "2024/2025"
+}</pre>
+  </section>
+</div>
+{% endblock %}

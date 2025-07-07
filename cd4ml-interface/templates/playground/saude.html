@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="playground-container">
+  <h2>API de Saúde da Lavoura</h2>
+
+  <section class="model-scores">
+    <h3>Scores dos Modelos</h3>
+    <ul>
+      {% for nome, score in scores.items() %}
+        <li><strong>{{ nome }}</strong>: {{ score }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="api-test">
+    <h3>Rodar API</h3>
+    <form method="post">
+      <label>NDVI: <input type="number" step="0.01" name="ndvi" required></label>
+      <label>Solo (pH): <input type="number" step="0.01" name="ph_solo" required></label>
+      <label>Temperatura Média (°C): <input type="number" step="0.1" name="temperatura" required></label>
+      <button type="submit">Testar</button>
+    </form>
+
+    {% if prediction %}
+    <div class="result-box">
+      <strong>Resultado:</strong>
+      <pre>{{ prediction }}</pre>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="integration-info">
+    <h3>Integração</h3>
+    <p><strong>Path:</strong> <code>/api/v1/saude/predict</code></p>
+    <p><strong>Método:</strong> POST</p>
+    <p><strong>Headers:</strong></p>
+    <pre>
+Content-Type: application/json
+x-api-key: SUA_CHAVE_AQUI
+    </pre>
+    <p><strong>Exemplo de corpo JSON:</strong></p>
+    <pre>{
+  "ndvi": 0.75,
+  "ph_solo": 6.2,
+  "temperatura": 25.5
+}</pre>
+  </section>
+</div>
+{% endblock %}

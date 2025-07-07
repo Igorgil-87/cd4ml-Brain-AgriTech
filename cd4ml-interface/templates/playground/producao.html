@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="playground-container">
+  <h2>API de Produção Agrícola</h2>
+
+  <section class="model-scores">
+    <h3>Scores dos Modelos</h3>
+    <ul>
+      {% for nome, score in scores.items() %}
+        <li><strong>{{ nome }}</strong>: {{ score }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="api-test">
+    <h3>Rodar API</h3>
+    <form method="post">
+      <label>UF: <input type="text" name="uf" required></label>
+      <label>Cultura: <input type="text" name="cultura" required></label>
+      <label>Ano: <input type="number" name="ano" required></label>
+      <label>Mês: <input type="number" name="mes" required></label>
+      <button type="submit">Testar</button>
+    </form>
+
+    {% if prediction %}
+    <div class="result-box">
+      <strong>Resultado:</strong>
+      <pre>{{ prediction }}</pre>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="integration-info">
+    <h3>Integração</h3>
+    <p><strong>Path:</strong> <code>/api/v1/producao/predict</code></p>
+    <p><strong>Método:</strong> POST</p>
+    <p><strong>Headers:</strong></p>
+    <pre>
+Content-Type: application/json
+x-api-key: SUA_CHAVE_AQUI
+    </pre>
+    <p><strong>Exemplo de corpo JSON:</strong></p>
+    <pre>{
+  "uf": "MG",
+  "cultura": "Soja",
+  "ano": 2025,
+  "mes": 6
+}</pre>
+  </section>
+</div>
+{% endblock %}
