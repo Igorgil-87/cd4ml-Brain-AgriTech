@@ -1,0 +1,22 @@
+{
+  "application": "cd4ml-brain-agritech",
+  "name": "Deploy Ambiente A",
+  "stages": [
+    {
+      "type": "deployManifest",
+      "name": "Deploy Compose",
+      "account": "local-docker",
+      "cloudProvider": "kubernetes",
+      "manifestArtifactId": "docker-compose",
+      "source": "artifact",
+      "skipExpressionEvaluation": false
+    }
+  ],
+  "triggers": [],
+  "description": "Pipeline de deploy do ambiente A",
+  "keepWaitingPipelines": false,
+  "limitConcurrent": true,
+  "parameterConfig": [],
+  "notifications": [],
+  "expectedArtifacts": []
+}

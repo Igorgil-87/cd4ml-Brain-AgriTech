@@ -8,3 +8,4 @@ data/agrofitprodutosformulados.csv
 dagster/dagster_home/history/
 dagster/dagster_home/runs.db
 *.sqlite
+.env

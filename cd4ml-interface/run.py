@@ -1,6 +1,6 @@
-from app import create_app
+from main import app
 
-app = create_app()
-
+# Este arquivo serve apenas como ponto de entrada alternativo
+# Exemplo: python run.py
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    app.run()

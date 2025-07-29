@@ -1,0 +1,55 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/incendio.css') }}">
+<div class="playground-container">
+  <h2>Identificação de Focos de Incêndio</h2>
+  <p class="api-description">Monitore áreas de risco e identifique focos de incêndio em regiões rurais com base em imagens de satélite e clima.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label>Latitude:</label>
+    <input type="number" step="any" name="latitude" required>
+
+    <label>Longitude:</label>
+    <input type="number" step="any" name="longitude" required>
+
+    <label>Data (AAAA-MM-DD):</label>
+    <input type="date" name="data" required>
+
+    <button type="submit">Detectar Incêndio</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <p><strong>Probabilidade de Foco de Incêndio:</strong> {{ prediction }}</p>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /incendio</code></p>
+  <p><strong>Content-Type:</strong> <code>application/x-www-form-urlencoded</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>latitude</code>: float - Latitude da área</li>
+    <li><code>longitude</code>: float - Longitude da área</li>
+    <li><code>data</code>: string - Data da análise</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Sua chave: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo</h4>
+  <pre><code>import requests
+
+requests.post(
+    "http://localhost:11001/incendio",
+    data={
+        "latitude": -12.345,
+        "longitude": -45.678,
+        "data": "2025-07-17"
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)</code></pre>
+</div>
+{% endblock %}

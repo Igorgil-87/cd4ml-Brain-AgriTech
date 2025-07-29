@@ -1,0 +1,59 @@
+{% extends "base_playground.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pred_rendimento.css') }}">
+
+<div class="playground-container">
+  <h2>Predição de Rendimento Agrícola</h2>
+  <p class="api-description">Estime a produtividade esperada com base em parâmetros de solo, clima e cultura.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label for="cultura">Cultura:</label>
+    <input type="text" name="cultura" required>
+
+    <label for="estado">Estado (UF):</label>
+    <input type="text" name="estado" required>
+
+    <label for="ano">Ano:</label>
+    <input type="number" name="ano" required>
+
+    <label for="unidade">Unidade (ex: sacas/hectare):</label>
+    <input type="text" name="unidade" required>
+
+    <button type="submit">Executar Predição</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <p><strong>Produtividade Estimada:</strong> {{ prediction }} {{ request.form.get('unidade') }}</p>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /produtividade/pred_rendimento</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>cultura</code>: str - Nome da cultura (ex: soja, milho)</li>
+    <li><code>estado</code>: str - Sigla do estado</li>
+    <li><code>ano</code>: int - Ano da safra</li>
+    <li><code>unidade</code>: str - Unidade de medida</li>
+  </ul>
+
+  <h4>Exemplo (Python)</h4>
+  <pre><code>import requests
+
+response = requests.post(
+    "http://localhost:11001/produtividade/pred_rendimento",
+    data={
+        "cultura": "milho",
+        "estado": "PR",
+        "ano": 2024,
+        "unidade": "sacas/hectare"
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)
+print(response.json())</code></pre>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+# spinnaker-config.yml - Ambiente A
+application: cd4ml-brain-agritech-a
+account: local-docker-a
+cloud_provider: docker
+pipeline:
+  name: Deploy CD4ML Brain Agritech A
+  description: Pipeline de deploy para o ambiente A local
+  stages:
+    - name: Deploy Docker Compose A
+      type: script
+      script: |
+        echo "Iniciando deploy no ambiente A..."
+        cd /app/dr-infra/env-a
+        docker compose down
+        docker compose up -d --build
+        echo "Ambiente A implantado com sucesso."

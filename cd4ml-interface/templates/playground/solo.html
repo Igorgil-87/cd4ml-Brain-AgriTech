@@ -1,0 +1,50 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/solo.css') }}">
+<div class="playground-container">
+  <h2>Composição do Uso do Solo</h2>
+  <p class="api-description">Consulta da distribuição de uso do solo em uma propriedade rural com base na localização geográfica.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label>Latitude:</label>
+    <input type="number" step="any" name="latitude" required>
+
+    <label>Longitude:</label>
+    <input type="number" step="any" name="longitude" required>
+
+    <button type="submit">Consultar Uso do Solo</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <p><strong>Composição do Solo:</strong> {{ prediction }}</p>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /solo</code></p>
+  <p><strong>Content-Type:</strong> <code>application/x-www-form-urlencoded</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>latitude</code>: float - Latitude da propriedade</li>
+    <li><code>longitude</code>: float - Longitude da propriedade</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Sua chave: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo</h4>
+  <pre><code>import requests
+
+requests.post(
+    "http://localhost:11001/solo",
+    data={
+        "latitude": -15.7942,
+        "longitude": -47.8822
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)</code></pre>
+</div>
+{% endblock %}

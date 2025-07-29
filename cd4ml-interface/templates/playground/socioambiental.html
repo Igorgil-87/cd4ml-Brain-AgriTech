@@ -1,0 +1,54 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<div class="playground-container">
+  <h2>APIs Socioambientais</h2>
+  <p class="api-description">
+    Utilize esta interface para consultar informações ambientais e sociais relevantes, como presença de biomas, unidades de conservação, terras indígenas e focos de incêndio.
+  </p>
+
+  <h3>Exemplo: Consulta de Bioma</h3>
+  <form method="POST">
+    <label>Latitude:</label>
+    <input type="number" step="any" name="latitude" required>
+
+    <label>Longitude:</label>
+    <input type="number" step="any" name="longitude" required>
+
+    <button type="submit">Consultar Bioma</button>
+  </form>
+
+  {% if resultado %}
+    <h3>Resultado</h3>
+    <pre>{{ resultado }}</pre>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API - Bioma</h3>
+  <p><strong>Endpoint:</strong> <code>POST /socioambiental/bioma</code></p>
+  <p><strong>Método:</strong> <code>POST</code></p>
+  <p><strong>Headers:</strong> <code>X-API-Key</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>latitude</code>: float - Ex: -10.123456</li>
+    <li><code>longitude</code>: float - Ex: -55.654321</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Chave de autenticação: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo (Python)</h4>
+  <pre><code>import requests
+
+response = requests.post(
+    "http://localhost:11001/socioambiental/bioma",
+    data={
+        "latitude": -10.123456,
+        "longitude": -55.654321
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)
+
+print(response.json())</code></pre>
+</div>
+{% endblock %}

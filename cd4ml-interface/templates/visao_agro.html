@@ -1,38 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
 
-<!-- Layout principal -->
-<div class="dashboard-layout">
-  <!-- Sidebar existente do layout -->
-  <aside class="sidebar">
-    <ul>
-      <li><a href="#" onclick="loadDashboard()"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
-      <li><a href="#" onclick="loadIframe('http://localhost:5601')"><i class="fas fa-chart-line"></i> Monitor</a></li>
-      <li><a href="#" onclick="loadIframe('http://localhost:12000')"><i class="fas fa-robot"></i> MLflow</a></li>
-      <li><a href="#" onclick="loadIframe('http://localhost:9000')"><i class="fas fa-box"></i> Storage</a></li>
-      <li><a href="#" onclick="loadIframe('http://localhost:11000')"><i class="fas fa-brain"></i> Modelos ML</a></li>
-      <li><a href="#" onclick="loadIframe('http://localhost:11001/visao_agro')"><i class="fas fa-brain"></i> Visão Agro</a></li>
-      <li class="active"><a href="#"><i class="fas fa-seedling"></i> Visão Agro</a></li>
-    </ul>
-  </aside>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/visao_agro.css') }}">
 
-  <!-- Conteúdo Visão Agro -->
-  <main class="agro-main">
-    {% for categoria, cards in secoes.items() %}
+<div class="agro-container">
+  {% for categoria, cards in secoes.items() %}
     <section class="agro-section">
       <h3>{{ categoria }}</h3>
       <div class="agro-cards">
         {% for card in cards %}
-        {% set rota = card[1].lower().replace(' ', '_').replace('ç','c').replace('ã','a').replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ô','o').replace('ú','u') %}
-        <a href="/{{ rota }}" class="agro-card">
-          <img src="{{ url_for('static', filename=card[0]) }}" alt="{{ card[1] }}">
-          <div class="agro-card-title">{{ card[1] }}</div>
-        </a>
+          <div class="agro-card" onclick="window.location.href='{{ url_for(card[2]) }}'">
+            <img src="{{ url_for('static', filename='img/' + card[0]) }}" alt="{{ card[1] }}">
+            <div class="agro-card-title">{{ card[1] }}</div>
+          </div>
         {% endfor %}
       </div>
     </section>
-    {% endfor %}
-  </main>
+  {% endfor %}
 </div>
 
 {% endblock %}

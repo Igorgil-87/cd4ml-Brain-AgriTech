@@ -25,9 +25,11 @@
     </div>
     <div class="header-right">
       <a href="https://github.com/Igorgil-87/cd4ml-Brain-AgriTech" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
-      <a href="http://localhost:8081/browser/" target="_blank" title="Lake"><i class="fas fa-database"></i></a>
+      <a href="http://localhost:8081/browser/" target="_blank" title="Banco de Dados"><i class="fas fa-database"></i></a>
       <a href="http://localhost:10000/blue" target="_blank" title="Jenkins"><i class="fas fa-sync"></i></a>
       <a href="http://localhost:8888/lab" target="_blank" title="Jupyter"><i class="fas fa-book"></i></a>
+      <a href="http://localhost:5601" target="_blank" title="Monitoramento"><i class="fas fa-chart-line"></i></a>
+      <a href="http://localhost:3005/" target="_blank" title="DAGs (Airflow)"><i class="fas fa-network-wired"></i></a>
       <button class="alert-button" onclick="toggleAlerts()" title="Alertas">
         <i class="fas fa-bell"></i>
         <span class="alert-count" id="alert-count">3</span>
@@ -48,12 +50,9 @@
     <aside class="sidebar">
       <ul>
         <li><a href="#" onclick="loadDashboard()"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
-        <li><a href="#" onclick="loadIframe('http://localhost:5601')"><i class="fas fa-chart-line"></i> Monitor</a></li>
         <li><a href="#" onclick="loadIframe('http://localhost:12000')"><i class="fas fa-robot"></i> MLflow</a></li>
         <li><a href="#" onclick="loadIframe('http://localhost:9000')"><i class="fas fa-box"></i> Storage</a></li>
-        <li><a href="#" onclick="loadIframe('http://localhost:11001/visao_agro')"><i class="fas fa-brain"></i> Visão Agro</a></li>
-        <li><a href="#" onclick="loadIframe('http://localhost:8083/dags/pipeline_carregamento_agro_por_tabela/grid?root=')"><i class="fas fa-network-wired"></i> DAGs</a></li>
-        <li><a href="{{ url_for('visao_agro') }}"><i class="fas fa-seedling"></i> Visão Agro</a></li>
+        <li class="active"><a href="{{ url_for('visao_agro') }}"><i class="fas fa-seedling"></i> Visão Agro</a></li>
       </ul>
     </aside>
 

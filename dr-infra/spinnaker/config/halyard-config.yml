@@ -1,0 +1,28 @@
+deployment:
+  name: local-spinnaker
+  type: Distributed
+
+providers:
+  docker:
+    enabled: true
+    accounts:
+      - name: local-docker-a
+        requiredGroupMembership: []
+        dockerRegistries: []
+        permissions: {}
+      - name: local-docker-b
+        requiredGroupMembership: []
+        dockerRegistries: []
+        permissions: {}
+
+features:
+  artifacts: true
+
+webhooks:
+  enabled: true
+
+metricStores:
+  prometheus:
+    enabled: false
+
+timezone: America/Sao_Paulo

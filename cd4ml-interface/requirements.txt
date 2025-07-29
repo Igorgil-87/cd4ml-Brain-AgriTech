@@ -1,1 +1,2 @@
 flask
+mlflow==2.11.3

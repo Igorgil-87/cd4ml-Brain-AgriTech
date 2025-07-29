@@ -1,0 +1,59 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<div class="playground-container">
+  <h2>APIs de Produtividade Agrícola</h2>
+  <p class="api-description">
+    Utilize essa interface para estimar produtividade, penalizações por uso indevido do solo, NDVI, otimização de insumos e rendimento da safra.
+  </p>
+
+  <h3>Exemplo: Predição de Rendimento</h3>
+  <form method="POST">
+    <label>Cultura:</label>
+    <input type="text" name="cultura" required>
+
+    <label>Área Plantada (ha):</label>
+    <input type="number" name="area_plantada" step="any" required>
+
+    <label>Município:</label>
+    <input type="text" name="municipio" required>
+
+    <button type="submit">Prever Rendimento</button>
+  </form>
+
+  {% if resultado %}
+    <h3>Resultado</h3>
+    <pre>{{ resultado }}</pre>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API - Predição de Rendimento</h3>
+  <p><strong>Endpoint:</strong> <code>POST /predict/rendimento</code></p>
+  <p><strong>Método:</strong> <code>POST</code></p>
+  <p><strong>Headers:</strong> <code>X-API-Key</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>cultura</code>: string - Ex: SOYBEAN</li>
+    <li><code>area_plantada</code>: float - Ex: 25.5</li>
+    <li><code>municipio</code>: string - Nome do município</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Chave de autenticação: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo (Python)</h4>
+  <pre><code>import requests
+
+response = requests.post(
+    "http://localhost:11001/predict/rendimento",
+    data={
+        "cultura": "SOYBEAN",
+        "area_plantada": 25.5,
+        "municipio": "Barreiras"
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)
+
+print(response.json())</code></pre>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lavoura.css') }}">
+<div class="playground-container">
+  <h2>Distância da Proximidade de Rios</h2>
+  <p class="api-description">Calcula a proximidade da lavoura em relação a corpos hídricos próximos, auxiliando na análise ambiental e irrigação.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label>Latitude da Lavoura:</label>
+    <input type="number" step="any" name="latitude" required>
+
+    <label>Longitude da Lavoura:</label>
+    <input type="number" step="any" name="longitude" required>
+
+    <button type="submit">Calcular Distância</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <p><strong>Distância até o rio mais próximo:</strong> {{ prediction }} km</p>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /lavoura</code></p>
+  <p><strong>Content-Type:</strong> <code>application/x-www-form-urlencoded</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>latitude</code>: float - Coordenada de latitude da lavoura</li>
+    <li><code>longitude</code>: float - Coordenada de longitude da lavoura</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Sua chave: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo</h4>
+  <pre><code>import requests
+
+requests.post(
+    "http://localhost:11001/lavoura",
+    data={
+        "latitude": -15.789,
+        "longitude": -47.882
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)</code></pre>
+</div>
+{% endblock %}

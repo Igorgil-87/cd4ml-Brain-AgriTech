@@ -1,0 +1,96 @@
+/* Limita altura e ativa scroll quando necessário */
+.playground-container {
+  background: rgba(0, 0, 0, 0.75);
+  padding: 30px;
+  border-radius: 15px;
+  max-width: 900px;
+  max-height: 90vh; /* <- nova altura máxima */
+  overflow-y: auto; /* <- ativa barra de rolagem vertical */
+  margin: 50px auto;
+  color: #f5f5f5;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.playground-container h2,
+.playground-container h3,
+.playground-container h4 {
+  color: #ffffff;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #777;
+  padding-bottom: 5px;
+}
+
+.playground-container p,
+.playground-container li {
+  color: #dddddd;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.playground-container code {
+  background: #222;
+  color: #00ffe0;
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+
+.playground-container pre {
+  background-color: #111;
+  padding: 15px;
+  color: #00ffe0;
+  border-radius: 10px;
+  overflow-x: auto;
+  font-size: 0.95rem;
+}
+
+form {
+  margin-top: 20px;
+}
+
+form label {
+  display: block;
+  margin: 10px 0 5px;
+  color: #f0f0f0;
+  font-weight: bold;
+}
+
+form input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #1e1e1e;
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 15px;
+}
+
+button[type="submit"] {
+  background-color: #00bfa5;
+  color: #fff;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 10px;
+  transition: background-color 0.3s;
+}
+
+button[type="submit"]:hover {
+  background-color: #00a58c;
+}
+
+@media (max-width: 768px) {
+  .playground-container {
+    padding: 20px;
+    margin: 20px;
+    max-height: none; /* em telas pequenas, deixa altura livre */
+  }
+
+  pre {
+    font-size: 0.85rem;
+  }
+}

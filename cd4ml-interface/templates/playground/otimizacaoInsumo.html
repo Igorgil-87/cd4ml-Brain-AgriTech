@@ -1,0 +1,55 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/otimizacaoInsumo.css') }}">
+<div class="playground-container">
+  <h2>Otimização de Insumos</h2>
+  <p class="api-description">Recomenda a alocação ideal de insumos com base em dados de solo e clima para maximizar a produtividade da lavoura.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label>Área Plantada (hectares):</label>
+    <input type="number" step="any" name="area_plantada" required>
+
+    <label>Tipo de Insumo:</label>
+    <input type="text" name="tipo_insumo" required>
+
+    <label>Disponibilidade do Insumo (kg):</label>
+    <input type="number" step="any" name="qtd_insumo" required>
+
+    <button type="submit">Calcular Otimização</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <p><strong>Distribuição Ideal:</strong> {{ prediction }}</p>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /otimizacaoInsumo</code></p>
+  <p><strong>Content-Type:</strong> <code>application/x-www-form-urlencoded</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>area_plantada</code>: float - Área total da lavoura em hectares</li>
+    <li><code>tipo_insumo</code>: string - Nome do insumo agrícola</li>
+    <li><code>qtd_insumo</code>: float - Quantidade disponível em kg</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Sua chave: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo</h4>
+  <pre><code>import requests
+
+requests.post(
+    "http://localhost:11001/otimizacaoInsumo",
+    data={
+        "area_plantada": 100,
+        "tipo_insumo": "Fertilizante A",
+        "qtd_insumo": 500
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)</code></pre>
+</div>
+{% endblock %}

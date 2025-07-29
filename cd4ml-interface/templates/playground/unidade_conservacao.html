@@ -1,0 +1,47 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/unidade_conservacao.css') }}">
+<div class="playground-container">
+  <h2>Consulta de Unidade de Conservação</h2>
+  <p class="api-description">Verifica se determinada localidade está inserida em área de unidade de conservação.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label>Município:</label>
+    <input type="text" name="municipio" required>
+
+    <label>UF (Estado):</label>
+    <input type="text" name="uf" maxlength="2" required>
+
+    <button type="submit">Consultar</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <pre>{{ prediction }}</pre>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /unidade_conservacao</code></p>
+  <p><strong>Content-Type:</strong> <code>application/x-www-form-urlencoded</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>municipio</code>: string - Nome do município</li>
+    <li><code>uf</code>: string - Sigla do estado</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Sua chave: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo</h4>
+  <pre><code>import requests
+
+requests.post(
+    "http://localhost:11001/unidade_conservacao",
+    data={"municipio": "Alta Floresta", "uf": "MT"},
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)</code></pre>
+</div>
+{% endblock %}

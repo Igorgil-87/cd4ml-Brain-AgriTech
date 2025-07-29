@@ -1,0 +1,49 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<div class="playground-container">
+  <h2>API: Distância da Proximidade de Rios</h2>
+  <p class="api-description">
+    Esta API retorna a distância entre a propriedade e corpos hídricos próximos, auxiliando na análise de logística agrícola.
+  </p>
+
+  <h3>Parâmetros de Entrada</h3>
+  <form method="POST">
+    <label>Latitude:</label>
+    <input type="number" step="any" name="latitude" required>
+
+    <label>Longitude:</label>
+    <input type="number" step="any" name="longitude" required>
+
+    <button type="submit">Calcular Distância</button>
+  </form>
+
+  {% if resultado %}
+    <h3>Resultado</h3>
+    <pre>{{ resultado }}</pre>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /logistica/distancia-rios</code></p>
+  <p><strong>Headers:</strong> <code>X-API-Key</code></p>
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>latitude</code>: float</li>
+    <li><code>longitude</code>: float</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Sua chave: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo (Python)</h4>
+  <pre><code>import requests
+
+response = requests.post(
+    "http://localhost:11001/logistica/distancia-rios",
+    data={"latitude": -21.12345, "longitude": -47.6789},
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)
+
+print(response.json())</code></pre>
+</div>
+{% endblock %}

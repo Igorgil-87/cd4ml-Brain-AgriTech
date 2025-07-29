@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 
-<!-- Splash Screen -->
-<div id="splash">
-  <img src="{{ url_for('static', filename='img/santander.gif') }}" alt="Santander">
-  <h1>Projeto Cezargina</h1>
-  <p>Engenharia de ML para o Agronegócio</p>
+<!-- Splash Screen Moderna -->
+<div id="splash" class="splash-screen">
+  <div class="splash-content">
+    <img src="{{ url_for('static', filename='img/santander.gif') }}" alt="Santander" class="splash-logo">
+    <h1>Projeto Cezargina</h1>
+    <p>Engenharia de ML para o Agronegócio</p>
+  </div>
 </div>
 
 <!-- Conteúdo Principal do Dashboard -->

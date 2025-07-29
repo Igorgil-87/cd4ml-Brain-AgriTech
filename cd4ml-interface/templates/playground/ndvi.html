@@ -1,0 +1,49 @@
+{% extends "base_playground.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ndvi.css') }}">
+
+<div class="playground-container">
+  <h2>Índice de Vegetação NDVI</h2>
+  <p class="api-description">Calcule o NDVI (Normalized Difference Vegetation Index) com base em imagens remotas.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label for="valor_infravermelho">Valor do Infravermelho (NIR):</label>
+    <input type="number" step="any" name="valor_infravermelho" required>
+
+    <label for="valor_vermelho">Valor do Vermelho (RED):</label>
+    <input type="number" step="any" name="valor_vermelho" required>
+
+    <button type="submit">Calcular NDVI</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <p><strong>NDVI:</strong> {{ prediction }}</p>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /produtividade/ndvi</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>valor_infravermelho</code>: float - Valor da banda NIR da imagem</li>
+    <li><code>valor_vermelho</code>: float - Valor da banda vermelha</li>
+  </ul>
+
+  <h4>Exemplo (Python)</h4>
+  <pre><code>import requests
+
+response = requests.post(
+    "http://localhost:11001/produtividade/ndvi",
+    data={
+        "valor_infravermelho": 0.7,
+        "valor_vermelho": 0.3
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)
+print(response.json())</code></pre>
+</div>
+{% endblock %}

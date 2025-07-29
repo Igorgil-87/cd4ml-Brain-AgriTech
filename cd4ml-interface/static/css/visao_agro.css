@@ -1,132 +1,78 @@
-body {
-  background: transparent;
+/* Reset básico */
+* {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+
+body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
+  background-color: #f4f4f4;
 }
 
-/* Container principal */
-.container-fluid {
-  padding-top: 100px;
-  padding-left: 40px;
-  padding-right: 40px;
-}
-
-/* Seção */
-.section {
-  margin-bottom: 40px;
-}
-
-.section h2 {
-  font-size: 1.6rem;
-  margin-bottom: 20px;
-  color: #e60000;
-  font-weight: 600;
-}
-
-/* Estilo dos cards horizontais */
-.scrolling-wrapper {
+/* Container principal da Visão Agro */
+.agro-container {
+  padding: 40px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  justify-content: flex-start;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 100%;
+  margin: auto;
 }
 
-.custom-card {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: transform 0.3s;
-  width: 100%;
-  max-width: 620px;
-  cursor: pointer;
-}
-.custom-card:hover {
-  transform: scale(1.02);
-}
-.custom-card img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-.custom-card-body {
-  padding: 12px 16px;
-}
-.custom-card-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #111;
-}
-
-/* Navbar transparente fixo */
-.navbar {
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-  padding: 14px 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-.navbar-brand {
-  display: flex;
-  align-items: center;
-  font-size: 1.2rem;
-  color: #fff !important;
-  font-weight: 600;
-}
-.navbar-brand img {
-  margin-right: 10px;
-  height: 36px;
-}
-.agro-main {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  background: rgba(255,255,255,0.92);
-  border-radius: 16px;
-  margin: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.agro-header {
-  margin-bottom: 30px;
-}
-.agro-header h2 {
-  font-size: 1.6rem;
-  color: #e60000;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.agro-section {
-  margin-bottom: 40px;
-}
+/* Título das seções */
 .agro-section h3 {
-  font-size: 1.2rem;
-  margin-bottom: 15px;
-  color: #333;
-  border-left: 4px solid #e60000;
+  font-size: 1.8em;
+  margin-bottom: 12px;
+  color: #444;
+  border-left: 6px solid #a70d22;
   padding-left: 12px;
 }
 
+/* Cards em rolagem horizontal estilo Netflix */
 .agro-cards {
   display: flex;
+  overflow-x: auto;
   gap: 20px;
-  flex-wrap: wrap;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: #a70d22 #ddd;
 }
 
-.agro-card {
-  width: 250px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  overflow: hidden;
-  transition: transform 0.2s;
-  cursor: pointer;
+.agro-cards::-webkit-scrollbar {
+  height: 8px;
 }
+
+.agro-cards::-webkit-scrollbar-thumb {
+  background-color: #a70d22;
+  border-radius: 4px;
+}
+
+.agro-cards::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}
+
+/* Estilo dos cards */
+.agro-card {
+  flex: 0 0 auto;
+  width: 180px;
+  background: #ffffffcc;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  scroll-snap-align: start;
+}
+
 .agro-card:hover {
-  transform: translateY(-5px);
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
 .agro-card img {
@@ -136,9 +82,25 @@ body {
 }
 
 .agro-card-title {
-  padding: 10px;
-  font-weight: bold;
-  text-align: center;
-  font-size: 0.95rem;
-  color: #333;
+  font-size: 1em;
+  padding: 12px;
+  font-weight: 600;
+  color: #222;
+  background-color: #f8f8f8;
+  width: 100%;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .agro-container {
+    padding: 20px;
+  }
+
+  .agro-card {
+    width: 140px;
+  }
+
+  .agro-card-title {
+    font-size: 0.9em;
+  }
 }

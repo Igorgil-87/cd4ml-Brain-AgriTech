@@ -1,0 +1,58 @@
+{% extends "base_playground.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analise_clima.css') }}">
+
+<div class="playground-container">
+  <h2>Análise de Clima para Lavouras</h2>
+  <p class="api-description">Previsão de condições climáticas para lavouras a partir dos dados inseridos.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label for="temperatura_media">Temperatura Média (°C):</label>
+    <input type="number" step="any" name="temperatura_media" required>
+
+    <label for="precipitacao">Precipitação (mm):</label>
+    <input type="number" step="any" name="precipitacao" required>
+
+    <label for="umidade">Umidade Relativa (%):</label>
+    <input type="number" step="any" name="umidade" required>
+
+    <button type="submit">Executar Modelo</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <p><strong>Predição:</strong> {{ prediction }}</p>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /climatica/analise-clima</code></p>
+  <p><strong>Content-Type:</strong> <code>application/x-www-form-urlencoded</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>temperatura_media</code>: float - Temperatura média esperada</li>
+    <li><code>precipitacao</code>: float - Volume de chuva em mm</li>
+    <li><code>umidade</code>: float - Umidade relativa do ar em %</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Sua chave: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo (Python)</h4>
+  <pre><code>import requests
+
+response = requests.post(
+    "http://localhost:11001/climatica/analise-clima",
+    data={
+        "temperatura_media": 26.4,
+        "precipitacao": 12.3,
+        "umidade": 75
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)
+print(response.json())</code></pre>
+</div>
+{% endblock %}

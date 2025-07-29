@@ -1,0 +1,49 @@
+{% extends "base_playground.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/incendio_socio.css') }}">
+
+<div class="playground-container">
+  <h2>Identificação de Focos de Incêndio</h2>
+  <p class="api-description">Consulta a existência de focos de incêndio em determinada região.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label for="latitude">Latitude:</label>
+    <input type="number" step="any" name="latitude" required>
+
+    <label for="longitude">Longitude:</label>
+    <input type="number" step="any" name="longitude" required>
+
+    <button type="submit">Verificar Incêndios</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <p><strong>Focos identificados:</strong> {{ prediction }}</p>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /socioambiental/incendio_socio</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>latitude</code>: float - Latitude da área</li>
+    <li><code>longitude</code>: float - Longitude da área</li>
+  </ul>
+
+  <h4>Exemplo (Python)</h4>
+  <pre><code>import requests
+
+response = requests.post(
+    "http://localhost:11001/socioambiental/incendio_socio",
+    data={
+        "latitude": -10.1234,
+        "longitude": -48.5678
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)
+print(response.json())</code></pre>
+</div>
+{% endblock %}

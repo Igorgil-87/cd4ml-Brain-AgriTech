@@ -1,0 +1,43 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ibama.css') }}">
+<div class="playground-container">
+  <h2>Consulta de Embargos Ambientais - IBAMA</h2>
+  <p class="api-description">Verifica se há embargos ambientais registrados no IBAMA para o CPF/CNPJ informado.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label>CPF ou CNPJ:</label>
+    <input type="text" name="documento" required>
+
+    <button type="submit">Consultar</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <pre>{{ prediction }}</pre>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /IBAMA</code></p>
+  <p><strong>Content-Type:</strong> <code>application/x-www-form-urlencoded</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>documento</code>: string - CPF ou CNPJ a ser consultado</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Sua chave: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo</h4>
+  <pre><code>import requests
+
+requests.post(
+    "http://localhost:11001/IBAMA",
+    data={"documento": "12345678900"},
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)</code></pre>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base_playground.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/indigina_socio.css') }}">
+
+<div class="playground-container">
+  <h2>Consulta de Terra Indígena</h2>
+  <p class="api-description">Verifica se a localização informada está dentro de uma Terra Indígena.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label for="latitude">Latitude:</label>
+    <input type="number" step="any" name="latitude" required>
+
+    <label for="longitude">Longitude:</label>
+    <input type="number" step="any" name="longitude" required>
+
+    <button type="submit">Consultar</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <p><strong>Resultado da Consulta:</strong> {{ prediction }}</p>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /socioambiental/indigina_socio</code></p>
+  <p><strong>Content-Type:</strong> <code>application/x-www-form-urlencoded</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>latitude</code>: float - Latitude do ponto consultado</li>
+    <li><code>longitude</code>: float - Longitude do ponto consultado</li>
+  </ul>
+
+  <h4>Exemplo (Python)</h4>
+  <pre><code>import requests
+
+response = requests.post(
+    "http://localhost:11001/socioambiental/indigina_socio",
+    data={
+        "latitude": -10.1234,
+        "longitude": -48.5678
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)
+print(response.json())</code></pre>
+</div>
+{% endblock %}

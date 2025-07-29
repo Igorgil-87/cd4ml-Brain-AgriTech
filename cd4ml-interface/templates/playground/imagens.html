@@ -1,0 +1,65 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<div class="playground-container">
+  <h2>API: Imagem de Satélite Sentinel</h2>
+  <p class="api-description">
+    Esta API retorna imagens de satélite (Sentinel) com base em coordenadas geográficas e datas informadas.
+  </p>
+
+  <h3>Parâmetros de Entrada</h3>
+  <form method="POST">
+    <label>Latitude:</label>
+    <input type="number" step="any" name="latitude" required>
+
+    <label>Longitude:</label>
+    <input type="number" step="any" name="longitude" required>
+
+    <label>Data Inicial (YYYY-MM-DD):</label>
+    <input type="date" name="data_inicial" required>
+
+    <label>Data Final (YYYY-MM-DD):</label>
+    <input type="date" name="data_final" required>
+
+    <button type="submit">Buscar Imagem</button>
+  </form>
+
+  {% if imagem_url %}
+    <h3>Resultado</h3>
+    <p>Imagem gerada:</p>
+    <img src="{{ imagem_url }}" alt="Imagem de Satélite" style="max-width: 100%; margin-top: 1rem;">
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /imagens/sentinel</code></p>
+  <p><strong>Headers:</strong> <code>X-API-Key</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>latitude</code>: float</li>
+    <li><code>longitude</code>: float</li>
+    <li><code>data_inicial</code>: string (formato YYYY-MM-DD)</li>
+    <li><code>data_final</code>: string (formato YYYY-MM-DD)</li>
+  </ul>
+
+  <h4>API Key</h4>
+  <p>Sua chave: <code>{{ api_key or 'SUA_CHAVE_AQUI' }}</code></p>
+
+  <h4>Exemplo (Python)</h4>
+  <pre><code>import requests
+
+response = requests.post(
+    "http://localhost:11001/imagens/sentinel",
+    data={
+        "latitude": -23.55,
+        "longitude": -46.63,
+        "data_inicial": "2024-06-01",
+        "data_final": "2024-06-10"
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)
+
+with open("imagem.jpg", "wb") as f:
+    f.write(response.content)</code></pre>
+</div>
+{% endblock %}

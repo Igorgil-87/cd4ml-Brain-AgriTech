@@ -11,10 +11,16 @@ def climatica_view():
         model = load_model("climatica", stage="Production")
         prediction_result = predict(model, input_data)
 
-    scores = {
-        "Análise de Clima para Lavouras": 0.91,
-        "Histórico de Temperatura no Campo": 0.87,
-        "Previsão do Tempo para Safra": 0.93,
-    }
+    return render_template("playground/climatica.html", prediction=prediction_result, api_key="abc123xyz456")
 
-    return render_template("playground/climatica.html", scores=scores, prediction=prediction_result)
+@bp_climatica.route("/analise_clima")
+def analise_clima_view():
+    return render_template("playground/analise_clima.html")
+
+@bp_climatica.route("/safrahistorica")
+def safrahistorica_view():
+    return render_template("playground/safrahistorica.html")
+
+@bp_climatica.route("/clima_lavoura")
+def clima_lavoura_view():
+    return render_template("playground/clima_lavoura.html")

@@ -1,0 +1,17 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<h2>Predição: Clima</h2>
+<form method="POST">
+  <!-- seus campos -->
+</form>
+
+{% if prediction %}
+  <p>Resultado: {{ prediction }}</p>
+{% endif %}
+
+<ul>
+  {% for nome, score in scores.items() %}
+    <li>{{ nome }} — Score: {{ score }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

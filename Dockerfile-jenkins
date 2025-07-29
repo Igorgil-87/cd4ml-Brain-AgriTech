@@ -15,8 +15,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Instala as libs Python do projeto
 COPY requirements.txt /tmp/requirements.txt
+#RUN pip install --upgrade pip setuptools wheel && \
+#    pip install --no-cache-dir -r /tmp/requirements.txt
+
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r /tmp/requirements.txt
+    pip install --no-cache-dir --timeout=100 --retries=5 -r /tmp/requirements.txt
 
 # Adiciona jenkins ao grupo docker
 RUN groupadd docker || true && usermod -aG docker jenkins

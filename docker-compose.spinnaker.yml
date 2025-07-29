@@ -1,0 +1,16 @@
+services:
+  spinnaker:
+    image: spinnaker/workshop-demo:orange
+    container_name: spinnaker-monolith
+    ports:
+      - "9000:9000"   # Deck UI
+      - "8084:8084"   # Gate API
+      - "8080:8080"   # Echo / app interna
+    environment:
+      - SPINNAKER_ENV=dev
+    volumes:
+      - spinnaker-data:/opt/spinnaker
+    platform: linux/amd64
+
+volumes:
+  spinnaker-data:

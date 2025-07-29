@@ -1,0 +1,52 @@
+{% extends "base_playground.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/colheita.css') }}">
+<div class="playground-container">
+  <h2>Geração de Coordenadas Geodésicas</h2>
+  <p class="api-description">Calcula pontos de colheita ideais com base em coordenadas geodésicas e dados geográficos.</p>
+
+  <h3>Entrada</h3>
+  <form method="POST">
+    <label>Coordenada Inicial (Latitude):</label>
+    <input type="number" step="any" name="lat_inicial" required>
+
+    <label>Coordenada Inicial (Longitude):</label>
+    <input type="number" step="any" name="lon_inicial" required>
+
+    <label>Distância desejada (km):</label>
+    <input type="number" step="any" name="distancia_km" required>
+
+    <button type="submit">Gerar Coordenada</button>
+  </form>
+
+  {% if prediction %}
+    <h3>Resultado</h3>
+    <p><strong>Nova Coordenada:</strong> {{ prediction }}</p>
+  {% endif %}
+
+  <hr>
+  <h3>Documentação da API</h3>
+  <p><strong>Endpoint:</strong> <code>POST /colheita</code></p>
+  <p><strong>Content-Type:</strong> <code>application/x-www-form-urlencoded</code></p>
+
+  <h4>Parâmetros</h4>
+  <ul>
+    <li><code>lat_inicial</code>: float - Latitude do ponto inicial</li>
+    <li><code>lon_inicial</code>: float - Longitude do ponto inicial</li>
+    <li><code>distancia_km</code>: float - Distância desejada em quilômetros</li>
+  </ul>
+
+  <h4>Exemplo</h4>
+  <pre><code>import requests
+
+requests.post(
+    "http://localhost:11001/colheita",
+    data={
+        "lat_inicial": -21.123,
+        "lon_inicial": -48.321,
+        "distancia_km": 5.0
+    },
+    headers={"X-API-Key": "SUA_CHAVE_AQUI"}
+)</code></pre>
+</div>
+{% endblock %}
