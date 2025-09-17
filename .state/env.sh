@@ -1,0 +1,1 @@
+export HAL_PORT_IN_USE=8064

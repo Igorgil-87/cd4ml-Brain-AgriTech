@@ -1,22 +1,26 @@
 {
+  "appConfig": {},
   "application": "cd4ml-brain-agritech",
-  "name": "Deploy Ambiente A",
+  "name": "DR - Deploy ENV A",
   "stages": [
     {
-      "type": "deployManifest",
-      "name": "Deploy Compose",
-      "account": "local-docker",
-      "cloudProvider": "kubernetes",
-      "manifestArtifactId": "docker-compose",
-      "source": "artifact",
-      "skipExpressionEvaluation": false
+      "type": "script",
+      "name": "Deploy ENV-A",
+      "script": "#!/bin/bash\ncd /workspace/dr-infra/env-a/scripts\nbash start.sh",
+      "failPipeline": true,
+      "waitForCompletion": true,
+      "requisiteStageRefIds": [],
+      "refId": "1"
+    },
+    {
+      "type": "script",
+      "name": "Health Check ENV-A",
+      "script": "#!/bin/bash\nbash /workspace/dr-infra/spinnaker/scripts/helpers.sh check_health mlflow\n",
+      "requisiteStageRefIds": ["1"],
+      "refId": "2"
     }
   ],
   "triggers": [],
-  "description": "Pipeline de deploy do ambiente A",
-  "keepWaitingPipelines": false,
-  "limitConcurrent": true,
-  "parameterConfig": [],
-  "notifications": [],
-  "expectedArtifacts": []
+  "description": "Pipeline DR para criação do ambiente A",
+  "disabled": false
 }

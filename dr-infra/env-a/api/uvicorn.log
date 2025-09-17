@@ -1,0 +1,12 @@
+INFO:     Will watch for changes in these directories: ['/Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/env-a/api']
+INFO:     Uvicorn running on http://0.0.0.0:18081 (Press CTRL+C to quit)
+INFO:     Started reloader process [45297] using WatchFiles
+INFO:     Started server process [45301]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:63074 - "GET /status HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [45301]
+INFO:     Stopping reloader process [45297]

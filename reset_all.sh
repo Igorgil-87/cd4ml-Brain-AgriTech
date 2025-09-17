@@ -5,7 +5,7 @@ echo "🧨 [RESET] Destruindo ambiente KIND + Docker Compose + volumes..."
 
 # 1. Parar e remover todos os containers do Docker Compose
 echo "🛑 Parando containers do Docker Compose..."
-docker-compose down -v --remove-orphans || true
+docker compose down -v --remove-orphans || true
 
 # 2. Remover o cluster KIND 'spinnaker'
 if kind get clusters | grep -q '^spinnaker$'; then
@@ -38,4 +38,3 @@ echo "✅ Ambiente completamente destruído."
 
 echo ""
 echo "🚀 Iniciando reconstrução automática..."
-./setup_spinnaker.sh

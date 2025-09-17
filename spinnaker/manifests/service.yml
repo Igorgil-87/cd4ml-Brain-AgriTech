@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: env-a
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cd4ml-api
+  namespace: env-a
+spec:
+  selector:
+    app: cd4ml-api
+    track: blue        # tráfego inicial para "blue"
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000

@@ -1,0 +1,22 @@
+{
+    "application": "cd4ml-brain-agritech",
+    "name": "DR - Failover Switch",
+    "stages": [
+      {
+        "type": "script",
+        "name": "Desliga ENV A",
+        "script": "#!/bin/bash\ncd /workspace/dr-infra/env-a/scripts\nbash destroy.sh",
+        "refId": "1",
+        "requisiteStageRefIds": []
+      },
+      {
+        "type": "script",
+        "name": "Liga ENV B",
+        "script": "#!/bin/bash\ncd /workspace/dr-infra/env-b/scripts\nbash start.sh",
+        "refId": "2",
+        "requisiteStageRefIds": ["1"]
+      }
+    ],
+    "description": "Pipeline para alternância de ambiente A para B",
+    "disabled": false
+  }

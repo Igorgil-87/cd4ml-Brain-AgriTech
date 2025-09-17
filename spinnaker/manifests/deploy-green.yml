@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cd4ml-api-green
+  namespace: env-a
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cd4ml-api
+      track: green
+  template:
+    metadata:
+      labels:
+        app: cd4ml-api
+        track: green
+    spec:
+      containers:
+        - name: cd4ml-api
+          image: cd4ml/api:latest
+          ports:
+            - containerPort: 8000

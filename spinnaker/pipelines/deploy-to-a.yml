@@ -1,0 +1,14 @@
+apiVersion: v2
+kind: SpinnakerPipeline
+metadata:
+  name: deploy-to-a
+  application: cd4ml-dsr
+spec:
+  stages:
+    - name: Deploy to env-a
+      type: deployManifest
+      account: my-k8s-account
+      cloudProvider: kubernetes
+      manifestArtifact:
+        artifactAccount: embedded-artifact
+        reference: spinnaker/manifests/env-a-deployment.yml

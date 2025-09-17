@@ -1,0 +1,19 @@
+apiVersion: v2
+kind: SpinnakerPipeline
+metadata:
+  name: swap-traffic
+  application: cd4ml-dsr
+spec:
+  stages:
+    - name: Swap Traffic to env-b
+      type: patchManifest
+      account: my-k8s-account
+      cloudProvider: kubernetes
+      manifestName: service cd4ml-api
+      location: env-a
+      patchBody: |
+        spec:
+          selector:
+            app: cd4ml-api
+      options:
+        mergeStrategy: strategic

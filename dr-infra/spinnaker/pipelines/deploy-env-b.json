@@ -1,22 +1,26 @@
 {
+  "appConfig": {},
   "application": "cd4ml-brain-agritech",
-  "name": "Deploy Ambiente B",
+  "name": "DR - Deploy ENV B",
   "stages": [
     {
-      "type": "deployManifest",
-      "name": "Deploy Compose",
-      "account": "local-docker",
-      "cloudProvider": "kubernetes",
-      "manifestArtifactId": "docker-compose",
-      "source": "artifact",
-      "skipExpressionEvaluation": false
+      "type": "script",
+      "name": "Deploy ENV-B",
+      "script": "#!/bin/bash\ncd /workspace/dr-infra/env-b/scripts\nbash start.sh",
+      "failPipeline": true,
+      "waitForCompletion": true,
+      "requisiteStageRefIds": [],
+      "refId": "1"
+    },
+    {
+      "type": "script",
+      "name": "Health Check ENV-B",
+      "script": "#!/bin/bash\nbash /workspace/dr-infra/spinnaker/scripts/helpers.sh check_health dagster-webserver",
+      "requisiteStageRefIds": ["1"],
+      "refId": "2"
     }
   ],
   "triggers": [],
-  "description": "Pipeline de deploy do ambiente B",
-  "keepWaitingPipelines": false,
-  "limitConcurrent": true,
-  "parameterConfig": [],
-  "notifications": [],
-  "expectedArtifacts": []
+  "description": "Pipeline DR para criação do ambiente B",
+  "disabled": false
 }

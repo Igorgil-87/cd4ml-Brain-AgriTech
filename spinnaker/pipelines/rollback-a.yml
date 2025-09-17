@@ -1,0 +1,15 @@
+apiVersion: v2
+kind: SpinnakerPipeline
+metadata:
+  name: rollback-a
+  application: cd4ml-dsr
+spec:
+  stages:
+    - name: Rollback env-a
+      type: undoRolloutManifest
+      account: my-k8s-account
+      cloudProvider: kubernetes
+      options:
+        namespace: env-a
+        kind: deployment
+        name: cd4ml-api

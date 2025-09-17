@@ -1,0 +1,103 @@
+apiVersion: spinnaker.netflix.com/v1alpha2
+kind: SpinnakerPipeline
+metadata:
+  name: deploy-to-a
+  namespace: spinnaker
+spec:
+  application: cd4ml-env-a
+  description: Pipeline de deploy para ambiente A
+  pipeline:
+    name: Deploy to A
+    stages:
+      - name: Deploy Manifest A
+        type: deployManifest
+        refId: deploy-a
+        requisiteStageRefIds: []
+        deployManifest:
+          cloudProvider: kubernetes
+          manifests:
+            - apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: cd4ml-api
+                namespace: env-a
+              spec:
+                replicas: 2
+                selector:
+                  matchLabels:
+                    app: cd4ml-api
+                template:
+                  metadata:
+                    labels:
+                      app: cd4ml-api
+                  spec:
+                    containers:
+                      - name: cd4ml-api
+                        image: your-registry/cd4ml-api:latest
+                        ports:
+                          - containerPort: 8000
+            - apiVersion: v1
+              kind: Service
+              metadata:
+                name: cd4ml-api
+                namespace: env-a
+              spec:
+                selector:
+                  app: cd4ml-api
+                ports:
+                  - protocol: TCP
+                    port: 80
+                    targetPort: 8000
+
+---
+
+apiVersion: spinnaker.netflix.com/v1alpha2
+kind: SpinnakerPipeline
+metadata:
+  name: deploy-to-b
+  namespace: spinnaker
+spec:
+  application: cd4ml-env-b
+  description: Pipeline de deploy para ambiente B
+  pipeline:
+    name: Deploy to B
+    stages:
+      - name: Deploy Manifest B
+        type: deployManifest
+        refId: deploy-b
+        requisiteStageRefIds: []
+        deployManifest:
+          cloudProvider: kubernetes
+          manifests:
+            - apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: cd4ml-api
+                namespace: env-b
+              spec:
+                replicas: 2
+                selector:
+                  matchLabels:
+                    app: cd4ml-api
+                template:
+                  metadata:
+                    labels:
+                      app: cd4ml-api
+                  spec:
+                    containers:
+                      - name: cd4ml-api
+                        image: your-registry/cd4ml-api:latest
+                        ports:
+                          - containerPort: 8000
+            - apiVersion: v1
+              kind: Service
+              metadata:
+                name: cd4ml-api
+                namespace: env-b
+              spec:
+                selector:
+                  app: cd4ml-api
+                ports:
+                  - protocol: TCP
+                    port: 80
+                    targetPort: 8000
