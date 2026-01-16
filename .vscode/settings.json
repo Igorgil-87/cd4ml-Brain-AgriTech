@@ -1,0 +1,35 @@
+{
+  // 🌾 RECONHECIMENTO DE ARQUIVOS
+  "files.associations": {
+    "*.cob": "COBOL",
+    "*.cbl": "COBOL",
+    "*.cpy": "COBOL",
+    "*.copybook": "COBOL",
+    "*.py": "python",
+    "*.java": "java"
+  },
+
+  // 🧩 COBOL
+  "cobol.linter": "gnucobol",
+  "cobol.sourceformat": "free",
+
+  // 🐍 PYTHON
+  "python.languageServer": "Pylance",
+  "python.analysis.autoImportCompletions": true,
+  "python.formatting.provider": "black",
+  "editor.formatOnSave": true,
+
+  // ☕ JAVA
+  "java.configuration.checkProjectSettingsExclusions": false,
+  "java.errors.incompleteClasspath.severity": "ignore",
+  "java.format.enabled": true,
+  "java.saveActions.organizeImports": true,
+
+  // 💡 GERAIS / IA / VISUAL
+  "errorLens.enabled": true,
+  "editor.inlineSuggest.enabled": true,
+  "editor.suggest.preview": true,
+  "editor.quickSuggestions": { "strings": true },
+  "workbench.colorTheme": "Default Dark Modern",
+  "extensions.ignoreRecommendations": false
+}

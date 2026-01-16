@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "bitlang.cobol",
+    "vscjava.vscode-java-pack",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "github.copilot",
+    "usernamehw.errorlens",
+    "streetsidesoftware.code-spell-checker",
+    "VisualStudioExptTeam.vscodeintellicode",
+    "pkief.material-icon-theme"
+  ]
+}

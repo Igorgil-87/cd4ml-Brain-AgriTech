@@ -1,36 +1,54 @@
 #!/bin/bash
-set -e
 
-echo "⚠️  Este script irá APAGAR COMPLETAMENTE os ambientes A, B e o Spinnaker."
-read -p "Tem certeza? (digite 'SIM' para continuar): " CONFIRMA
+echo "======================================"
+echo " 🧨 RESET DOCKER + KUBERNETES (kubectl)"
+echo " Isso vai apagar TUDO do cluster atual:"
+echo " - TODOS os namespaces (exceto kube-system, etc. se travados)"
+echo " - TODOS os pods, deployments, services, etc."
+echo " E depois limpar Docker (containers, imagens, volumes, redes)."
+echo "======================================"
+echo
 
-if [[ "$CONFIRMA" != "SIM" ]]; then
-  echo "❌ Operação cancelada."
-  exit 1
+kubectl config current-context 2>/dev/null || {
+  echo "kubectl não configurado ou sem contexto. Pulando parte de Kubernetes."
+}
+
+read -p "DIGITE EXATAMENTE 'SIM' para continuar: " CONFIRM
+if [ "$CONFIRM" != "SIM" ]; then
+  echo "Cancelado."
+  exit 0
 fi
 
-BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_A_DIR="$BASE_DIR/dr-infra/env-a"
-ENV_B_DIR="$BASE_DIR/dr-infra/env-b"
-SPINNAKER_DIR="$BASE_DIR/dr-infra/spinnaker"
+echo "🧨 Apagando todos os namespaces Kubernetes (exceto os protegidos)..."
+kubectl delete ns --all --force --grace-period=0 2>/dev/null || true
 
-echo "⛔ Parando e removendo todos os containers..."
-docker compose -f "$ENV_A_DIR/docker-compose.yaml" down -v --remove-orphans || true
-docker compose -f "$ENV_B_DIR/docker-compose.yaml" down -v --remove-orphans || true
-docker compose -f "$SPINNAKER_DIR/docker-compose.yaml" down -v --remove-orphans || true
+echo "🧨 Apagando PersistentVolumes (se existirem)..."
+kubectl delete pv --all 2>/dev/null || true
 
-echo "🧹 Removendo volumes órfãos..."
-docker volume prune -f || true
+echo "⛔ Parando containers Docker..."
+docker stop $(docker ps -aq) 2>/dev/null || true
 
-echo "🔌 Removendo redes órfãs..."
-docker network prune -f || true
+echo "🗑️ Removendo containers..."
+docker rm -f $(docker ps -aq) 2>/dev/null || true
 
-read -p "Deseja também remover todas as imagens Docker criadas? (digite 'SIM' para confirmar): " IMAGENS_OK
-if [[ "$IMAGENS_OK" == "SIM" ]]; then
-  echo "🗑️  Removendo imagens criadas localmente (dagster, mlflow, etc)..."
-  docker images --filter=reference="*dagster*" --format "{{.Repository}}:{{.Tag}}" | xargs -r docker rmi -f || true
-  docker images --filter=reference="*mlflow*" --format "{{.Repository}}:{{.Tag}}" | xargs -r docker rmi -f || true
-  docker images --filter=reference="*cd4ml*" --format "{{.Repository}}:{{.Tag}}" | xargs -r docker rmi -f || true
-fi
+echo "🧹 Removendo imagens..."
+docker rmi -f $(docker images -aq) 2>/dev/null || true
 
-echo "✅ Todos os ambientes foram destruídos com sucesso."
+echo "📦 Removendo volumes..."
+docker volume rm $(docker volume ls -q) 2>/dev/null || true
+
+echo "🌐 Removendo redes..."
+docker network rm $(docker network ls -q) 2>/dev/null || true
+
+echo "🧽 docker system prune..."
+docker system prune -a --volumes -f
+
+echo "🔨 Limpando builders..."
+docker builder prune -a -f
+
+echo
+echo "======================================"
+echo " ✅ DOCKER + KUBERNETES RESETADOS (até onde o sistema permitiu)."
+echo "   Se usar Docker Desktop, ainda pode haver containers internos"
+echo "   (docker-desktop, infra) se o Kubernetes estiver habilitado."
+echo "======================================"
