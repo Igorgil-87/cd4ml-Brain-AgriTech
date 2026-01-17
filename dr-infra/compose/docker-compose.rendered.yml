@@ -1,0 +1,586 @@
+name: compose
+services:
+  airflow-scheduler:
+    command:
+      - scheduler
+    depends_on:
+      airflow-webserver:
+        condition: service_started
+        required: true
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+    image: apache/airflow:2.6.1
+    networks:
+      jenkins_nw: null
+    restart: always
+    volumes:
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/airflow/dags
+        target: /opt/airflow/dags
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/scripts
+        target: /opt/airflow/scripts
+        bind:
+          create_host_path: true
+  airflow-webserver:
+    command:
+      - bash
+      - -c
+      - |2
+          airflow db upgrade &&
+          airflow users create --username admin --firstname Admin --lastname Admin --role Admin --email admin@admin.com --password admin &&
+          airflow webserver
+    depends_on:
+      postgres:
+        condition: service_started
+        required: true
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+    image: apache/airflow:2.6.1
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 8080
+        published: "8083"
+        protocol: tcp
+    restart: always
+    volumes:
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/airflow/dags
+        target: /opt/airflow/dags
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/scripts
+        target: /opt/airflow/scripts
+        bind:
+          create_host_path: true
+  cd4ml-api:
+    build:
+      context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/cd4ml-api
+      dockerfile: Dockerfile
+    container_name: cd4ml-api
+    depends_on:
+      mlflow:
+        condition: service_started
+        required: true
+    environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: adminadmin
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 8000
+        published: "8000"
+        protocol: tcp
+  dagster-daemon:
+    build:
+      context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+      dockerfile: Dockerfile-dagster
+    command:
+      - dagster-daemon
+      - run
+    container_name: dagster-daemon
+    depends_on:
+      minio:
+        condition: service_started
+        required: true
+      mlflow:
+        condition: service_started
+        required: true
+      postgres:
+        condition: service_started
+        required: true
+    environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: adminadmin
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      PYTHONPATH: /opt/dagster/app
+      SLACK_API_TOKEN: xoxb-xxx...
+      SLACK_CHANNEL: '#alertas-dagster'
+    image: dagster-webserver:local
+    networks:
+      jenkins_nw: null
+    volumes:
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/dagster
+        target: /opt/dagster/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/dagster/dagster_home
+        target: /opt/dagster/dagster_home
+        bind:
+          create_host_path: true
+  dagster-webserver:
+    build:
+      context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+      dockerfile: Dockerfile-dagster
+    command:
+      - dagster-webserver
+      - -h
+      - 0.0.0.0
+      - -p
+      - "3000"
+    container_name: dagster-webserver
+    depends_on:
+      dagster-daemon:
+        condition: service_started
+        required: true
+      minio:
+        condition: service_started
+        required: true
+      mlflow:
+        condition: service_started
+        required: true
+      postgres:
+        condition: service_started
+        required: true
+    environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: adminadmin
+      DAGSTER_HOME: /opt/dagster/dagster_home
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      PYTHONPATH: /opt/dagster/app
+      SLACK_API_TOKEN: xoxb-xxx...
+      SLACK_CHANNEL: '#alertas-dagster'
+    image: dagster-webserver:local
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 3000
+        published: "3005"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/dagster
+        target: /opt/dagster/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/dagster/dagster_home
+        target: /opt/dagster/dagster_home
+        bind:
+          create_host_path: true
+  dev:
+    command:
+      - jupyter
+      - lab
+      - --LabApp.token=
+    container_name: dev
+    entrypoint:
+      - start.sh
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+    image: jupyter/minimal-notebook:54462805efcb
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 8888
+        published: "8888"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+        target: /home/jovyan
+        bind:
+          create_host_path: true
+  es01:
+    container_name: es01
+    environment:
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      bootstrap.memory_lock: "true"
+      cluster.name: es-docker-cluster
+      discovery.type: single-node
+      http.host: 0.0.0.0
+      http.port: "9200"
+      node.name: es01
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 9200
+        published: "9200"
+        protocol: tcp
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - type: volume
+        source: data01
+        target: /usr/share/elasticsearch/data
+        volume: {}
+  fluentd:
+    container_name: fluentd
+    depends_on:
+      es01:
+        condition: service_started
+        required: true
+    image: ericnaglertw/cd4ml-fluentd:1
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 24224
+        published: "24224"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/fluentd/conf
+        target: /fluentd/etc
+        bind:
+          create_host_path: true
+  interface:
+    build:
+      context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/cd4ml-interface
+      dockerfile: Dockerfile
+    command:
+      - python
+      - main.py
+    container_name: interface
+    depends_on:
+      dagster-webserver:
+        condition: service_started
+        required: true
+      jenkins:
+        condition: service_started
+        required: true
+      minio:
+        condition: service_started
+        required: true
+      mlflow:
+        condition: service_started
+        required: true
+    environment:
+      FLASK_APP: main.py
+      FLASK_ENV: development
+      PYTHONUNBUFFERED: "1"
+      TZ: America/Sao_Paulo
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:8000 || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 3
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 8000
+        published: "11001"
+        protocol: tcp
+    restart: always
+    volumes:
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/cd4ml-interface
+        target: /app
+        bind:
+          create_host_path: true
+    working_dir: /app
+  jenkins:
+    build:
+      context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+      dockerfile: Dockerfile-jenkins
+    container_name: jenkins
+    deploy:
+      resources:
+        limits:
+          cpus: 2
+          memory: "8589934592"
+        reservations:
+          cpus: 1
+          memory: "4294967296"
+    environment:
+      ACCESS_KEY: admin
+      FLUENTD_HOST: fluentd
+      FLUENTD_PORT: "24224"
+      SECRET_KEY: adminadmin
+      TENANT: jenkins
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -s http://localhost:8080/login || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 5
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 8080
+        published: "10000"
+        protocol: tcp
+    restart: unless-stopped
+    secrets:
+      - source: jenkins-admin-password
+        target: /run/secrets/jenkins-admin-password
+    volumes:
+      - type: volume
+        source: jenkins_home
+        target: /var/jenkins_home
+        volume: {}
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: true
+  kafka:
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_started
+        required: true
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_BROKER_ID: "1"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    image: confluentinc/cp-kafka:7.5.0
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 9092
+        published: "9092"
+        protocol: tcp
+  kib01:
+    container_name: kib01
+    depends_on:
+      es01:
+        condition: service_started
+        required: true
+    environment:
+      ELASTICSEARCH_HOSTS: http://es01:9200
+      ELASTICSEARCH_URL: http://es01:9200
+    image: docker.elastic.co/kibana/kibana:7.6.0
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 5601
+        published: "5601"
+        protocol: tcp
+  load_data:
+    build:
+      context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+      dockerfile: load_data/Dockerfile
+    container_name: load_data
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: true
+    deploy:
+      resources:
+        limits:
+          memory: "4294967296"
+    entrypoint:
+      - sh
+      - -c
+      - while ! pg_isready -h postgres -U agro_user; do sleep 1; done; python /app/scripts/load_data.py
+    networks:
+      jenkins_nw: null
+    volumes:
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/data
+        target: /app/data
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/scripts
+        target: /app/scripts
+        bind:
+          create_host_path: true
+  minio:
+    command:
+      - -c
+      - mkdir -p /data/cd4ml-ml-flow-bucket && /usr/bin/minio server /data
+    container_name: minio
+    entrypoint:
+      - sh
+    environment:
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: adminadmin
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:9000/minio/health/live
+      timeout: 20s
+      interval: 30s
+      retries: 3
+    image: minio/minio:RELEASE.2020-08-08T04-50-06Z
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 9000
+        published: "9000"
+        protocol: tcp
+    volumes:
+      - type: volume
+        source: minio-storage
+        target: /data
+        volume: {}
+  mlflow:
+    build:
+      context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+      dockerfile: Dockerfile-mlflow
+    command:
+      - mlflow
+      - server
+      - --backend-store-uri
+      - postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+      - --default-artifact-root
+      - s3://cd4ml-ml-flow-bucket/
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+    container_name: mlflow
+    depends_on:
+      minio:
+        condition: service_started
+        required: true
+      postgres:
+        condition: service_started
+        required: true
+    environment:
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: adminadmin
+      BACKEND_STORE_URI: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+      GUNICORN_CMD_ARGS: --timeout 300 --workers 4 --bind 0.0.0.0:5000 --log-level debug
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:5000/api/2.0/mlflow/experiments/list
+      timeout: 10s
+      interval: 20s
+      retries: 10
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 5000
+        published: "12000"
+        protocol: tcp
+    volumes:
+      - type: volume
+        source: mlflow-storage
+        target: /mnt/mlflow
+        volume: {}
+  pgadmin:
+    container_name: pgadmin
+    depends_on:
+      postgres:
+        condition: service_started
+        required: true
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -s
+        - http://localhost:80 || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 3
+    image: dpage/pgadmin4
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "8081"
+        protocol: tcp
+  postgres:
+    container_name: postgres
+    environment:
+      POSTGRES_DB: brain_agro
+      POSTGRES_PASSWORD: agro_password
+      POSTGRES_USER: agro_user
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U agro_user || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 5
+    image: postgres:13
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "5433"
+        protocol: tcp
+    volumes:
+      - type: bind
+        source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/postgres-init-scripts
+        target: /docker-entrypoint-initdb.d
+        read_only: true
+        bind:
+          create_host_path: true
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql/data
+        volume: {}
+  zookeeper:
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
+    image: confluentinc/cp-zookeeper:7.5.0
+    networks:
+      jenkins_nw: null
+    ports:
+      - mode: ingress
+        target: 2181
+        published: "2181"
+        protocol: tcp
+networks:
+  default:
+    name: compose_default
+  jenkins_nw:
+    name: compose_jenkins_nw
+    driver: bridge
+volumes:
+  data01:
+    name: compose_data01
+  jenkins_home:
+    name: compose_jenkins_home
+  minio-storage:
+    name: compose_minio-storage
+  mlflow-storage:
+    name: compose_mlflow-storage
+  postgres_data:
+    name: compose_postgres_data
+secrets:
+  jenkins-admin-password:
+    name: compose_jenkins-admin-password
+    file: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/jenkins/jenkins-admin-password.txt

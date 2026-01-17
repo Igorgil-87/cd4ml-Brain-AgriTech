@@ -1,0 +1,7 @@
+[37mDEBU[0m Checking validation of provider: kubernetes  
+[37mDEBU[0m Checking validation of controller:           
+[37mDEBU[0m Compose file dir: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose 
+[33mWARN[0m Restart policy 'unless-stopped' in service jenkins is not supported, convert it to 'always' 
+[36mINFO[0m Service name in docker-compose has been changed from "load_data" to "load-data" 
+[37mDEBU[0m Compose file dir: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose 
+[31mFATA[0m unable to read secret from file: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/jenkins/jenkins-admin-password.txt 

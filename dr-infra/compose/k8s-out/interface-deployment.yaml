@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.rendered.yml --out k8s-out --verbose
+    kompose.version: 1.38.0 (HEAD)
+  labels:
+    io.kompose.service: interface
+  name: interface
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: interface
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.rendered.yml --out k8s-out --verbose
+        kompose.version: 1.38.0 (HEAD)
+      labels:
+        io.kompose.service: interface
+    spec:
+      containers:
+        - args:
+            - python
+            - main.py
+          env:
+            - name: FLASK_APP
+              value: main.py
+            - name: FLASK_ENV
+              value: development
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: TZ
+              value: America/Sao_Paulo
+          image: interface
+          livenessProbe:
+            exec:
+              command:
+                - curl
+                - -f
+                - http://localhost:8000 || exit 1
+            failureThreshold: 3
+            periodSeconds: 30
+            timeoutSeconds: 10
+          name: interface
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /app
+              name: interface-claim0
+          workingDir: /app
+      restartPolicy: Always
+      volumes:
+        - name: interface-claim0
+          persistentVolumeClaim:
+            claimName: interface-claim0

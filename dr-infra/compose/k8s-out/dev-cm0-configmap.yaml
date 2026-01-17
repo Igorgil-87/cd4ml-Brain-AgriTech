@@ -1,0 +1,730 @@
+apiVersion: v1
+data:
+  .env: |-
+    ACCESS_KEY=admin
+    SECRET_KEY=adminadmin
+    JENKINS_ACCESS_KEY=admin
+    JENKINS_SECRET_KEY=adminadmin
+    MINIO_ACCESS_KEY=admin
+    MINIO_SECRET_KEY=adminadmin
+    POSTGRES_USER=agro_user
+    POSTGRES_PASSWORD=agro_password
+    PGADMIN_DEFAULT_EMAIL=admin@admin.com
+    PGADMIN_DEFAULT_PASSWORD=admin
+    POSTGRES_DB=brain_agro
+    MLFLOW_TRACKING_URL=http://mlflow:5000
+    MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+    AWS_ACCESS_KEY_ID=...
+    AWS_SECRET_ACCESS_KEY=...
+    SLACK_API_TOKEN=xoxb-xxx...    # Seu token do Slack
+    SLACK_CHANNEL=#alertas-dagster
+    API_KEY=meu_super_token_123
+    KAFKA_SERVER=kafka:9092
+  00-render-compose.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    COMPOSE_FILE="${1:-docker-compose.yaml}"
+    ENV_FILE="${2:-.env}"
+    RENDERED_OUT="${3:-docker-compose.rendered.yml}"
+
+    log(){ echo "[$(date '+%F %T')] $*"; }
+    fail(){ echo "[$(date '+%F %T')] ERROR: $*" >&2; exit 1; }
+
+    command -v docker >/dev/null || fail "docker não encontrado"
+    docker compose version >/dev/null 2>&1 || fail "docker compose não está disponível"
+
+    [[ -f "$COMPOSE_FILE" ]] || fail "Não achei $COMPOSE_FILE"
+    [[ -f "$ENV_FILE" ]] || fail "Não achei $ENV_FILE (crie com base no .env.example)"
+
+    # Validação mínima (sem expor secrets)
+    required_vars=(
+      POSTGRES_DB POSTGRES_USER POSTGRES_PASSWORD
+      MINIO_ACCESS_KEY MINIO_SECRET_KEY
+      PGADMIN_DEFAULT_EMAIL PGADMIN_DEFAULT_PASSWORD
+      API_KEY KAFKA_SERVER
+      MLFLOW_TRACKING_URL MLFLOW_S3_ENDPOINT_URL
+    )
+
+    log "Validando variáveis essenciais em $ENV_FILE..."
+    missing=0
+    for v in "${required_vars[@]}"; do
+      if ! grep -qE "^${v}=" "$ENV_FILE"; then
+        echo " - faltando: $v"
+        missing=1
+      fi
+    done
+    [[ "$missing" -eq 0 ]] || fail "Faltam variáveis no $ENV_FILE"
+
+    log "Renderizando compose (docker compose config) -> $RENDERED_OUT"
+    docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" config > "$RENDERED_OUT"
+
+    log "OK. Preview:"
+    head -n 25 "$RENDERED_OUT"
+  01-kompose.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    RENDERED="${1:-docker-compose.rendered.yml}"
+    OUT_DIR="${2:-k8s-out}"
+    JENKINS_SECRET_FILE="${3:-./jenkins/jenkins-admin-password.txt}"
+
+    log(){ echo "[$(date '+%F %T')] $*"; }
+    fail(){ echo "[$(date '+%F %T')] ERROR: $*" >&2; exit 1; }
+
+    command -v kompose >/dev/null || fail "kompose não encontrado. Instale: brew install kompose"
+    [[ -f "$RENDERED" ]] || fail "Não achei $RENDERED. Rode primeiro: ./00-render-compose.sh"
+
+    # Se o compose referencia secret por arquivo, o kompose PRECISA ler o arquivo
+    if [[ ! -f "$JENKINS_SECRET_FILE" ]]; then
+      log "Secret do Jenkins não encontrado em $JENKINS_SECRET_FILE"
+      log "Criando com valor default (troque depois): admin"
+      mkdir -p "$(dirname "$JENKINS_SECRET_FILE")"
+      printf "admin\n" > "$JENKINS_SECRET_FILE"
+    fi
+
+    mkdir -p "$OUT_DIR"
+    # limpa sem erro se vazio
+    rm -rf "${OUT_DIR:?}/"* 2>/dev/null || true
+
+    log "Convertendo com kompose..."
+    kompose convert -f "$RENDERED" --out "$OUT_DIR" --verbose
+
+    log "Arquivos gerados:"
+    ls -lha "$OUT_DIR" | head -n 80
+  compose-to-k8s.sh: |
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    LOG_DIR="./logs"
+    OUT_DIR="./k8s-out"
+    COMPOSE_IN="./docker-compose.yaml"
+    COMPOSE_RENDERED="./docker-compose.rendered.yml"
+
+    mkdir -p "$LOG_DIR" "$OUT_DIR"
+
+    log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
+    fail() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $*" >&2; exit 1; }
+
+    log "Validando pré-requisitos..."
+    command -v docker >/dev/null 2>&1 || fail "docker não encontrado"
+    docker compose version >/dev/null 2>&1 || fail "docker compose não encontrado"
+    command -v kompose >/dev/null 2>&1 || fail "kompose não encontrado (brew install kompose)"
+
+    log "Checando arquivo compose: $COMPOSE_IN"
+    [[ -f "$COMPOSE_IN" ]] || fail "Não achei $COMPOSE_IN no diretório atual: $(pwd)"
+
+    log "Renderizando compose (expande envs/anchors) -> $COMPOSE_RENDERED"
+    docker compose -f "$COMPOSE_IN" config > "$COMPOSE_RENDERED" 2> "$LOG_DIR/docker-compose-config.err" \
+      || fail "Falhou em 'docker compose config'. Veja $LOG_DIR/docker-compose-config.err"
+
+    log "Limpando saída antiga em $OUT_DIR"
+    rm -rf "$OUT_DIR"/*
+
+    log "Convertendo com kompose -> $OUT_DIR"
+    kompose convert -f "$COMPOSE_RENDERED" --out "$OUT_DIR" --verbose \
+      > "$LOG_DIR/kompose.out" 2> "$LOG_DIR/kompose.err" || fail "Kompose falhou. Veja $LOG_DIR/kompose.err"
+
+    log "Arquivos gerados:"
+    ls -lha "$OUT_DIR" | sed -n '1,120p'
+
+    COUNT=$(find "$OUT_DIR" -maxdepth 1 -type f -name "*.yaml" -o -name "*.yml" | wc -l | tr -d ' ')
+    if [[ "$COUNT" == "0" ]]; then
+      fail "Kompose não gerou manifests. Veja $LOG_DIR/kompose.out e $LOG_DIR/kompose.err"
+    fi
+
+    log "OK ✅ Kompose gerou $COUNT manifest(s) em $OUT_DIR"
+    log "Próximo passo: ajustar secrets/volumes/healthchecks e aplicar no kind."
+  docker-compose.rendered.yml: |
+    name: compose
+    services:
+      airflow-scheduler:
+        command:
+          - scheduler
+        depends_on:
+          airflow-webserver:
+            condition: service_started
+            required: true
+        environment:
+          AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+          AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+        image: apache/airflow:2.6.1
+        networks:
+          jenkins_nw: null
+        restart: always
+        volumes:
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/airflow/dags
+            target: /opt/airflow/dags
+            bind:
+              create_host_path: true
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/scripts
+            target: /opt/airflow/scripts
+            bind:
+              create_host_path: true
+      airflow-webserver:
+        command:
+          - bash
+          - -c
+          - |2
+              airflow db upgrade &&
+              airflow users create --username admin --firstname Admin --lastname Admin --role Admin --email admin@admin.com --password admin &&
+              airflow webserver
+        depends_on:
+          postgres:
+            condition: service_started
+            required: true
+        environment:
+          AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+          AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+          AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+        image: apache/airflow:2.6.1
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 8080
+            published: "8083"
+            protocol: tcp
+        restart: always
+        volumes:
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/airflow/dags
+            target: /opt/airflow/dags
+            bind:
+              create_host_path: true
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/scripts
+            target: /opt/airflow/scripts
+            bind:
+              create_host_path: true
+      cd4ml-api:
+        build:
+          context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/cd4ml-api
+          dockerfile: Dockerfile
+        container_name: cd4ml-api
+        depends_on:
+          mlflow:
+            condition: service_started
+            required: true
+        environment:
+          AWS_ACCESS_KEY_ID: admin
+          AWS_SECRET_ACCESS_KEY: adminadmin
+          MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+          MLFLOW_TRACKING_URI: http://mlflow:5000
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 8000
+            published: "8000"
+            protocol: tcp
+      dagster-daemon:
+        build:
+          context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+          dockerfile: Dockerfile-dagster
+        command:
+          - dagster-daemon
+          - run
+        container_name: dagster-daemon
+        depends_on:
+          minio:
+            condition: service_started
+            required: true
+          mlflow:
+            condition: service_started
+            required: true
+          postgres:
+            condition: service_started
+            required: true
+        environment:
+          AWS_ACCESS_KEY_ID: admin
+          AWS_SECRET_ACCESS_KEY: adminadmin
+          DAGSTER_HOME: /opt/dagster/dagster_home
+          MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+          MLFLOW_TRACKING_URI: http://mlflow:5000
+          PYTHONPATH: /opt/dagster/app
+          SLACK_API_TOKEN: xoxb-xxx...
+          SLACK_CHANNEL: '#alertas-dagster'
+        image: dagster-webserver:local
+        networks:
+          jenkins_nw: null
+        volumes:
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/dagster
+            target: /opt/dagster/app
+            bind:
+              create_host_path: true
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/dagster/dagster_home
+            target: /opt/dagster/dagster_home
+            bind:
+              create_host_path: true
+      dagster-webserver:
+        build:
+          context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+          dockerfile: Dockerfile-dagster
+        command:
+          - dagster-webserver
+          - -h
+          - 0.0.0.0
+          - -p
+          - "3000"
+        container_name: dagster-webserver
+        depends_on:
+          dagster-daemon:
+            condition: service_started
+            required: true
+          minio:
+            condition: service_started
+            required: true
+          mlflow:
+            condition: service_started
+            required: true
+          postgres:
+            condition: service_started
+            required: true
+        environment:
+          AWS_ACCESS_KEY_ID: admin
+          AWS_SECRET_ACCESS_KEY: adminadmin
+          DAGSTER_HOME: /opt/dagster/dagster_home
+          MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+          MLFLOW_TRACKING_URI: http://mlflow:5000
+          PYTHONPATH: /opt/dagster/app
+          SLACK_API_TOKEN: xoxb-xxx...
+          SLACK_CHANNEL: '#alertas-dagster'
+        image: dagster-webserver:local
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 3000
+            published: "3005"
+            protocol: tcp
+        volumes:
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/dagster
+            target: /opt/dagster/app
+            bind:
+              create_host_path: true
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/dagster/dagster_home
+            target: /opt/dagster/dagster_home
+            bind:
+              create_host_path: true
+      dev:
+        command:
+          - jupyter
+          - lab
+          - --LabApp.token=
+        container_name: dev
+        entrypoint:
+          - start.sh
+        environment:
+          JUPYTER_ENABLE_LAB: "yes"
+        image: jupyter/minimal-notebook:54462805efcb
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 8888
+            published: "8888"
+            protocol: tcp
+        volumes:
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+            target: /home/jovyan
+            bind:
+              create_host_path: true
+      es01:
+        container_name: es01
+        environment:
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+          bootstrap.memory_lock: "true"
+          cluster.name: es-docker-cluster
+          discovery.type: single-node
+          http.host: 0.0.0.0
+          http.port: "9200"
+          node.name: es01
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 9200
+            published: "9200"
+            protocol: tcp
+        ulimits:
+          memlock:
+            soft: -1
+            hard: -1
+        volumes:
+          - type: volume
+            source: data01
+            target: /usr/share/elasticsearch/data
+            volume: {}
+      fluentd:
+        container_name: fluentd
+        depends_on:
+          es01:
+            condition: service_started
+            required: true
+        image: ericnaglertw/cd4ml-fluentd:1
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 24224
+            published: "24224"
+            protocol: tcp
+        volumes:
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/fluentd/conf
+            target: /fluentd/etc
+            bind:
+              create_host_path: true
+      interface:
+        build:
+          context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/cd4ml-interface
+          dockerfile: Dockerfile
+        command:
+          - python
+          - main.py
+        container_name: interface
+        depends_on:
+          dagster-webserver:
+            condition: service_started
+            required: true
+          jenkins:
+            condition: service_started
+            required: true
+          minio:
+            condition: service_started
+            required: true
+          mlflow:
+            condition: service_started
+            required: true
+        environment:
+          FLASK_APP: main.py
+          FLASK_ENV: development
+          PYTHONUNBUFFERED: "1"
+          TZ: America/Sao_Paulo
+        healthcheck:
+          test:
+            - CMD
+            - curl
+            - -f
+            - http://localhost:8000 || exit 1
+          timeout: 10s
+          interval: 30s
+          retries: 3
+        networks:
+          default: null
+        ports:
+          - mode: ingress
+            target: 8000
+            published: "11001"
+            protocol: tcp
+        restart: always
+        volumes:
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/cd4ml-interface
+            target: /app
+            bind:
+              create_host_path: true
+        working_dir: /app
+      jenkins:
+        build:
+          context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+          dockerfile: Dockerfile-jenkins
+        container_name: jenkins
+        deploy:
+          resources:
+            limits:
+              cpus: 2
+              memory: "8589934592"
+            reservations:
+              cpus: 1
+              memory: "4294967296"
+        environment:
+          ACCESS_KEY: admin
+          FLUENTD_HOST: fluentd
+          FLUENTD_PORT: "24224"
+          SECRET_KEY: adminadmin
+          TENANT: jenkins
+        healthcheck:
+          test:
+            - CMD-SHELL
+            - curl -s http://localhost:8080/login || exit 1
+          timeout: 10s
+          interval: 30s
+          retries: 5
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 8080
+            published: "10000"
+            protocol: tcp
+        restart: unless-stopped
+        secrets:
+          - source: jenkins-admin-password
+            target: /run/secrets/jenkins-admin-password
+        volumes:
+          - type: volume
+            source: jenkins_home
+            target: /var/jenkins_home
+            volume: {}
+          - type: bind
+            source: /var/run/docker.sock
+            target: /var/run/docker.sock
+            bind:
+              create_host_path: true
+      kafka:
+        container_name: kafka
+        depends_on:
+          zookeeper:
+            condition: service_started
+            required: true
+        environment:
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+          KAFKA_BROKER_ID: "1"
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+        image: confluentinc/cp-kafka:7.5.0
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 9092
+            published: "9092"
+            protocol: tcp
+      kib01:
+        container_name: kib01
+        depends_on:
+          es01:
+            condition: service_started
+            required: true
+        environment:
+          ELASTICSEARCH_HOSTS: http://es01:9200
+          ELASTICSEARCH_URL: http://es01:9200
+        image: docker.elastic.co/kibana/kibana:7.6.0
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 5601
+            published: "5601"
+            protocol: tcp
+      load_data:
+        build:
+          context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+          dockerfile: load_data/Dockerfile
+        container_name: load_data
+        depends_on:
+          postgres:
+            condition: service_healthy
+            required: true
+        deploy:
+          resources:
+            limits:
+              memory: "4294967296"
+        entrypoint:
+          - sh
+          - -c
+          - while ! pg_isready -h postgres -U agro_user; do sleep 1; done; python /app/scripts/load_data.py
+        networks:
+          jenkins_nw: null
+        volumes:
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/data
+            target: /app/data
+            bind:
+              create_host_path: true
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/scripts
+            target: /app/scripts
+            bind:
+              create_host_path: true
+      minio:
+        command:
+          - -c
+          - mkdir -p /data/cd4ml-ml-flow-bucket && /usr/bin/minio server /data
+        container_name: minio
+        entrypoint:
+          - sh
+        environment:
+          MINIO_ACCESS_KEY: admin
+          MINIO_SECRET_KEY: adminadmin
+        healthcheck:
+          test:
+            - CMD
+            - curl
+            - -f
+            - http://localhost:9000/minio/health/live
+          timeout: 20s
+          interval: 30s
+          retries: 3
+        image: minio/minio:RELEASE.2020-08-08T04-50-06Z
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 9000
+            published: "9000"
+            protocol: tcp
+        volumes:
+          - type: volume
+            source: minio-storage
+            target: /data
+            volume: {}
+      mlflow:
+        build:
+          context: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose
+          dockerfile: Dockerfile-mlflow
+        command:
+          - mlflow
+          - server
+          - --backend-store-uri
+          - postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+          - --default-artifact-root
+          - s3://cd4ml-ml-flow-bucket/
+          - --host
+          - 0.0.0.0
+          - --port
+          - "5000"
+        container_name: mlflow
+        depends_on:
+          minio:
+            condition: service_started
+            required: true
+          postgres:
+            condition: service_started
+            required: true
+        environment:
+          AWS_ACCESS_KEY_ID: admin
+          AWS_SECRET_ACCESS_KEY: adminadmin
+          BACKEND_STORE_URI: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+          GUNICORN_CMD_ARGS: --timeout 300 --workers 4 --bind 0.0.0.0:5000 --log-level debug
+          MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+          MLFLOW_TRACKING_URI: http://mlflow:5000
+        healthcheck:
+          test:
+            - CMD
+            - curl
+            - -f
+            - http://localhost:5000/api/2.0/mlflow/experiments/list
+          timeout: 10s
+          interval: 20s
+          retries: 10
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 5000
+            published: "12000"
+            protocol: tcp
+        volumes:
+          - type: volume
+            source: mlflow-storage
+            target: /mnt/mlflow
+            volume: {}
+      pgadmin:
+        container_name: pgadmin
+        depends_on:
+          postgres:
+            condition: service_started
+            required: true
+        environment:
+          PGADMIN_DEFAULT_EMAIL: admin@admin.com
+          PGADMIN_DEFAULT_PASSWORD: admin
+        healthcheck:
+          test:
+            - CMD
+            - curl
+            - -s
+            - http://localhost:80 || exit 1
+          timeout: 10s
+          interval: 30s
+          retries: 3
+        image: dpage/pgadmin4
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 80
+            published: "8081"
+            protocol: tcp
+      postgres:
+        container_name: postgres
+        environment:
+          POSTGRES_DB: brain_agro
+          POSTGRES_PASSWORD: agro_password
+          POSTGRES_USER: agro_user
+        healthcheck:
+          test:
+            - CMD-SHELL
+            - pg_isready -U agro_user || exit 1
+          timeout: 10s
+          interval: 30s
+          retries: 5
+        image: postgres:13
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 5432
+            published: "5433"
+            protocol: tcp
+        volumes:
+          - type: bind
+            source: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/postgres-init-scripts
+            target: /docker-entrypoint-initdb.d
+            read_only: true
+            bind:
+              create_host_path: true
+          - type: volume
+            source: postgres_data
+            target: /var/lib/postgresql/data
+            volume: {}
+      zookeeper:
+        container_name: zookeeper
+        environment:
+          ZOOKEEPER_CLIENT_PORT: "2181"
+          ZOOKEEPER_TICK_TIME: "2000"
+        image: confluentinc/cp-zookeeper:7.5.0
+        networks:
+          jenkins_nw: null
+        ports:
+          - mode: ingress
+            target: 2181
+            published: "2181"
+            protocol: tcp
+    networks:
+      default:
+        name: compose_default
+      jenkins_nw:
+        name: compose_jenkins_nw
+        driver: bridge
+    volumes:
+      data01:
+        name: compose_data01
+      jenkins_home:
+        name: compose_jenkins_home
+      minio-storage:
+        name: compose_minio-storage
+      mlflow-storage:
+        name: compose_mlflow-storage
+      postgres_data:
+        name: compose_postgres_data
+    secrets:
+      jenkins-admin-password:
+        name: compose_jenkins-admin-password
+        file: /Users/vanessasouza/Documents/GitHub/cd4ml-Brain-AgriTech/dr-infra/compose/jenkins/jenkins-admin-password.txt
+  docker-compose.yaml: "############################\n# GRUPO 1: Jenkins e Welcome\n############################\nservices:\n\n  jenkins:\n    container_name: jenkins\n    build:\n      context: .\n      dockerfile: Dockerfile-jenkins\n    ports:\n      - \"10000:8080\"\n    environment:\n      FLUENTD_HOST: fluentd\n      FLUENTD_PORT: 24224\n      TENANT: \"jenkins\"\n      ACCESS_KEY: ${JENKINS_ACCESS_KEY}\n      SECRET_KEY: ${JENKINS_SECRET_KEY}\n    volumes:\n      - jenkins_home:/var/jenkins_home\n      - /var/run/docker.sock:/var/run/docker.sock\n    secrets:\n      - jenkins-admin-password\n    networks:\n      - jenkins_nw\n    healthcheck:\n      test: [\"CMD-SHELL\", \"curl -s http://localhost:8080/login || exit 1\"]\n      interval: 30s\n      timeout: 10s\n      retries: 5\n    deploy:\n      resources:\n        limits:\n          memory: 8g\n          cpus: \"2\"\n        reservations:\n          memory: 4g\n          cpus: \"1\"\n    restart: unless-stopped\n\n##########################\n# GRUPO 2: Dagster stack\n##########################\n  dagster-webserver:\n    build:\n      context: .\n      dockerfile: Dockerfile-dagster\n    image: dagster-webserver:local\n    container_name: dagster-webserver\n    ports:\n      - \"3005:3000\"\n    volumes:\n      - ./dagster:/opt/dagster/app\n      - ./dagster/dagster_home:/opt/dagster/dagster_home\n    environment:\n      DAGSTER_HOME: /opt/dagster/dagster_home\n      PYTHONPATH: /opt/dagster/app\n      SLACK_API_TOKEN: ${SLACK_API_TOKEN}\n      SLACK_CHANNEL: \"#alertas-dagster\"\n      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}\n      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}\n      MLFLOW_S3_ENDPOINT_URL: http://minio:9000\n      MLFLOW_TRACKING_URI: http://mlflow:5000\n    depends_on:\n      - dagster-daemon\n      - mlflow\n      - minio\n      - postgres\n    networks:\n      - jenkins_nw\n    command: dagster-webserver -h 0.0.0.0 -p 3000\n\n  dagster-daemon:\n    build:\n      context: .\n      dockerfile: Dockerfile-dagster\n    image: dagster-webserver:local\n    container_name: dagster-daemon\n    volumes:\n      - ./dagster:/opt/dagster/app\n      - ./dagster/dagster_home:/opt/dagster/dagster_home\n    environment:\n      DAGSTER_HOME: /opt/dagster/dagster_home\n      PYTHONPATH: /opt/dagster/app\n      SLACK_API_TOKEN: ${SLACK_API_TOKEN}\n      SLACK_CHANNEL: \"#alertas-dagster\"\n      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}\n      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}\n      MLFLOW_S3_ENDPOINT_URL: http://minio:9000\n      MLFLOW_TRACKING_URI: http://mlflow:5000\n    depends_on:\n      - mlflow\n      - minio\n      - postgres\n    networks:\n      - jenkins_nw\n    command: dagster-daemon run\n\n\n############################\n# GRUPO 3: MinIO e MLflow\n############################\n  minio:\n    image: minio/minio:RELEASE.2020-08-08T04-50-06Z\n    container_name: minio\n    ports:\n      - \"9000:9000\"\n    environment:\n      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}\n      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}\n    entrypoint: sh\n    command: -c 'mkdir -p /data/cd4ml-ml-flow-bucket && /usr/bin/minio server /data'\n    healthcheck:\n      test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:9000/minio/health/live\"]\n      interval: 30s\n      timeout: 20s\n      retries: 3\n    volumes:\n      - minio-storage:/data\n    networks:\n      - jenkins_nw\n\n  mlflow:\n    container_name: mlflow\n    build:\n      context: .\n      dockerfile: Dockerfile-mlflow\n    environment:\n      MLFLOW_S3_ENDPOINT_URL: http://minio:9000\n      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}\n      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}\n      MLFLOW_TRACKING_URI: http://mlflow:5000\n      BACKEND_STORE_URI: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro\n      GUNICORN_CMD_ARGS: \"--timeout 300 --workers 4 --bind 0.0.0.0:5000 --log-level debug\"\n    ports:\n      - \"12000:5000\"\n    networks:\n      - jenkins_nw\n    volumes:\n      - mlflow-storage:/mnt/mlflow\n    depends_on:\n      - minio\n      - postgres\n    healthcheck:\n      test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:5000/api/2.0/mlflow/experiments/list\"]\n      interval: 20s\n      timeout: 10s\n      retries: 10\n    command: >\n      mlflow server --backend-store-uri postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro --default-artifact-root s3://cd4ml-ml-flow-bucket/ --host 0.0.0.0 --port 5000\n \n#########################\n# GRUPO 4: Airflow stack\n#########################\n  postgres:\n    image: postgres:13\n    container_name: postgres\n    environment:\n      - POSTGRES_DB=${POSTGRES_DB}\n      - POSTGRES_USER=${POSTGRES_USER}\n      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}\n    ports:\n      - \"5433:5432\"\n    volumes:\n      - ./postgres-init-scripts:/docker-entrypoint-initdb.d:ro\n      - postgres_data:/var/lib/postgresql/data\n    networks:\n      - jenkins_nw\n    healthcheck:\n      test: [\"CMD-SHELL\", \"pg_isready -U ${POSTGRES_USER} || exit 1\"]\n      interval: 30s\n      timeout: 10s\n      retries: 5\n\n  airflow-webserver:\n    image: apache/airflow:2.6.1\n    restart: always\n    depends_on:\n      - postgres\n    environment:\n      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor\n      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro\n      - AIRFLOW__CORE__LOAD_EXAMPLES=False\n    volumes:\n      - ./airflow/dags:/opt/airflow/dags\n      - ./scripts:/opt/airflow/scripts\n    ports:\n      - \"8083:8080\"\n    command: >\n      bash -c \"\n        airflow db upgrade &&\n        airflow users create --username admin --firstname Admin --lastname Admin --role Admin --email admin@admin.com --password admin &&\n        airflow webserver\n      \"\n    networks:\n      - jenkins_nw\n\n  airflow-scheduler:\n    image: apache/airflow:2.6.1\n    restart: always\n    depends_on:\n      - airflow-webserver\n    environment:\n      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor\n      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro\n    volumes:\n      - ./airflow/dags:/opt/airflow/dags\n      - ./scripts:/opt/airflow/scripts\n    command: scheduler\n    networks:\n      - jenkins_nw\n\n  pgadmin:\n    image: dpage/pgadmin4\n    container_name: pgadmin\n    environment:\n      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}\n      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}\n    ports:\n      - \"8081:80\"\n    networks:\n      - jenkins_nw\n    depends_on:\n      - postgres\n    healthcheck:\n      test: [\"CMD\", \"curl\", \"-s\", \"http://localhost:80 || exit 1\"]\n      interval: 30s\n      timeout: 10s\n      retries: 3\n\n#########################\n# GRUPO 5: Logging e Dados\n#########################\n  es01:\n    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0\n    container_name: es01\n    environment:\n      - node.name=es01\n      - cluster.name=es-docker-cluster\n      - bootstrap.memory_lock=true\n      - http.port=9200\n      - http.host=0.0.0.0\n      - \"ES_JAVA_OPTS=-Xms512m -Xmx512m\"\n      - discovery.type=single-node\n    ulimits:\n      memlock:\n        soft: -1\n        hard: -1\n    volumes:\n      - data01:/usr/share/elasticsearch/data\n    ports:\n      - 9200:9200\n    networks:\n      - jenkins_nw\n\n  kib01:\n    image: docker.elastic.co/kibana/kibana:7.6.0\n    container_name: kib01\n    ports:\n      - 5601:5601\n    environment:\n      ELASTICSEARCH_URL: http://es01:9200\n      ELASTICSEARCH_HOSTS: http://es01:9200\n    networks:\n      - jenkins_nw\n    depends_on:\n      - es01\n\n  fluentd:\n    image: ericnaglertw/cd4ml-fluentd:1\n    container_name: fluentd\n    volumes:\n      - ./fluentd/conf:/fluentd/etc\n    ports:\n      - \"24224:24224\"\n    networks:\n      - jenkins_nw\n    depends_on:\n      - es01\n\n  load_data:\n    build:\n      context: .\n      dockerfile: load_data/Dockerfile\n    container_name: load_data\n    volumes:\n      - ./data:/app/data\n      - ./scripts:/app/scripts\n    networks:\n      - jenkins_nw\n    depends_on:\n      postgres:\n        condition: service_healthy\n    entrypoint: [\"sh\", \"-c\", \"while ! pg_isready -h postgres -U ${POSTGRES_USER}; do sleep 1; done; python /app/scripts/load_data.py\"]\n    deploy:\n      resources:\n        limits:\n          memory: 4g\n\n#########################\n# GRUPO 6: Dev tools\n#########################\n  dev:\n    container_name: dev\n    image: jupyter/minimal-notebook:54462805efcb\n    environment:\n      - JUPYTER_ENABLE_LAB=yes\n    ports:\n      - \"8888:8888\"\n    entrypoint: \"start.sh\"\n    command: \"jupyter lab --LabApp.token=''\"\n    volumes:\n      - .:/home/jovyan/\n    networks:\n      - jenkins_nw\n\n  cd4ml-api:\n    build:\n      context: ./cd4ml-api\n    container_name: cd4ml-api\n    ports:\n      - \"8000:8000\"\n    environment:\n      MLFLOW_TRACKING_URI: http://mlflow:5000\n      AWS_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}\n      AWS_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}\n      MLFLOW_S3_ENDPOINT_URL: http://minio:9000\n    depends_on:\n      - mlflow\n    networks:\n      - jenkins_nw\n\n  interface:\n    build:\n      context: ./cd4ml-interface\n    container_name: interface\n    ports:\n      - \"11001:8000\"\n    restart: always\n    depends_on:\n      - mlflow\n      - dagster-webserver\n      - minio\n      - jenkins\n    volumes:\n      - ./cd4ml-interface:/app\n    working_dir: /app\n    environment:\n      - FLASK_ENV=development\n      - PYTHONUNBUFFERED=1\n      - TZ=America/Sao_Paulo\n      - FLASK_APP=main.py\n    command: python main.py\n    healthcheck:\n      test: [\"CMD\", \"curl\", \"-f\", \"http://localhost:8000 || exit 1\"]\n      interval: 30s\n      timeout: 10s\n      retries: 3\n#########################\n# FILAS Kafka e Zookeeper\n#########################\n  zookeeper:\n    image: confluentinc/cp-zookeeper:7.5.0\n    container_name: zookeeper\n    environment:\n      ZOOKEEPER_CLIENT_PORT: 2181\n      ZOOKEEPER_TICK_TIME: 2000\n    ports:\n      - \"2181:2181\"\n    networks:\n      - jenkins_nw\n\n  kafka:\n    image: confluentinc/cp-kafka:7.5.0\n    container_name: kafka\n    depends_on:\n      - zookeeper\n    ports:\n      - \"9092:9092\"\n    environment:\n      KAFKA_BROKER_ID: 1\n      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181\n      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092\n      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1\n    networks:\n      - jenkins_nw\n\n#########################\n# Volumes, Redes e Segredos\n#########################\nvolumes:\n  jenkins_home:\n  data01:\n  minio-storage:\n  mlflow-storage:\n  postgres_data:\n\nnetworks:\n  jenkins_nw:\n    driver: bridge\n\nsecrets:\n  jenkins-admin-password:\n    file: ./jenkins/jenkins-admin-password.txt\n"
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: dev
+  name: dev-cm0

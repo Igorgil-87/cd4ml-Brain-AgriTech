@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.rendered.yml --out k8s-out --verbose
+    kompose.version: 1.38.0 (HEAD)
+  labels:
+    io.kompose.service: load-data
+  name: load-data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: load-data
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.rendered.yml --out k8s-out --verbose
+        kompose.version: 1.38.0 (HEAD)
+      labels:
+        io.kompose.service: load-data
+    spec:
+      containers:
+        - command:
+            - sh
+            - -c
+            - while ! pg_isready -h postgres -U agro_user; do sleep 1; done; python /app/scripts/load_data.py
+          image: load-data
+          name: load-data
+          resources:
+            limits:
+              memory: "4294967296"
+          volumeMounts:
+            - mountPath: /app/data
+              name: load-data-claim0
+            - mountPath: /app/scripts
+              name: load-data-claim1
+      restartPolicy: Always
+      volumes:
+        - name: load-data-claim0
+          persistentVolumeClaim:
+            claimName: load-data-claim0
+        - name: load-data-claim1
+          persistentVolumeClaim:
+            claimName: load-data-claim1

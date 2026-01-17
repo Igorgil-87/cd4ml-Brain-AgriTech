@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.rendered.yml --out k8s-out --verbose
+    kompose.version: 1.38.0 (HEAD)
+  labels:
+    io.kompose.service: dagster-daemon
+  name: dagster-daemon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: dagster-daemon
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.rendered.yml --out k8s-out --verbose
+        kompose.version: 1.38.0 (HEAD)
+      labels:
+        io.kompose.service: dagster-daemon
+    spec:
+      containers:
+        - args:
+            - dagster-daemon
+            - run
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: admin
+            - name: AWS_SECRET_ACCESS_KEY
+              value: adminadmin
+            - name: DAGSTER_HOME
+              value: /opt/dagster/dagster_home
+            - name: MLFLOW_S3_ENDPOINT_URL
+              value: http://minio:9000
+            - name: MLFLOW_TRACKING_URI
+              value: http://mlflow:5000
+            - name: PYTHONPATH
+              value: /opt/dagster/app
+            - name: SLACK_API_TOKEN
+              value: xoxb-xxx...
+            - name: SLACK_CHANNEL
+              value: '#alertas-dagster'
+          image: dagster-webserver:local
+          name: dagster-daemon
+          volumeMounts:
+            - mountPath: /opt/dagster/app
+              name: dagster-daemon-claim0
+            - mountPath: /opt/dagster/dagster_home
+              name: dagster-daemon-claim1
+      restartPolicy: Always
+      volumes:
+        - name: dagster-daemon-claim0
+          persistentVolumeClaim:
+            claimName: dagster-daemon-claim0
+        - name: dagster-daemon-claim1
+          persistentVolumeClaim:
+            claimName: dagster-daemon-claim1

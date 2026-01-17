@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.rendered.yml --out k8s-out --verbose
+    kompose.version: 1.38.0 (HEAD)
+  labels:
+    io.kompose.service: mlflow
+  name: mlflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: mlflow
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.rendered.yml --out k8s-out --verbose
+        kompose.version: 1.38.0 (HEAD)
+      labels:
+        io.kompose.service: mlflow
+    spec:
+      containers:
+        - args:
+            - mlflow
+            - server
+            - --backend-store-uri
+            - postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+            - --default-artifact-root
+            - s3://cd4ml-ml-flow-bucket/
+            - --host
+            - 0.0.0.0
+            - --port
+            - "5000"
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: admin
+            - name: AWS_SECRET_ACCESS_KEY
+              value: adminadmin
+            - name: BACKEND_STORE_URI
+              value: postgresql+psycopg2://agro_user:agro_password@postgres:5432/brain_agro
+            - name: GUNICORN_CMD_ARGS
+              value: --timeout 300 --workers 4 --bind 0.0.0.0:5000 --log-level debug
+            - name: MLFLOW_S3_ENDPOINT_URL
+              value: http://minio:9000
+            - name: MLFLOW_TRACKING_URI
+              value: http://mlflow:5000
+          image: mlflow
+          livenessProbe:
+            exec:
+              command:
+                - curl
+                - -f
+                - http://localhost:5000/api/2.0/mlflow/experiments/list
+            failureThreshold: 10
+            periodSeconds: 20
+            timeoutSeconds: 10
+          name: mlflow
+          ports:
+            - containerPort: 5000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /mnt/mlflow
+              name: mlflow-storage
+      restartPolicy: Always
+      volumes:
+        - name: mlflow-storage
+          persistentVolumeClaim:
+            claimName: mlflow-storage
